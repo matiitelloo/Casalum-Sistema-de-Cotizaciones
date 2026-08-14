@@ -1,3 +1,32 @@
+/**
+ * Logos de proveedor por clave de marca. Va aparte de SEED_DATA porque
+ * SEED_DATA.brands se sobrescribe entero al cargar el catálogo guardado
+ * (Firestore/localStorage) — meterlo ahí perdería el logo en cuanto
+ * terminara esa carga.
+ */
+window.BRAND_LOGOS = {
+  femec: 'assets/brands/femec.png',
+  fisa: 'assets/brands/fisa.png',
+  cedal: 'assets/brands/cedal.png'
+};
+
+/** Muestra/oculta el <img> de logo de proveedor junto a un selector de marca. */
+window.updateBrandLogo = function (imgId, brandKey) {
+  const img = document.getElementById(imgId);
+  if (!img) return;
+  const src = window.BRAND_LOGOS[brandKey];
+  if (src) {
+    // Si el archivo del logo todavía no existe, se oculta en vez de mostrar
+    // el ícono de imagen rota.
+    img.onerror = () => { img.style.display = 'none'; };
+    img.src = src;
+    img.alt = brandKey;
+    img.style.display = '';
+  } else {
+    img.style.display = 'none';
+  }
+};
+
 window.SEED_DATA = {
   brands: {
   "femec": {

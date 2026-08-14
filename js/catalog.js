@@ -113,6 +113,7 @@ class CatalogManager {
         if (brandSel) {
             brandSel.addEventListener('change', () => {
                 this.currentBrand = brandSel.value;
+                if (window.updateBrandLogo) window.updateBrandLogo('catalog-brand-logo', this.currentBrand);
                 this.populateCategorySelect();
             });
         }
@@ -167,6 +168,7 @@ class CatalogManager {
         if (brands.length > 0) {
             this.currentBrand = brands[0];
             sel.value = brands[0];
+            if (window.updateBrandLogo) window.updateBrandLogo('catalog-brand-logo', this.currentBrand);
             this.populateCategorySelect();
         }
     }

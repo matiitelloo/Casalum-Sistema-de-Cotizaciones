@@ -485,7 +485,7 @@ class QuotationManager {
         if (window.clientManager) {
             window.clientManager.useGenericClient().catch(err => {
                 console.warn('No se pudo obtener/guardar "Consumidor Final" en la nube; se usa uno local:', err);
-                window.clientManager.fillClientForm({ id: 'CONSUMIDOR-FINAL', name: 'Consumidor Final', phone: '', address: '' });
+                window.clientManager.fillClientForm({ id: '9999999999', name: 'Consumidor Final', phone: '000000', address: '000000' });
             });
         }
     }

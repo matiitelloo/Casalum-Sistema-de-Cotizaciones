@@ -192,6 +192,7 @@
                     <button class="nav-item" data-page="new-quotation" id="nav-quick-quote"><i class="fa-solid fa-bolt"></i> Cotización Rápida</button>
                     <button class="nav-item" data-page="glass-quote"><i class="fa-solid fa-glass-water"></i> Cotizar Vidrio</button>
                     <button class="nav-item" data-page="history"><i class="fa-solid fa-magnifying-glass"></i> Buscar Cotización</button>
+                    <button class="nav-item" data-page="catalog" id="nav-catalog-db"><i class="fa-solid fa-database"></i> Base de Datos</button>
                 </div>
 
                 <button class="nav-item" data-page="clients"><i class="fa-solid fa-address-book"></i> Clientes</button>
@@ -823,7 +824,7 @@
                                 <i class="fa-solid fa-cubes"></i> Módulos
                             </button>
                             <button class="btn btn-outline btn-sm" id="btn-catalog-view-db">
-                                <i class="fa-solid fa-database"></i> Modificar base de datos
+                                <i class="fa-solid fa-database"></i> Base de Datos
                             </button>
                         </div>
                     </div>
@@ -861,7 +862,10 @@
                             <div class="grid-form" style="grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.25rem;">
                                 <div class="form-group">
                                     <label>Proveedor</label>
-                                    <select id="module-brand-select" class="form-control"></select>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <img id="module-brand-logo" src="" alt="" style="height: 28px; width: 28px; object-fit: contain; border-radius: 4px; flex-shrink: 0; display: none;">
+                                        <select id="module-brand-select" class="form-control" style="flex: 1;"></select>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label>Categoría / Sistema</label>
@@ -978,7 +982,8 @@
                     <!-- Tab: Profiles -->
                     <div id="catalog-tab-profiles" class="catalog-tab-content">
                         <!-- Brand selector -->
-                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                            <img id="catalog-brand-logo" src="" alt="" style="height: 28px; width: 28px; object-fit: contain; border-radius: 4px; display: none;">
                             <select id="catalog-brand-select" class="form-control" style="max-width: 200px;">
                             </select>
                             <select id="catalog-category-select" class="form-control" style="max-width: 280px;">
@@ -1238,18 +1243,18 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
 
-    <script src="data/seed.js?v=5"></script>
+    <script src="data/seed.js?v=6"></script>
     <script src="data/catalog-items.js?v=3"></script>
     <script src="js/auth.js?v=3"></script>
     <script src="js/db.js?v=3"></script>
     <script src="js/calculator.js?v=5"></script>
     <script src="js/ventanaFija1100.js?v=8"></script>
-    <script src="js/quotations.js?v=26"></script>
-    <script src="js/clients.js?v=6"></script>
+    <script src="js/quotations.js?v=27"></script>
+    <script src="js/clients.js?v=7"></script>
     <script src="js/pdf.js?v=2"></script>
-    <script src="js/catalog.js?v=6"></script>
-    <script src="js/modules.js?v=4"></script>
+    <script src="js/catalog.js?v=7"></script>
+    <script src="js/modules.js?v=5"></script>
     <script src="js/settings.js?v=2"></script>
-    <script src="js/app.js?v=11"></script>
+    <script src="js/app.js?v=12"></script>
 </body>
 </html>

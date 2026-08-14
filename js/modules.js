@@ -269,6 +269,7 @@ class ModuleManager {
             });
             if (!window.SEED_DATA.brands[d.brand]) d.brand = Object.keys(window.SEED_DATA.brands)[0] || '';
             brandSel.value = d.brand;
+            if (window.updateBrandLogo) window.updateBrandLogo('module-brand-logo', d.brand);
         }
 
         const brand = window.SEED_DATA.brands[d.brand];

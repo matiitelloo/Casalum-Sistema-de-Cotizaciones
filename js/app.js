@@ -76,6 +76,18 @@ class App {
             });
         }
 
+        // Acceso directo a "Base de Datos" desde el submenú Cotización: navega a
+        // Catálogo y abre esa pestaña de una vez (en vez de la de Módulos, que es
+        // la que abre por defecto). La edición sigue restringida a admins: reutiliza
+        // la misma vista de Catálogo, que ya solo habilita los campos para ellos.
+        const navCatalogDb = document.getElementById('nav-catalog-db');
+        if (navCatalogDb) {
+            navCatalogDb.addEventListener('click', () => {
+                this.navigate('catalog');
+                if (window.moduleManager) window.moduleManager.showView('db');
+            });
+        }
+
         // Submenú "Cotización" (Nueva Cotización / Buscar Cotización)
         const navGroupToggle = document.getElementById('nav-group-cotizacion');
         if (navGroupToggle) {
