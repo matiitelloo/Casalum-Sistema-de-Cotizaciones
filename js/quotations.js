@@ -385,8 +385,32 @@ class QuotationManager {
         this.goToStep(1);
     }
 
+    /**
+     * Cotización rápida: en el stepper solo se ven "Cotizar" (Productos) y "Total"
+     * (Resumen); Cliente y Detalles quedan ocultos porque el cliente se asigna solo
+     * (Consumidor Final) y no hay notas que llenar. Nueva Cotización (modo normal)
+     * sigue mostrando los 4 pasos tal cual, sin tocar nada de este método.
+     */
+    applyStepperMode() {
+        document.querySelectorAll('.stepper .step').forEach((el, index) => {
+            const stepNum = index + 1;
+            if (stepNum <= 2) {
+                el.style.display = this.isQuickQuote ? 'none' : '';
+                return;
+            }
+            const label = this.isQuickQuote ? el.getAttribute('data-label-quick') : el.getAttribute('data-label-normal');
+            if (label) el.textContent = label;
+        });
+
+        // Sin Cliente ni Detalles no hay a dónde volver desde Productos.
+        const prevBtn3 = document.getElementById('btn-prev-step-3');
+        if (prevBtn3) prevBtn3.style.display = this.isQuickQuote ? 'none' : '';
+    }
+
     goToStep(step) {
         this.currentStep = step;
+
+        this.applyStepperMode();
 
         // Update stepper UI
         document.querySelectorAll('.stepper .step').forEach((el, index) => {
@@ -434,9 +458,11 @@ class QuotationManager {
     }
 
     /**
-     * Cotización rápida: reinicia el wizard y lo deja listo en el Paso 1, marcado para
-     * saltarse el Paso 2 y guardarse con el flag `quickQuote`. Reutiliza exactamente el
-     * mismo motor de cálculo y saveQuotation() que la cotización normal.
+     * Cotización rápida: reinicia el wizard, asigna "Consumidor Final" solo (sin
+     * pedir datos) y entra directo al Paso 3, que en este modo se ve como
+     * "Cotizar" — luego "Total" es el único otro paso visible. Se guarda con el
+     * flag `quickQuote` y reutiliza exactamente el mismo motor de cálculo y
+     * saveQuotation() que la cotización normal.
      */
     startQuickQuote() {
         this.isQuickQuote = true;
@@ -450,6 +476,55 @@ class QuotationManager {
         this.parentId = null;
         document.getElementById('client-form').reset();
         window.clientManager.currentClient = null;
+        this.renderCart();
+        window.app.navigate('new-quotation');
+        this.goToStep(3);
+        // Sin pedir cédula ni nombre: se guarda como "Consumidor Final" de una vez.
+        // Si falla la nube (sin señal en el local, etc.) se usa uno local para no
+        // dejar la venta rápida sin cliente asignado.
+        if (window.clientManager) {
+            window.clientManager.useGenericClient().catch(err => {
+                console.warn('No se pudo obtener/guardar "Consumidor Final" en la nube; se usa uno local:', err);
+                window.clientManager.fillClientForm({ id: 'CONSUMIDOR-FINAL', name: 'Consumidor Final', phone: '', address: '' });
+            });
+        }
+    }
+
+    /**
+     * Handler del botón "Nueva Cotización". Los dos modos deben ser
+     * independientes: si se venía de una Cotización Rápida (o de editar una),
+     * ese carrito y ese cliente no pertenecen al modo normal, así que se
+     * limpia todo antes de entrar — igual que Cotización Rápida limpia todo
+     * al entrar ella. Si ya se estaba en modo normal, solo navega y continúa
+     * donde se había quedado (no pierde el trabajo en curso).
+     */
+    goToNewQuotation() {
+        if (!this.isQuickQuote) {
+            window.app.navigate('new-quotation');
+            return;
+        }
+
+        this.isQuickQuote = false;
+        this.cart = [];
+        this.editingId = null;
+        this.editingDate = null;
+        this.baseCode = null;
+        this.versionType = null;
+        this.versionNumber = null;
+        this.revisionLabel = null;
+        this.parentId = null;
+        this.activeModule = null;
+        document.getElementById('client-form').reset();
+        if (window.clientManager) window.clientManager.currentClient = null;
+        const notesEl = document.getElementById('q-notes');
+        if (notesEl) notesEl.value = '';
+        const pctEl = document.getElementById('summary-descuento-pct');
+        if (pctEl) pctEl.value = 0;
+        const btnSave = document.getElementById('btn-save');
+        if (btnSave) btnSave.innerHTML = '<i class="fa-solid fa-save"></i> Guardar Cotización';
+        const btnSaveAs = document.getElementById('btn-save-as');
+        if (btnSaveAs) btnSaveAs.style.display = 'none';
+
         this.renderCart();
         window.app.navigate('new-quotation');
         this.goToStep(1);

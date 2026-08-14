@@ -66,6 +66,16 @@ class App {
             });
         }
 
+        // "Nueva Cotización" y "Cotización Rápida" comparten página pero deben ser
+        // modos independientes: este handler evita que la rápida deje residuos
+        // (carrito, cliente, stepper de 2 pasos) al entrar a la normal.
+        const navNewQuotation = document.getElementById('nav-new-quotation');
+        if (navNewQuotation) {
+            navNewQuotation.addEventListener('click', () => {
+                if (window.quotationManager) window.quotationManager.goToNewQuotation();
+            });
+        }
+
         // Submenú "Cotización" (Nueva Cotización / Buscar Cotización)
         const navGroupToggle = document.getElementById('nav-group-cotizacion');
         if (navGroupToggle) {

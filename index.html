@@ -188,13 +188,13 @@
                     <i class="fa-solid fa-chevron-down" id="nav-group-cotizacion-arrow" style="margin-left: auto; font-size: 0.7rem; transition: transform var(--duration) var(--ease-smooth);"></i>
                 </button>
                 <div id="nav-submenu-cotizacion" style="display: none; flex-direction: column; gap: 0.25rem; padding-left: 1.25rem;">
-                    <button class="nav-item" data-page="new-quotation"><i class="fa-solid fa-plus-circle"></i> Nueva Cotización</button>
-                    <button class="nav-item" data-page="history"><i class="fa-solid fa-magnifying-glass"></i> Buscar Cotización</button>
+                    <button class="nav-item" data-page="new-quotation" id="nav-new-quotation"><i class="fa-solid fa-plus-circle"></i> Nueva Cotización</button>
+                    <button class="nav-item" data-page="new-quotation" id="nav-quick-quote"><i class="fa-solid fa-bolt"></i> Cotización Rápida</button>
                     <button class="nav-item" data-page="glass-quote"><i class="fa-solid fa-glass-water"></i> Cotizar Vidrio</button>
+                    <button class="nav-item" data-page="history"><i class="fa-solid fa-magnifying-glass"></i> Buscar Cotización</button>
                 </div>
 
                 <button class="nav-item" data-page="clients"><i class="fa-solid fa-address-book"></i> Clientes</button>
-                <button class="nav-item" data-page="new-quotation" id="nav-quick-quote"><i class="fa-solid fa-bolt"></i> Cotización Rápida</button>
                 <button class="nav-item" data-page="catalog"><i class="fa-solid fa-book-open"></i> Catálogo</button>
                 <button class="nav-item" data-page="settings" id="nav-settings" style="display: none;"><i class="fa-solid fa-gear"></i> Ajustes de la Empresa</button>
             </nav>
@@ -407,8 +407,8 @@
                     <div class="stepper">
                         <div class="step active">1. Cliente</div>
                         <div class="step">2. Detalles</div>
-                        <div class="step">3. Productos</div>
-                        <div class="step">4. Resumen</div>
+                        <div class="step" data-label-normal="3. Productos" data-label-quick="Cotizar">3. Productos</div>
+                        <div class="step" data-label-normal="4. Resumen" data-label-quick="Total">4. Resumen</div>
                     </div>
                     
                     <div class="card mt-4">
@@ -1244,12 +1244,12 @@
     <script src="js/db.js?v=3"></script>
     <script src="js/calculator.js?v=5"></script>
     <script src="js/ventanaFija1100.js?v=8"></script>
-    <script src="js/quotations.js?v=24"></script>
+    <script src="js/quotations.js?v=26"></script>
     <script src="js/clients.js?v=6"></script>
     <script src="js/pdf.js?v=2"></script>
     <script src="js/catalog.js?v=6"></script>
     <script src="js/modules.js?v=4"></script>
     <script src="js/settings.js?v=2"></script>
-    <script src="js/app.js?v=10"></script>
+    <script src="js/app.js?v=11"></script>
 </body>
 </html>
