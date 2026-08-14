@@ -87,19 +87,29 @@ class App {
                 if (window.moduleManager) window.moduleManager.showView('db');
             });
         }
-
-        // Submenú "Cotización" (Nueva Cotización / Buscar Cotización)
-        const navGroupToggle = document.getElementById('nav-group-cotizacion');
-        if (navGroupToggle) {
-            navGroupToggle.addEventListener('click', () => {
-                const submenu = document.getElementById('nav-submenu-cotizacion');
-                const arrow = document.getElementById('nav-group-cotizacion-arrow');
-                const isOpen = submenu.style.display === 'flex';
-                submenu.style.display = isOpen ? 'none' : 'flex';
-                navGroupToggle.setAttribute('aria-expanded', String(!isOpen));
-                if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        const navCatalogModules = document.getElementById('nav-catalog-modules');
+        if (navCatalogModules) {
+            navCatalogModules.addEventListener('click', () => {
+                this.navigate('catalog');
+                if (window.moduleManager) window.moduleManager.showView('modules');
             });
         }
+
+        const bindGroupToggle = (toggleId, submenuId, arrowId) => {
+            const toggle = document.getElementById(toggleId);
+            if (!toggle) return;
+            toggle.addEventListener('click', () => {
+                const submenu = document.getElementById(submenuId);
+                const arrow = document.getElementById(arrowId);
+                const isOpen = submenu.style.display === 'flex';
+                submenu.style.display = isOpen ? 'none' : 'flex';
+                toggle.setAttribute('aria-expanded', String(!isOpen));
+                if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+        };
+        // Submenús desplegables: "Cotización" y "Catálogo"
+        bindGroupToggle('nav-group-cotizacion', 'nav-submenu-cotizacion', 'nav-group-cotizacion-arrow');
+        bindGroupToggle('nav-group-catalogo', 'nav-submenu-catalogo', 'nav-group-catalogo-arrow');
 
         // History: search, filters panel, apply/clear, load more
         const searchInput = document.getElementById('history-search');
@@ -212,15 +222,19 @@ class App {
         if (!match) return;
         match.classList.add('active');
 
-        // Si la sección vive dentro del submenú "Cotización", se despliega.
-        const submenu = document.getElementById('nav-submenu-cotizacion');
-        if (submenu && submenu.contains(match)) {
+        // Si la sección vive dentro de un submenú desplegable, se despliega.
+        [
+            ['nav-submenu-cotizacion', 'nav-group-cotizacion', 'nav-group-cotizacion-arrow'],
+            ['nav-submenu-catalogo', 'nav-group-catalogo', 'nav-group-catalogo-arrow']
+        ].forEach(([submenuId, toggleId, arrowId]) => {
+            const submenu = document.getElementById(submenuId);
+            if (!submenu || !submenu.contains(match)) return;
             submenu.style.display = 'flex';
-            const toggle = document.getElementById('nav-group-cotizacion');
-            const arrow = document.getElementById('nav-group-cotizacion-arrow');
+            const toggle = document.getElementById(toggleId);
+            const arrow = document.getElementById(arrowId);
             if (toggle) toggle.setAttribute('aria-expanded', 'true');
             if (arrow) arrow.style.transform = 'rotate(180deg)';
-        }
+        });
     }
 
     navigate(pageId) {
@@ -352,7 +366,7 @@ class App {
 
                             await window.dbManager.save('quotations', quotation);
                             alert('Cotización de vidrio guardada en el historial.');
-                            
+
                             // Reset
                             baseInput.value = '';
                             heightInput.value = '';

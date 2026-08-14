@@ -221,9 +221,11 @@ class Calculator {
             details.push({ code: 'ACC', desc: acc.name, unitPrice: acc.price, qty: acc.qty, qtyString: acc.qty + ' und', total: cost });
         });
 
-        // Add Labor
+        // Add Labor — el costo por hora es único y viene de Ajustes de la Empresa,
+        // nunca del formulario (ver settingsManager); horas = horas totales del trabajo.
         const n = v => (typeof v === 'number' && !Number.isNaN(v)) ? v : 0;
-        const laborCostRaw = (n(labor.workers) * n(labor.hours) * n(labor.costPerHour)) + n(labor.transport) + n(labor.viaticos);
+        const laborCostPerHour = n(this.settings && this.settings.laborCostPerHour);
+        const laborCostRaw = (n(labor.workers) * n(labor.hours) * laborCostPerHour) + n(labor.transport) + n(labor.viaticos);
         if (laborCostRaw > 0) {
             totalCost += laborCostRaw;
             details.push({ code: 'MOB', desc: 'Mano de Obra y Transporte', unitPrice: laborCostRaw, qty: 1, qtyString: 'Global', total: laborCostRaw });

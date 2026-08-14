@@ -100,7 +100,6 @@ class QuotationManager {
             labor: {
                 workers: val('p-labor-workers'),
                 hours: val('p-labor-hours'),
-                costPerHour: val('p-labor-cost'),
                 transport: val('p-transport'),
                 viaticos: val('p-viaticos')
             },
@@ -146,7 +145,6 @@ class QuotationManager {
         if (form.labor) {
             setVal('p-labor-workers', form.labor.workers);
             setVal('p-labor-hours', form.labor.hours);
-            setVal('p-labor-cost', form.labor.costPerHour);
             setVal('p-transport', form.labor.transport);
             setVal('p-viaticos', form.labor.viaticos);
         }
@@ -628,7 +626,7 @@ class QuotationManager {
         // (no 'change') para no perderlo si recarga sin salir del campo.
         [
             'p-brand', 'p-system', 'p-color', 'p-width', 'p-height', 'p-modules', 'p-leaves',
-            'p-glass', 'p-qty', 'p-labor-workers', 'p-labor-hours', 'p-labor-cost',
+            'p-glass', 'p-qty', 'p-labor-workers', 'p-labor-hours',
             'p-transport', 'p-viaticos'
         ].forEach(id => {
             const el = document.getElementById(id);
@@ -640,33 +638,17 @@ class QuotationManager {
         // Los accesorios se generan por JS, así que se escucha en el contenedor.
         const accContainer = document.getElementById('accessories-container');
         if (accContainer) {
-            accContainer.addEventListener('input', (e) => {
-                this.queueSaveDraft();
-                if (e.target && e.target.classList.contains('acc-input')) {
-                    e.target.setAttribute('data-manual-override', 'true');
-                }
-            });
+            accContainer.addEventListener('input', () => this.queueSaveDraft());
         }
 
-        // Auto-calculate glass area based on width and height
+        // Auto-calculate glass area based on width and height. Los accesorios NO
+        // se recalculan acá: su cantidad es fija (viene del módulo o la escribe el
+        // usuario), independiente de las medidas de la ventana.
         const calcGlassArea = () => {
             const w = parseFloat(document.getElementById('p-width').value) || 0;
             const h = parseFloat(document.getElementById('p-height').value) || 0;
             const area = w * h;
             document.getElementById('p-glass-area').value = area > 0 ? area.toFixed(2) : '';
-            
-            if (this.activeModule && this.activeModule.accessories) {
-                const multiplier = area > 1 ? area : 1;
-                this.activeModule.accessories.forEach(acc => {
-                    const input = document.querySelector(`.acc-input[data-name="${acc.name}"]`);
-                    if (input && !input.hasAttribute('data-manual-override')) {
-                        const baseQty = parseFloat(input.getAttribute('data-base-qty')) || 0;
-                        if (baseQty > 0) {
-                            input.value = parseFloat((baseQty * multiplier).toFixed(2));
-                        }
-                    }
-                });
-            }
         };
         const widthInput = document.getElementById('p-width');
         const heightInput = document.getElementById('p-height');
@@ -825,7 +807,6 @@ class QuotationManager {
         document.querySelectorAll('.acc-input').forEach(input => input.value = '0');
         document.getElementById('p-labor-workers').value = '0';
         document.getElementById('p-labor-hours').value = '0';
-        document.getElementById('p-labor-cost').value = '5.00';
         document.getElementById('p-transport').value = '0';
         document.getElementById('p-viaticos').value = '0';
     }
@@ -846,31 +827,18 @@ class QuotationManager {
         this.applyingModule = false;
     }
 
-    /** Vuelca accesorios y mano de obra del módulo en el formulario. */
+    /** Vuelca accesorios y mano de obra del módulo en el formulario. Cantidades fijas, sin escalar por área. */
     applyModuleAccessoriesAndLabor(mod) {
-        const w = parseFloat(document.getElementById('p-width').value) || 0;
-        const h = parseFloat(document.getElementById('p-height').value) || 0;
-        const area = w * h;
-        const multiplier = area > 1 ? area : 1;
-
-        document.querySelectorAll('.acc-input').forEach(input => {
-            input.value = '0';
-            input.removeAttribute('data-manual-override');
-            input.setAttribute('data-base-qty', '0');
-        });
+        document.querySelectorAll('.acc-input').forEach(input => { input.value = '0'; });
 
         (mod.accessories || []).forEach(acc => {
             const input = document.querySelector(`.acc-input[data-name="${acc.name}"]`);
-            if (input) {
-                input.setAttribute('data-base-qty', acc.qty);
-                input.value = parseFloat((acc.qty * multiplier).toFixed(2));
-            }
+            if (input) input.value = acc.qty;
         });
 
         const labor = mod.labor || {};
         document.getElementById('p-labor-workers').value = labor.workers || 0;
         document.getElementById('p-labor-hours').value = labor.hours || 0;
-        document.getElementById('p-labor-cost').value = labor.costPerHour || 5.0;
         document.getElementById('p-transport').value = labor.transport || 0;
         document.getElementById('p-viaticos').value = labor.viaticos || 0;
     }
@@ -1221,7 +1189,6 @@ class QuotationManager {
 
         const workers = this.numOr(document.getElementById('p-labor-workers').value, 0, true);
         const hours = this.numOr(document.getElementById('p-labor-hours').value, 0);
-        const costPerHour = this.numOr(document.getElementById('p-labor-cost').value, 5.0);
         const transport = this.numOr(document.getElementById('p-transport').value, 0);
         const viaticos = this.numOr(document.getElementById('p-viaticos').value, 0);
 
@@ -1242,7 +1209,7 @@ class QuotationManager {
         return {
             brand, system, color, width, height, qty, glassType, glassArea,
             modules, leaves, mullon,
-            labor: { workers, hours, costPerHour, transport, viaticos },
+            labor: { workers, hours, transport, viaticos },
             accessories,
             moduleId: mod ? mod.itemId : null,
             moduleName: mod ? mod.itemName : null,
@@ -1402,7 +1369,6 @@ class QuotationManager {
         document.querySelectorAll('.acc-input').forEach(input => input.value = '0');
         document.getElementById('p-labor-workers').value = '0';
         document.getElementById('p-labor-hours').value = '0';
-        document.getElementById('p-labor-cost').value = '5.00';
         document.getElementById('p-transport').value = '0';
         document.getElementById('p-viaticos').value = '0';
 
@@ -1515,7 +1481,6 @@ class QuotationManager {
             if (data.labor) {
                 document.getElementById('p-labor-workers').value = data.labor.workers || 0;
                 document.getElementById('p-labor-hours').value = data.labor.hours || 0;
-                document.getElementById('p-labor-cost').value = data.labor.costPerHour || 5.0;
                 document.getElementById('p-transport').value = data.labor.transport || 0;
                 document.getElementById('p-viaticos').value = data.labor.viaticos || 0;
             }

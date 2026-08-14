@@ -2447,6 +2447,7 @@ window.SEED_DATA = {
   defaultSettings: {
     gastosGenerales: 0.14,
     utilidad: 0.30,
+    laborCostPerHour: 5.00,
     iva: 0.15,
     companyName: 'CASALUM',
     companySubtitle: 'aluminio - vidrio',

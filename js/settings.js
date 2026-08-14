@@ -7,6 +7,7 @@ class CompanySettingsManager {
         this.settings = {
             gastosGenerales: window.SEED_DATA?.defaultSettings?.gastosGenerales ?? 0.14,
             utilidad: window.SEED_DATA?.defaultSettings?.utilidad ?? 0.30,
+            laborCostPerHour: window.SEED_DATA?.defaultSettings?.laborCostPerHour ?? 5.00,
             iva: 0
         };
         this.isAdmin = false;
@@ -58,8 +59,10 @@ class CompanySettingsManager {
     renderForm() {
         const gastosInput = document.getElementById('set-gastos');
         const utilidadInput = document.getElementById('set-utilidad');
+        const laborCostInput = document.getElementById('set-labor-cost');
         if (gastosInput) gastosInput.value = (this.settings.gastosGenerales * 100).toFixed(2);
         if (utilidadInput) utilidadInput.value = (this.settings.utilidad * 100).toFixed(2);
+        if (laborCostInput) laborCostInput.value = this.settings.laborCostPerHour.toFixed(2);
     }
 
     async saveFromForm() {
@@ -67,10 +70,11 @@ class CompanySettingsManager {
         const msgEl = document.getElementById('settings-msg');
         const gastos = parseFloat(document.getElementById('set-gastos').value) / 100;
         const utilidad = parseFloat(document.getElementById('set-utilidad').value) / 100;
+        const laborCostPerHour = parseFloat(document.getElementById('set-labor-cost').value);
 
-        if (isNaN(gastos) || gastos < 0 || isNaN(utilidad) || utilidad < 0) {
+        if (isNaN(gastos) || gastos < 0 || isNaN(utilidad) || utilidad < 0 || isNaN(laborCostPerHour) || laborCostPerHour < 0) {
             if (msgEl) {
-                msgEl.textContent = 'Los porcentajes deben ser números válidos mayores o iguales a 0.';
+                msgEl.textContent = 'Todos los valores deben ser números válidos mayores o iguales a 0.';
                 msgEl.style.color = 'var(--danger)';
                 msgEl.style.display = 'block';
             }
@@ -78,7 +82,7 @@ class CompanySettingsManager {
         }
 
         try {
-            this.settings = { ...this.settings, gastosGenerales: gastos, utilidad: utilidad, iva: 0 };
+            this.settings = { ...this.settings, gastosGenerales: gastos, utilidad: utilidad, laborCostPerHour: laborCostPerHour, iva: 0 };
             await window.dbManager.db.collection('settings').doc('company').set(this.settings, { merge: true });
             if (window.calculator) window.calculator.settings = this.settings;
             if (msgEl) {

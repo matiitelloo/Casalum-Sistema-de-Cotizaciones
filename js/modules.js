@@ -57,28 +57,29 @@ class ModuleManager {
     showView(view) {
         const modulesView = document.getElementById('catalog-modules-view');
         const dbView = document.getElementById('catalog-db-view');
-        const btnModules = document.getElementById('btn-catalog-view-modules');
-        const btnDb = document.getElementById('btn-catalog-view-db');
+        const title = document.getElementById('catalog-page-title');
+        const navModules = document.getElementById('nav-catalog-modules');
+        const navDb = document.getElementById('nav-catalog-db');
         if (!modulesView || !dbView) return;
 
         const isDb = view === 'db';
         modulesView.style.display = isDb ? 'none' : 'block';
         dbView.style.display = isDb ? 'block' : 'none';
+        if (title) title.textContent = isDb ? 'Base de Datos' : 'Preestablecer Ítems';
 
-        [[btnModules, !isDb], [btnDb, isDb]].forEach(([btn, active]) => {
+        [[navModules, !isDb], [navDb, isDb]].forEach(([btn, active]) => {
             if (!btn) return;
-            btn.classList.toggle('btn-primary', active);
-            btn.classList.toggle('btn-outline', !active);
+            btn.classList.toggle('active', active);
         });
 
         if (isDb && window.catalogManager) window.catalogManager.renderCurrentTab();
     }
 
     bindEvents() {
-        const btnModules = document.getElementById('btn-catalog-view-modules');
-        const btnDb = document.getElementById('btn-catalog-view-db');
-        if (btnModules) btnModules.addEventListener('click', () => this.showView('modules'));
-        if (btnDb) btnDb.addEventListener('click', () => this.showView('db'));
+        const navModules = document.getElementById('nav-catalog-modules');
+        const navDb = document.getElementById('nav-catalog-db');
+        if (navModules) navModules.addEventListener('click', () => this.showView('modules'));
+        if (navDb) navDb.addEventListener('click', () => this.showView('db'));
 
         const groupSel = document.getElementById('module-group-select');
         if (groupSel) groupSel.addEventListener('change', () => {
@@ -232,7 +233,7 @@ class ModuleManager {
             category: '',
             profiles: [],
             accessories: [],
-            labor: { workers: 0, hours: 0, costPerHour: 5.0, transport: 0, viaticos: 0 },
+            labor: { workers: 0, hours: 0, transport: 0, viaticos: 0 },
             updatedAt: null,
             updatedBy: null
         };
@@ -534,7 +535,6 @@ class ModuleManager {
         const map = {
             'module-labor-workers': d.labor.workers,
             'module-labor-hours': d.labor.hours,
-            'module-labor-cost': d.labor.costPerHour,
             'module-labor-transport': d.labor.transport,
             'module-labor-viaticos': d.labor.viaticos
         };
@@ -561,7 +561,6 @@ class ModuleManager {
         d.labor = {
             workers: num('module-labor-workers', true),
             hours: num('module-labor-hours'),
-            costPerHour: num('module-labor-cost'),
             transport: num('module-labor-transport'),
             viaticos: num('module-labor-viaticos')
         };
