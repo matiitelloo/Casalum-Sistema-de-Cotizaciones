@@ -1,0 +1,614 @@
+/** Clave donde se guarda la última sección abierta para restaurarla al recargar. */
+const LAST_PAGE_KEY = 'casalum_last_page';
+
+/**
+ * Main Application Logic
+ */
+class App {
+    constructor() {
+        this.currentPage = 'dashboard';
+        this.historyPageSize = 15;
+        this.historyVisibleCount = 15;
+        this.init();
+    }
+
+    async init() {
+        this.setupNavigation();
+
+        try {
+            await window.dbManager.init();
+            console.log('Database initialized successfully');
+
+            window.authManager.onAuthReady(async () => {
+                await window.settingsManager.load();
+                window.settingsManager.applyAdminState();
+                this.updateDashboardStats();
+                this.loadRecentQuotations();
+                this.loadCatalogPreview();
+                // El borrador se reconstruye antes de abrir la sección, para que el
+                // asistente ya tenga el carrito y el cliente puestos al mostrarse.
+                const draftRestored = window.quotationManager
+                    ? window.quotationManager.restoreDraft()
+                    : false;
+                this.restoreLastPage(draftRestored);
+            });
+            await window.authManager.init();
+        } catch (error) {
+            console.error('Error initializing DB/Auth:', error);
+            // Si falla el arranque no se puede dejar la pantalla de carga puesta:
+            // se cae al login para que el usuario pueda reintentar.
+            if (window.authManager) window.authManager.checkAuth();
+        }
+    }
+
+    setupNavigation() {
+        // Solo los nav-item que realmente navegan a una página (excluye el botón que
+        // abre/cierra el submenú "Cotización", que no tiene data-page).
+        const navButtons = document.querySelectorAll('.nav-item[data-page]');
+
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Update active button
+                navButtons.forEach(b => b.classList.remove('active'));
+                const clickedBtn = e.currentTarget;
+                clickedBtn.classList.add('active');
+
+                // Navigate
+                const targetPage = clickedBtn.getAttribute('data-page');
+                this.navigate(targetPage);
+            });
+        });
+
+        const navQuickQuote = document.getElementById('nav-quick-quote');
+        if (navQuickQuote) {
+            navQuickQuote.addEventListener('click', () => {
+                if (window.quotationManager) window.quotationManager.startQuickQuote();
+            });
+        }
+
+        // Submenú "Cotización" (Nueva Cotización / Buscar Cotización)
+        const navGroupToggle = document.getElementById('nav-group-cotizacion');
+        if (navGroupToggle) {
+            navGroupToggle.addEventListener('click', () => {
+                const submenu = document.getElementById('nav-submenu-cotizacion');
+                const arrow = document.getElementById('nav-group-cotizacion-arrow');
+                const isOpen = submenu.style.display === 'flex';
+                submenu.style.display = isOpen ? 'none' : 'flex';
+                navGroupToggle.setAttribute('aria-expanded', String(!isOpen));
+                if (arrow) arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+            });
+        }
+
+        // History: search, filters panel, apply/clear, load more
+        const searchInput = document.getElementById('history-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => this.loadRecentQuotations());
+        }
+
+        const btnToggleFilters = document.getElementById('btn-toggle-filters');
+        if (btnToggleFilters) {
+            btnToggleFilters.addEventListener('click', () => {
+                const panel = document.getElementById('history-filters-panel');
+                panel.style.display = panel.style.display === 'none' ? 'grid' : 'none';
+            });
+        }
+
+        const btnApplyFilters = document.getElementById('btn-apply-filters');
+        if (btnApplyFilters) {
+            btnApplyFilters.addEventListener('click', () => this.loadRecentQuotations());
+        }
+
+        const btnClearFilters = document.getElementById('btn-clear-filters');
+        if (btnClearFilters) {
+            btnClearFilters.addEventListener('click', () => {
+                document.getElementById('filter-user').value = 'ALL';
+                document.getElementById('filter-status').value = 'ALL';
+                document.getElementById('filter-version-type').value = 'ALL';
+                document.getElementById('filter-date-from').value = '';
+                document.getElementById('filter-date-to').value = '';
+                document.getElementById('history-search').value = '';
+                this.loadRecentQuotations();
+            });
+        }
+
+        const btnLoadMore = document.getElementById('btn-history-load-more');
+        if (btnLoadMore) {
+            btnLoadMore.addEventListener('click', () => {
+                this.historyVisibleCount += this.historyPageSize;
+                this.loadRecentQuotations(false);
+            });
+        }
+    }
+
+    getHistoryFilters() {
+        return {
+            search: (document.getElementById('history-search')?.value || '').trim().toLowerCase(),
+            user: document.getElementById('filter-user')?.value || 'ALL',
+            status: document.getElementById('filter-status')?.value || 'ALL',
+            versionType: document.getElementById('filter-version-type')?.value || 'ALL',
+            dateFrom: document.getElementById('filter-date-from')?.value || '',
+            dateTo: document.getElementById('filter-date-to')?.value || ''
+        };
+    }
+
+    /**
+     * Guarda la sección abierta para reabrirla en la próxima recarga.
+     * Se guarda junto al uid: si en el mismo equipo entra otro usuario, arranca
+     * en su propia última sección y no en la del anterior.
+     */
+    rememberPage(pageId) {
+        const user = window.authManager && window.authManager.currentUser;
+        if (!user) return; // sin sesión todavía no hay nada que recordar
+        try {
+            localStorage.setItem(LAST_PAGE_KEY, JSON.stringify({ uid: user.uid, page: pageId }));
+        } catch (e) {
+            // Navegación privada o almacenamiento lleno: recordar la sección no es crítico.
+            console.warn('No se pudo recordar la última sección:', e);
+        }
+    }
+
+    /**
+     * Reabre la última sección tras recargar. Se llama cuando ya se conoce el usuario.
+     * @param {boolean} draftRestored si se recuperó una cotización a medio armar.
+     */
+    restoreLastPage(draftRestored) {
+        const user = window.authManager && window.authManager.currentUser;
+        if (!user) return;
+
+        let saved = null;
+        try {
+            saved = JSON.parse(localStorage.getItem(LAST_PAGE_KEY) || 'null');
+        } catch (e) {
+            saved = null;
+        }
+        if (!saved || saved.uid !== user.uid) return;
+
+        const pageId = saved.page;
+        if (!pageId || pageId === 'dashboard') return;                  // ya es la pantalla inicial
+        if (!document.getElementById(`page-${pageId}`)) return;         // sección que ya no existe
+        if (pageId === 'settings' && user.role !== 'admin') return;     // no la puede ver
+
+        this.navigate(pageId);
+        this.syncNavActive(pageId);
+
+        // Si se recuperó una cotización en curso se vuelve al paso donde la dejó;
+        // si no hay nada que recuperar, el asistente abre limpio en el Paso 1.
+        if (pageId === 'new-quotation' && window.quotationManager) {
+            const step = draftRestored ? (window.quotationManager.currentStep || 1) : 1;
+            window.quotationManager.goToStep(step);
+        }
+    }
+
+    /** Deja marcado en el menú lateral el botón de la sección abierta. */
+    syncNavActive(pageId) {
+        const buttons = [...document.querySelectorAll('.nav-item[data-page]')];
+        buttons.forEach(b => b.classList.remove('active'));
+
+        // "Cotización Rápida" comparte data-page con "Nueva Cotización": se marca
+        // la primera coincidencia, que es la entrada del submenú.
+        const match = buttons.find(b => b.getAttribute('data-page') === pageId);
+        if (!match) return;
+        match.classList.add('active');
+
+        // Si la sección vive dentro del submenú "Cotización", se despliega.
+        const submenu = document.getElementById('nav-submenu-cotizacion');
+        if (submenu && submenu.contains(match)) {
+            submenu.style.display = 'flex';
+            const toggle = document.getElementById('nav-group-cotizacion');
+            const arrow = document.getElementById('nav-group-cotizacion-arrow');
+            if (toggle) toggle.setAttribute('aria-expanded', 'true');
+            if (arrow) arrow.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    navigate(pageId) {
+        const targetPage = document.getElementById(`page-${pageId}`);
+        if (!targetPage) {
+            console.warn(`navigate(): página desconocida "${pageId}", se ignora.`);
+            return;
+        }
+
+        this.rememberPage(pageId);
+
+        // Hide all pages
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+
+        // Show target page
+        targetPage.classList.add('active');
+
+        // Update title
+        const titles = {
+            'dashboard': 'Panel de Control',
+            'new-quotation': 'Nueva Cotización',
+            'clients': 'Directorio de Clientes',
+            'history': 'Historial de Cotizaciones',
+            'catalog': 'Catálogo de Productos',
+            'glass-quote': 'Cotizar Vidrio',
+            'settings': 'Ajustes de la Empresa'
+        };
+        document.getElementById('page-title').textContent = titles[pageId] || 'CASALUM';
+        
+        // Mobile sidebar close on navigate
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (sidebar && overlay) {
+            sidebar.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        // Specific page logic
+        if (pageId === 'dashboard') {
+            this.updateDashboardStats();
+        } else if (pageId === 'clients') {
+            if (window.clientManager) {
+                window.clientManager.loadClientsList();
+            }
+        } else if (pageId === 'catalog') {
+            this.loadCatalogPreview();
+        } else if (pageId === 'history') {
+            this.loadRecentQuotations();
+        } else if (pageId === 'glass-quote') {
+            this.initGlassQuote();
+        }
+    }
+
+    /** Inicializa la página de cotización rápida de vidrio suelto. */
+    initGlassQuote() {
+        const sel = document.getElementById('gq-glass-type');
+        if (!sel || !window.SEED_DATA) return;
+
+        // Populate glass types from glassSale (sale pricing)
+        const glassData = window.SEED_DATA.glassSale || window.SEED_DATA.glass;
+        sel.innerHTML = '<option value="">Seleccione el tipo de vidrio...</option>';
+        glassData.forEach(g => {
+            sel.innerHTML += `<option value="${g.type}">${g.type}</option>`;
+        });
+
+        // Wire up events only once
+        if (!this._glassQuoteReady) {
+            this._glassQuoteReady = true;
+
+            const baseInput = document.getElementById('gq-base');
+            const heightInput = document.getElementById('gq-height');
+            const resultDiv = document.getElementById('gq-result');
+            const resultLabel = document.getElementById('gq-result-label');
+            const resultArea = document.getElementById('gq-result-area');
+            const resultPrice = document.getElementById('gq-result-price');
+
+            const calculate = () => {
+                const type = sel.value;
+                const base = parseFloat(baseInput.value);
+                const height = parseFloat(heightInput.value);
+
+                if (!type) { alert('Seleccione un tipo de vidrio.'); return; }
+                if (!base || base <= 0) { alert('Ingrese la base en metros.'); return; }
+                if (!height || height <= 0) { alert('Ingrese la altura en metros.'); return; }
+
+                const glassData = window.SEED_DATA.glassSale || window.SEED_DATA.glass;
+                const glass = glassData.find(g => g.type === type);
+                if (!glass) return;
+
+                const adjustedBase = base + 0.05;   // +5 cm
+                const adjustedHeight = height + 0.05; // +5 cm
+                const area = adjustedBase * adjustedHeight;
+                const price = glass.pricePerM2 * area;
+
+                resultLabel.textContent = `${type}`;
+                resultArea.textContent = `${base.toFixed(2)} × ${height.toFixed(2)} m`;
+                resultPrice.textContent = `$${price.toFixed(2)}`;
+                resultDiv.style.display = 'block';
+
+                const saveBtn = document.getElementById('gq-save');
+                if (saveBtn) {
+                    saveBtn.style.display = 'inline-block';
+                    saveBtn.onclick = async () => {
+                        try {
+                            const quotation = {
+                                clientId: 'MOSTRADOR',
+                                clientName: 'Venta de Vidrio Mostrador',
+                                date: new Date().toISOString(),
+                                cart: [{
+                                    quantity: 1,
+                                    description: `Vidrio suelto: ${type}`,
+                                    dimensions: `${base.toFixed(2)} × ${height.toFixed(2)}m`,
+                                    rawTotal: price,
+                                    total: price,
+                                    type: 'glass-sale'
+                                }],
+                                totals: { total: price },
+                                settings: window.calculator?.settings || {},
+                                author: window.authManager.currentUser.username,
+                                authorName: window.authManager.currentUser.name,
+                                revisionLabel: 'Venta de Vidrio', // Se muestra en lugar de COT-XXX
+                                parentId: null,
+                                status: 'active',
+                                quickQuote: true,
+                                isGlassQuote: true // Flag to identify it in history
+                            };
+
+                            await window.dbManager.save('quotations', quotation);
+                            alert('Cotización de vidrio guardada en el historial.');
+                            
+                            // Reset
+                            baseInput.value = '';
+                            heightInput.value = '';
+                            sel.value = '';
+                            resultDiv.style.display = 'none';
+                            saveBtn.style.display = 'none';
+                        } catch (e) {
+                            console.error('Error saving glass quote', e);
+                            alert('Hubo un error al guardar la cotización.');
+                        }
+                    };
+                }
+            };
+
+            document.getElementById('gq-calculate').addEventListener('click', calculate);
+
+            document.getElementById('gq-clear').addEventListener('click', () => {
+                sel.value = '';
+                baseInput.value = '';
+                heightInput.value = '';
+                resultDiv.style.display = 'none';
+                const saveBtn = document.getElementById('gq-save');
+                if (saveBtn) saveBtn.style.display = 'none';
+            });
+
+            // Allow Enter key to calculate
+            [baseInput, heightInput].forEach(inp => {
+                inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); calculate(); } });
+            });
+        }
+    }
+
+    async updateDashboardStats() {
+        const count = await window.dbManager.count('clients');
+        document.getElementById('stat-clients-count').textContent = count;
+        
+        const quotCount = await window.dbManager.count('quotations');
+        document.getElementById('stat-quotations-count').textContent = quotCount;
+    }
+
+    async loadRecentQuotations(resetPage = true) {
+        if (resetPage) this.historyVisibleCount = this.historyPageSize;
+
+        let quotations = await window.dbManager.getAll('quotations');
+        const container = document.getElementById('dashboard-quotations');
+        const loadMoreBtn = document.getElementById('btn-history-load-more');
+        const filters = this.getHistoryFilters();
+
+        if (filters.user !== 'ALL') quotations = quotations.filter(q => q.author === filters.user);
+        if (filters.status !== 'ALL') quotations = quotations.filter(q => (q.status || 'active') === filters.status);
+        if (filters.versionType !== 'ALL') quotations = quotations.filter(q => (q.versionType || 'A') === filters.versionType);
+        if (filters.dateFrom) quotations = quotations.filter(q => new Date(q.date) >= new Date(filters.dateFrom));
+        if (filters.dateTo) quotations = quotations.filter(q => new Date(q.date) <= new Date(filters.dateTo + 'T23:59:59'));
+
+        if (filters.search) {
+            const clients = await window.dbManager.getAll('clients');
+            const clientNameById = {};
+            clients.forEach(c => { clientNameById[c.id] = (c.name || '').toLowerCase(); });
+
+            quotations = quotations.filter(q => {
+                const clientName = clientNameById[q.clientId] || '';
+                return (q.clientId || '').toLowerCase().includes(filters.search) ||
+                    clientName.includes(filters.search) ||
+                    (q.baseCode || '').toLowerCase().includes(filters.search) ||
+                    this.quotationDisplayCode(q).toLowerCase().includes(filters.search);
+            });
+        }
+
+        if (quotations.length === 0) {
+            container.innerHTML = '<p class="text-muted text-center py-4">No hay cotizaciones para mostrar.</p>';
+            if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+            return;
+        }
+
+        // Agrupar por baseCode (cotizaciones anteriores a esta versión del sistema, sin
+        // baseCode, quedan cada una en su propio grupo de un solo elemento).
+        const groups = new Map();
+        quotations.forEach(q => {
+            const key = q.baseCode || `legacy-${q.id}`;
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key).push(q);
+        });
+
+        const groupList = Array.from(groups.values()).map(versions => {
+            versions.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const root = versions.find(v => !v.parentId) || versions[0];
+            const others = versions.filter(v => v.id !== root.id).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const latestDate = Math.max(...versions.map(v => new Date(v.date).getTime()));
+            return { root, others, latestDate };
+        });
+
+        groupList.sort((a, b) => b.latestDate - a.latestDate);
+
+        const visibleGroups = groupList.slice(0, this.historyVisibleCount);
+
+        let html = '<table class="table" style="width:100%; border-collapse:collapse; margin-top:1rem;"><thead><tr><th>Código</th><th>Fecha y Hora</th><th>Cliente CI</th><th>Autor</th><th>Estado</th><th>Total</th><th>Acciones</th></tr></thead><tbody>';
+
+        visibleGroups.forEach(({ root, others }) => {
+            html += this.renderQuotationRow(root, { versionCount: others.length });
+            others.forEach(v => {
+                html += this.renderQuotationRow(v, { isVersion: true, groupKey: root.baseCode });
+            });
+        });
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+        if (loadMoreBtn) {
+            loadMoreBtn.style.display = groupList.length > this.historyVisibleCount ? 'inline-block' : 'none';
+        }
+    }
+
+    /** Código visible de una cotización: revisionLabel si existe, o el viejo COT-XXXXXX derivado del docId. */
+    quotationDisplayCode(q) {
+        if (q.revisionLabel) return q.revisionLabel;
+        const displayId = (typeof q.id === 'string' && q.id.length > 10) ? q.id.substring(0, 6) : String(q.id).padStart(5, '0');
+        return `COT-${displayId.toUpperCase()}`;
+    }
+
+    renderQuotationRow(q, { versionCount = 0, isVersion = false, groupKey = null } = {}) {
+        const dateObj = new Date(q.date);
+        const dateStr = dateObj.toLocaleDateString('es-ES') + ' ' + dateObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const authorName = q.authorName || q.author || 'N/A';
+        const code = this.quotationDisplayCode(q);
+        const status = q.status || 'active';
+        const statusLabels = { active: ['Activa', 'var(--success)'], archived: ['Archivada', 'var(--text-muted)'], voided: ['Anulada', 'var(--danger)'] };
+        const [statusLabel, statusColor] = statusLabels[status] || statusLabels.active;
+
+        const toggleBtn = versionCount > 0
+            ? `<button class="btn btn-sm btn-outline" style="margin-left:8px; padding:2px 8px; font-size:0.75rem;" onclick="window.app.toggleVersions(this, '${q.baseCode || ''}')">+${versionCount} versiones</button>`
+            : '';
+
+        const versionAttr = isVersion ? `data-version-of="${groupKey || ''}"` : '';
+        const rowExtraStyle = isVersion ? 'display:none; background: var(--bg-alt);' : '';
+        const codeCellPrefix = isVersion ? '<span style="color: var(--text-muted);">&#8627;</span> ' : '';
+        const quickBadge = q.quickQuote
+            ? '<span title="Cotización rápida" style="margin-left:6px; background: var(--warning-light, #fef3c7); color: var(--warning, #b45309); padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600;"><i class="fa-solid fa-bolt"></i> Rápida</span>'
+            : '';
+
+        const archiveOrRestoreBtn = status === 'archived'
+            ? `<button class="btn btn-sm btn-outline" onclick="window.app.setQuotationStatus('${q.id}', 'active')" title="Restaurar" style="margin-left: 5px;"><i class="fa-solid fa-box-open"></i></button>`
+            : `<button class="btn btn-sm btn-outline" onclick="window.app.setQuotationStatus('${q.id}', 'archived')" title="Archivar" style="margin-left: 5px;"><i class="fa-solid fa-box-archive"></i></button>`;
+        const voidOrRestoreBtn = status === 'voided'
+            ? `<button class="btn btn-sm btn-outline" onclick="window.app.setQuotationStatus('${q.id}', 'active')" title="Restaurar" style="margin-left: 5px;"><i class="fa-solid fa-rotate-left"></i></button>`
+            : `<button class="btn btn-sm btn-outline" onclick="window.app.setQuotationStatus('${q.id}', 'voided')" title="Anular" style="margin-left: 5px; color: var(--danger); border-color: var(--danger);"><i class="fa-solid fa-ban"></i></button>`;
+
+        return `
+            <tr ${versionAttr} style="border-bottom: 1px solid var(--border-light); ${rowExtraStyle}">
+                <td style="padding: 10px;">${codeCellPrefix}${code}${quickBadge}${toggleBtn}</td>
+                <td style="padding: 10px;">${dateStr}</td>
+                <td style="padding: 10px;">${q.clientName || q.clientId}</td>
+                <td style="padding: 10px;"><span style="background: var(--bg-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">${authorName}</span></td>
+                <td style="padding: 10px;"><span style="color: ${statusColor}; font-weight: 600; font-size: 0.8rem;">${statusLabel}</span></td>
+                <td style="padding: 10px; font-weight:600; color:var(--primary);">$${(q.totals?.total ?? 0).toFixed(2)}</td>
+                <td style="padding: 10px; white-space: nowrap;">
+                    ${q.isGlassQuote ? '' : `<button class="btn btn-sm btn-outline" onclick="window.app.printQuotation('${q.id}')" title="Imprimir cotización" style="border-color: var(--primary); color: var(--primary);">
+                        <i class="fa-solid fa-print"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline" onclick="window.app.editQuotation('${q.id}')" title="Editar / Versionar" style="margin-left: 5px;">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>`}
+                    ${archiveOrRestoreBtn}
+                    ${voidOrRestoreBtn}
+                    <button class="btn btn-sm btn-danger" onclick="window.app.deleteQuotation('${q.id}')" title="Borrar cotización" style="margin-left: 5px;">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }
+
+    toggleVersions(btn, baseCode) {
+        const rows = document.querySelectorAll(`tr[data-version-of="${baseCode}"]`);
+        if (!rows.length) return;
+        const isHidden = rows[0].style.display === 'none';
+        rows.forEach(r => { r.style.display = isHidden ? 'table-row' : 'none'; });
+        btn.textContent = isHidden ? 'Ocultar versiones' : `+${rows.length} versiones`;
+    }
+
+    async setQuotationStatus(id, status) {
+        try {
+            await window.dbManager.save('quotations', { id, status }, 'id');
+            this.loadRecentQuotations(false);
+        } catch (e) {
+            console.error('Error updating quotation status', e);
+            alert('Hubo un error al actualizar el estado de la cotización.');
+        }
+    }
+
+    async editQuotation(id) {
+        const q = await window.dbManager.getById('quotations', id);
+        if (q && window.quotationManager) {
+            window.quotationManager.loadQuotationForEdit(q);
+        }
+    }
+
+    async printQuotation(id) {
+        const q = await window.dbManager.getById('quotations', id);
+        if (!q) return;
+
+        const client = await window.dbManager.getById('clients', q.clientId);
+        
+        const tempQM = {
+            id: q.id,
+            cart: q.cart,
+            totals: q.totals,
+            quoteNumber: q.quoteNumber,
+            quoteYear: q.quoteYear,
+            editingDate: q.date,
+            ensureQuotationNumber: async () => {
+                if (q.quoteNumber && q.quoteYear) {
+                    return { number: q.quoteNumber, year: q.quoteYear };
+                }
+                return window.quotationManager.ensureQuotationNumber();
+            }
+        };
+
+        const originalClient = window.clientManager.currentClient;
+        const originalUser = window.authManager.currentUser;
+        const originalSettings = window.calculator.settings;
+
+        window.clientManager.currentClient = client || { id: q.clientId, name: q.clientName || 'Consumidor Final', address: q.clientAddress || '' };
+        window.authManager.currentUser = { name: q.authorName || q.author };
+        window.calculator.settings = q.settings || window.calculator.settings;
+
+        if (window.pdfGenerator) {
+            window.pdfGenerator.generate(tempQM);
+        } else {
+            alert('Generador de PDF no disponible.');
+        }
+
+        // Restore
+        window.clientManager.currentClient = originalClient;
+        window.authManager.currentUser = originalUser;
+        window.calculator.settings = originalSettings;
+    }
+
+    async deleteQuotation(id) {
+        if (!confirm('¿Está seguro de que desea eliminar esta cotización? Esta acción no se puede deshacer.')) {
+            return;
+        }
+
+        try {
+            await window.dbManager.delete('quotations', id);
+            
+            let activeFilter = 'ALL';
+            const activeBtn = document.querySelector('.filter-btn.btn-primary');
+            if (activeBtn) {
+                activeFilter = activeBtn.getAttribute('data-user');
+            }
+            this.loadRecentQuotations(activeFilter);
+            this.updateDashboardStats();
+        } catch (e) {
+            console.error('Error deleting quotation', e);
+            alert('Hubo un error al intentar eliminar la cotización.');
+        }
+    }
+    
+    loadCatalogPreview() {
+        const isAdmin = !!(window.authManager && window.authManager.currentUser && window.authManager.currentUser.role === 'admin');
+
+        if (window.catalogManager) {
+            window.catalogManager.isAdmin = isAdmin;
+            window.catalogManager.showAdminControls();
+            window.catalogManager.renderCurrentTab();
+        }
+
+        // El rol se conoce recién al autenticar, así que el editor de módulos
+        // se refresca acá y no al construirse.
+        if (window.moduleManager) {
+            window.moduleManager.isAdmin = isAdmin;
+            window.moduleManager.applyAdminVisibility();
+            window.moduleManager.populateItemSelect();
+        }
+    }
+}
+
+// Start app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.app = new App();
+});

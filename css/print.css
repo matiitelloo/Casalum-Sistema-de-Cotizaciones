@@ -1,0 +1,115 @@
+/* Print and PDF Invoice Styles */
+#invoice-template {
+    background: #fff;
+    color: #333;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 20px;
+}
+
+.invoice-logo img {
+    max-width: 250px;
+}
+
+.invoice-company-details {
+    text-align: right;
+}
+
+.invoice-company-details h2 {
+    color: var(--primary);
+    margin-bottom: 5px;
+    font-size: 20px;
+}
+
+.invoice-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.invoice-client h3, .invoice-details h3 {
+    color: var(--primary);
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+.invoice-table-wrapper {
+    margin-bottom: 30px;
+}
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.invoice-table th {
+    background-color: var(--primary);
+    color: white;
+    padding: 10px;
+    text-align: left;
+    font-size: 12px;
+}
+
+.invoice-table td {
+    padding: 10px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.invoice-totals {
+    width: 300px;
+    margin-left: auto;
+    background: #f9fafb;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.invoice-totals-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.invoice-totals-row.grand-total {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--primary);
+    border-top: 2px solid #e5e7eb;
+    padding-top: 8px;
+    margin-top: 8px;
+}
+
+.invoice-footer {
+    margin-top: 50px;
+    text-align: center;
+    font-size: 10px;
+    color: #666;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 20px;
+}
+
+.signature-box {
+    margin-top: 60px;
+    display: flex;
+    justify-content: space-around;
+}
+
+.signature-line {
+    width: 200px;
+    border-top: 1px solid #333;
+    text-align: center;
+    padding-top: 5px;
+}

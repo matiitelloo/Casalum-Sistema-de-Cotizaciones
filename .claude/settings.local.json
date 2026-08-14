@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls -la \"C:/Users/SISTEMAS/Desktop/Matias Tello/\" | head -50)"
+    ]
+  }
+}

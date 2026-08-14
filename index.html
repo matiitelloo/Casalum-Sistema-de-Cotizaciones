@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASALUM - Sistema de Cotizaciones</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/print.css">
+    <style>
+        /* Extra styles for tables and stepper */
+        .table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+        .table th { background-color: #f9fafb; font-weight: 600; font-size: 0.875rem; color: var(--text-muted); }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .totals-box { background: #f9fafb; padding: 1.5rem; border-radius: var(--radius); margin-top: 2rem; border: 1px solid var(--border); }
+        .totals-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 1rem; }
+        .totals-row.grand-total { font-size: 1.25rem; font-weight: 700; color: var(--primary); border-top: 2px solid var(--border); padding-top: 0.5rem; margin-top: 0.5rem; }
+
+        /* Catalog edit inputs */
+        .catalog-edit-input, .catalog-glass-input, .catalog-acc-input {
+            border: 1px solid #ddd; border-radius: 4px; padding: 4px 6px; font-size: 0.82rem;
+            font-family: inherit; background: #fafbff; transition: border-color 0.2s;
+        }
+        .catalog-edit-input:focus, .catalog-glass-input:focus, .catalog-acc-input:focus {
+            border-color: var(--primary); outline: none; background: white; box-shadow: 0 0 0 2px rgba(43,94,167,0.12);
+        }
+        .btn-info { background-color: #3b82f6; color: white; }
+        @keyframes pulse-save { 0%,100% { box-shadow: 0 0 0 0 rgba(43,94,167,0.4); } 50% { box-shadow: 0 0 0 8px rgba(43,94,167,0); } }
+        .btn-pulse { animation: pulse-save 1.5s infinite; }
+
+        /* Product Gallery */
+        .product-gallery {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+        }
+        .gallery-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.4rem;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .gallery-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+            border-color: var(--primary-light);
+        }
+        .gallery-card img {
+            width: 100%;
+            height: 90px;
+            object-fit: contain;
+            margin-bottom: 0.4rem;
+        }
+        .card-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            line-height: 1.1;
+        }
+
+        /* Lightbox */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            cursor: zoom-out;
+            animation: fadeIn 0.2s ease;
+        }
+        .lightbox-overlay.active { display: flex; }
+        .lightbox-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: default;
+            max-width: 90%;
+        }
+        .lightbox-title {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .lightbox-close {
+            position: fixed;
+            top: 1.25rem;
+            right: 1.5rem;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+            z-index: 10000;
+        }
+        .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+        .lightbox-overlay img {
+            max-width: 85%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 10px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+            animation: zoomIn 0.25s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <!-- PANTALLA DE CARGA: se muestra mientras Firebase restaura la sesión guardada.
+         Sin esto el login alcanza a dibujarse en cada recarga aunque la sesión siga activa. -->
+    <div id="auth-loading" style="display: flex; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('assets/banner.jpg') no-repeat center center/cover;">
+        <div style="background: white; padding: 2.5rem 2rem; border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center;">
+            <img src="assets/logo.png" alt="CASALUM" style="width: 200px; margin-bottom: 1.5rem;">
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin: 0;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Cargando su sesión...
+            </p>
+        </div>
+    </div>
+
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-view" style="display: none; height: 100vh; width: 100vw; align-items: center; justify-content: center; background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('assets/banner.jpg') no-repeat center center/cover;">
+        <div style="background: white; padding: 2rem; border-radius: var(--radius); box-shadow: var(--shadow); width: 100%; max-width: 400px; text-align: center;">
+            <img src="assets/logo.png" alt="CASALUM" style="width: 200px; margin-bottom: 1.5rem;">
+            <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem;">Sistema de Cotizaciones</p>
+            <form id="login-form">
+                <div class="form-group" style="text-align: left;">
+                    <label>Usuario</label>
+                    <input type="text" id="login-user" name="username" autocomplete="username" class="form-control" placeholder="Ingrese su usuario">
+                </div>
+                <div class="form-group" style="text-align: left; position: relative;">
+                    <label>Contraseña</label>
+                    <input type="password" id="login-pass" name="password" autocomplete="current-password" class="form-control" placeholder="Ingrese su contraseña" style="padding-right: 2.5rem;">
+                    <button type="button" id="btn-toggle-pass" style="position: absolute; right: 10px; top: 32px; background: none; border: none; cursor: pointer; color: var(--text-muted); font-size: 1.1rem; padding: 0.25rem;">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+                <div style="text-align: left; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; margin-bottom: 1.5rem;">
+                    <input type="checkbox" id="login-remember"> 
+                    <label for="login-remember" style="margin: 0; font-weight: 500; font-size: 0.875rem; color: var(--text-secondary); cursor: pointer;">Mantener iniciada mi sesión</label>
+                </div>
+                <div id="login-error" style="color: var(--danger); font-size: 0.875rem; margin-bottom: 1rem; display: none;"></div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">Ingresar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL DE LA APP -->
+    <div class="app-container" id="app-view" style="display: none;">
+        <!-- Sidebar Overlay -->
+        <div id="sidebar-overlay" class="sidebar-overlay" onclick="document.getElementById('sidebar').classList.remove('active'); this.classList.remove('active');"></div>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="assets/logo.png" alt="CASALUM" style="width: 140px; background: white; border-radius: 8px; padding: 6px;">
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-home"></i> Inicio</button>
+
+                <button class="nav-item" type="button" id="nav-group-cotizacion" aria-expanded="false">
+                    <i class="fa-solid fa-file-invoice"></i> Cotización
+                    <i class="fa-solid fa-chevron-down" id="nav-group-cotizacion-arrow" style="margin-left: auto; font-size: 0.7rem; transition: transform var(--duration) var(--ease-smooth);"></i>
+                </button>
+                <div id="nav-submenu-cotizacion" style="display: none; flex-direction: column; gap: 0.25rem; padding-left: 1.25rem;">
+                    <button class="nav-item" data-page="new-quotation"><i class="fa-solid fa-plus-circle"></i> Nueva Cotización</button>
+                    <button class="nav-item" data-page="history"><i class="fa-solid fa-magnifying-glass"></i> Buscar Cotización</button>
+                    <button class="nav-item" data-page="glass-quote"><i class="fa-solid fa-glass-water"></i> Cotizar Vidrio</button>
+                </div>
+
+                <button class="nav-item" data-page="clients"><i class="fa-solid fa-address-book"></i> Clientes</button>
+                <button class="nav-item" data-page="new-quotation" id="nav-quick-quote"><i class="fa-solid fa-bolt"></i> Cotización Rápida</button>
+                <button class="nav-item" data-page="catalog"><i class="fa-solid fa-book-open"></i> Catálogo</button>
+                <button class="nav-item" data-page="settings" id="nav-settings" style="display: none;"><i class="fa-solid fa-gear"></i> Ajustes de la Empresa</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header for Welcome Message -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; padding: 1rem 2rem; background: white; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span style="font-weight: 500;">Bienvenido, <span id="current-user-name" style="color: var(--primary);"></span></span>
+                    <button id="btn-logout" class="btn btn-sm btn-outline" style="border-color: var(--danger); color: var(--danger);">Salir</button>
+                </div>
+            </div>
+
+            <header class="top-header">
+                <div class="header-title" style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="mobile-menu-btn" class="btn btn-outline" style="padding: 0.5rem; border: none; font-size: 1.25rem; display: none;" onclick="document.getElementById('sidebar').classList.add('active'); document.getElementById('sidebar-overlay').classList.add('active');">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <h1 id="page-title">Panel de Control</h1>
+                </div>
+                <div class="header-user" style="position: relative; cursor: pointer; padding: 0.5rem; border-radius: var(--radius); transition: background var(--duration);" id="profile-dropdown-trigger" onmouseover="this.style.background='var(--bg-main)'" onmouseout="this.style.background='transparent'">
+                    <span class="user-avatar"><i class="fa-solid fa-user"></i></span>
+                    <span class="user-name" id="header-user-name">Administrador</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: var(--text-muted); margin-left: 0.25rem;"></i>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="profile-dropdown" style="display: none; position: absolute; top: calc(100% + 5px); right: 0; background: white; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); min-width: 200px; z-index: 100; flex-direction: column; overflow: hidden; padding: 0.25rem 0;">
+                        <button type="button" id="btn-profile-dropdown" class="dropdown-item" style="background: none; border: none; text-align: left; padding: 0.75rem 1.25rem; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; font-family: inherit; font-size: 0.875rem; color: var(--text-main); transition: background var(--duration);">
+                            <i class="fa-solid fa-id-badge" style="width: 16px; color: var(--primary-light);"></i> Perfil
+                        </button>
+                        <button type="button" id="btn-change-profile" class="dropdown-item" style="background: none; border: none; text-align: left; padding: 0.75rem 1.25rem; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; font-family: inherit; font-size: 0.875rem; color: var(--text-main); transition: background var(--duration);">
+                            <i class="fa-solid fa-users" style="width: 16px; color: var(--primary-light);"></i> Cambiar de perfil
+                        </button>
+                        <div style="height: 1px; background: var(--border-light); margin: 0.25rem 0;"></div>
+                        <button type="button" id="btn-logout-dropdown" class="dropdown-item" style="background: none; border: none; text-align: left; padding: 0.75rem 1.25rem; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; font-family: inherit; font-size: 0.875rem; color: var(--danger); transition: background var(--duration);">
+                            <i class="fa-solid fa-right-from-bracket" style="width: 16px;"></i> Cerrar sesión
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <div class="page-container">
+                <!-- Page: Dashboard -->
+                <div id="page-dashboard" class="page active">
+                    <div class="dashboard-cards">
+                        <div class="card stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                            <div class="stat-info">
+                                <h3>Cotizaciones</h3>
+                                <p class="stat-value" id="stat-quotations-count">0</p>
+                            </div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                            <div class="stat-info">
+                                <h3>Clientes Registrados</h3>
+                                <p class="stat-value" id="stat-clients-count">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                            <h3 style="color: var(--primary); margin: 0;">Sistemas y Modelos <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-secondary); margin-left: 10px;">Catálogo Visual</span></h3>
+                        </div>
+                        <div class="product-gallery">
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785514348622.png" alt="Ventana Fija">
+                                <div class="card-title">1. Ventana Fija</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785514348519.png" alt="Ventana Corrediza">
+                                <div class="card-title">2. Ventana Corrediza</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513139059.jpg" alt="Ventana Proyectable">
+                                <div class="card-title">3. Ventana Proyectable</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513965545.png" alt="Ventana en Tubo 5x4">
+                                <div class="card-title">4. Ventana en Tubo (5x4)</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785514348538.jpg" alt="Ventana en Tubo 4x4">
+                                <div class="card-title">4. Ventana en Tubo (4x4)</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785514348548.jpg" alt="Ventana en Tubo 7x4">
+                                <div class="card-title">4. Ventana en Tubo (7x4)</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513485072.jpg" alt="Puerta Batiente 7x4">
+                                <div class="card-title">5. Puertas Batientes (7x4)</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513485346.png" alt="Puerta Batiente 5x4">
+                                <div class="card-title">5. Puertas Batientes (5x4)</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513485162.png" alt="Puerta Corrediza 2000">
+                                <div class="card-title">6. Puerta Corrediza 2000</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513485220.png" alt="Puerta Corrediza Europea Apilable">
+                                <div class="card-title">7. Puerta Corrediza Europea</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513485076.png" alt="Puerta T45">
+                                <div class="card-title">8. Puerta T45</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513139065.png" alt="Mampara Aluminio">
+                                <div class="card-title">9. Mampara (Aluminio)</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513139116.png" alt="Mampara">
+                                <div class="card-title">9.1. Mamparas</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513139023.png" alt="Cabina Corrediza">
+                                <div class="card-title">10. Cabina Corrediza</div>
+                            </div>
+                            <div class="gallery-card" onclick="openLightbox(this)">
+                                <img src="img/products/media__1785513139184.png" alt="Cabina Batiente">
+                                <div class="card-title">10.1. Cabina Batiente</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: History -->
+                <div id="page-history" class="page">
+                    <div class="card">
+                        <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h2>Historial de Cotizaciones</h2>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                                <div class="search-box" style="flex: 1; min-width: 220px;">
+                                    <i class="fa-solid fa-search"></i>
+                                    <input type="text" id="history-search" placeholder="Buscar por cliente, cédula o código...">
+                                </div>
+                                <button class="btn btn-sm btn-outline" id="btn-toggle-filters"><i class="fa-solid fa-filter"></i> Filtros</button>
+                            </div>
+                            <div id="history-filters-panel" class="grid-form" style="display: none; background: var(--bg-alt); padding: 1rem; border-radius: var(--radius);">
+                                <div class="form-group">
+                                    <label>Usuario</label>
+                                    <select id="filter-user" class="form-control">
+                                        <option value="ALL">Todos</option>
+                                        <option value="JPERALTA">José Mauricio</option>
+                                        <option value="MTELLO">Mati Tello</option>
+                                        <option value="TCESIN">Tobias Cesin</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Estado</label>
+                                    <select id="filter-status" class="form-control">
+                                        <option value="ALL">Todas</option>
+                                        <option value="active">Activas</option>
+                                        <option value="archived">Archivadas</option>
+                                        <option value="voided">Anuladas</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo de Versión</label>
+                                    <select id="filter-version-type" class="form-control">
+                                        <option value="ALL">Todas</option>
+                                        <option value="A">A</option>
+                                        <option value="B">B</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Fecha desde</label>
+                                    <input type="date" id="filter-date-from" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Fecha hasta</label>
+                                    <input type="date" id="filter-date-to" class="form-control">
+                                </div>
+                                <div class="flex-end mt-4" style="grid-column: span 2; gap: 0.75rem;">
+                                    <button class="btn btn-outline" id="btn-clear-filters">Limpiar Filtros</button>
+                                    <button class="btn btn-primary" id="btn-apply-filters">Aplicar Filtros</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body" id="dashboard-quotations">
+                            <p class="text-muted text-center py-4">Cargando cotizaciones...</p>
+                        </div>
+                        <div class="card-body" style="text-align: center; padding-top: 0;" id="history-load-more-container">
+                            <button class="btn btn-outline" id="btn-history-load-more" style="display: none;">Cargar más</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: New Quotation -->
+                <div id="page-new-quotation" class="page">
+                    <!-- Aviso cuando se recupera una cotización que quedó a medias -->
+                    <div id="draft-restored-banner" style="display: none; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; background: #fff8e6; border: 1px solid #f0d18a; color: #8a5a00; border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.85rem;">
+                        <span>
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                            Se recuperó la cotización que tenía en curso (<span id="draft-restored-when"></span>). Puede seguir donde la dejó.
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline" id="btn-discard-draft" style="border-color: #b45309; color: #b45309;">
+                            <i class="fa-solid fa-trash"></i> Descartar y empezar de cero
+                        </button>
+                    </div>
+
+                    <div class="stepper">
+                        <div class="step active">1. Cliente</div>
+                        <div class="step">2. Detalles</div>
+                        <div class="step">3. Productos</div>
+                        <div class="step">4. Resumen</div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            
+                            <!-- STEP 1: CLIENT -->
+                            <div id="step-1-content" class="step-content">
+                                <h3 class="mb-3">Información del Cliente</h3>
+                                <div class="mb-3" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                                    <div class="search-box" style="flex: 1; min-width: 200px;">
+                                        <i class="fa-solid fa-search"></i>
+                                        <input type="text" id="search-client" placeholder="Buscar por cédula o nombre...">
+                                    </div>
+                                    <button type="button" class="btn btn-outline" id="btn-use-generic-client"><i class="fa-solid fa-bolt"></i> Consumidor Final</button>
+                                </div>
+
+                                <form id="client-form" class="grid-form">
+                                    <div class="form-group">
+                                        <label>Cédula/RUC *</label>
+                                        <input type="text" id="client-id" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Nombre Completo *</label>
+                                        <input type="text" id="client-name" class="form-control" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Teléfono</label>
+                                        <input type="text" id="client-phone" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Dirección</label>
+                                        <input type="text" id="client-address" class="form-control">
+                                    </div>
+                                </form>
+                                <div class="flex-end mt-4">
+                                    <button class="btn btn-primary" id="btn-next-step-1">Siguiente <i class="fa-solid fa-arrow-right"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- STEP 2: DETAILS -->
+                            <div id="step-2-content" class="step-content" style="display: none;">
+                                <h3 class="mb-3">Detalles</h3>
+                                <div class="grid-form">
+                                    <div class="form-group" style="grid-column: span 2;">
+                                        <label>Notas Privadas</label>
+                                        <input type="text" id="q-notes" class="form-control" placeholder="Ej: Obra en el centro, entrega en 15 días">
+                                    </div>
+                                </div>
+                                <div class="flex-end mt-4" style="gap: 1rem;">
+                                    <button class="btn btn-outline" id="btn-prev-step-2"><i class="fa-solid fa-arrow-left"></i> Atrás</button>
+                                    <button class="btn btn-primary" id="btn-next-step-2">Siguiente <i class="fa-solid fa-arrow-right"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- STEP 3: PRODUCTS -->
+                            <div id="step-3-content" class="step-content" style="display: none;">
+                                <h3 class="mb-3">Agregar Productos</h3>
+                                
+                                <!-- Product Configurator Form -->
+                                <div style="background: var(--bg-main); padding: 1.5rem; border-radius: var(--radius); border: 1px solid var(--border);">
+
+                                    <!-- Sub-tabs: Productos / Mano de Obra y Extras -->
+                                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border);">
+                                        <button type="button" class="product-form-tab active" data-tab="productos" style="padding: 0.6rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--primary); border-bottom: 3px solid var(--primary); transition: all 0.2s;">
+                                            <i class="fa-solid fa-window-frame"></i> Productos
+                                        </button>
+                                        <button type="button" class="product-form-tab" data-tab="labor" style="padding: 0.6rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s;">
+                                            <i class="fa-solid fa-screwdriver-wrench"></i> Mano de Obra y Extras
+                                        </button>
+                                    </div>
+
+                                    <!-- Tab: Productos -->
+                                    <div id="product-tab-productos" class="product-tab-content grid-form">
+                                        <!-- Aluminio -->
+                                        <div style="grid-column: span 2; border-bottom: 1px solid #ccc; margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
+                                            <h4 style="margin: 0; color: var(--primary);">Configuración de Aluminio</h4>
+                                        </div>
+                                        <div class="form-group" style="grid-column: span 2;">
+                                            <label>Sistema / Categoría *</label>
+                                            <select id="p-system" class="form-control">
+                                                <option value="">Seleccione el sistema...</option>
+                                            </select>
+                                            <small id="p-module-info" style="display: block; margin-top: 0.4rem; font-size: 0.78rem; color: var(--text-muted);">
+                                                Elija el sistema: si tiene un módulo preestablecido se completa todo automáticamente.
+                                            </small>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Marca</label>
+                                            <select id="p-brand" class="form-control"></select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Color de Perfil</label>
+                                            <select id="p-color" class="form-control">
+                                                <option value="">Seleccione marca primero...</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Ancho Total (m)</label>
+                                            <input type="number" step="0.01" id="p-width" class="form-control" placeholder="Ej: 1.20">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Alto Total (m)</label>
+                                            <input type="number" step="0.01" id="p-height" class="form-control" placeholder="Ej: 1.50">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Módulos</label>
+                                            <input type="number" step="1" min="0" id="p-modules" class="form-control" placeholder="Ej: 3">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Hojas</label>
+                                            <input type="number" step="1" min="0" id="p-leaves" class="form-control" placeholder="Se autocompleta con Módulos">
+                                        </div>
+                                        <div class="form-group" id="p-mullon-group" style="display: none; grid-column: span 2; align-items: center;">
+                                            <label style="display:flex; align-items:center; gap:0.5rem; margin:0; font-weight:600; cursor:pointer;">
+                                                <input type="checkbox" id="p-mullon" style="width:18px; height:18px;">
+                                                Incluir mullón (poco común — solo si el cliente lo pide explícitamente)
+                                            </label>
+                                        </div>
+                                        <!-- Vidrio -->
+                                        <div style="grid-column: span 2; border-bottom: 1px solid #ccc; margin-bottom: 0.5rem; padding-bottom: 0.5rem; margin-top: 1rem;">
+                                            <h4 style="margin: 0; color: var(--primary);">Configuración de Vidrio</h4>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Tipo de Vidrio *</label>
+                                            <select id="p-glass" class="form-control"></select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Precio m²</label>
+                                            <input type="text" id="p-glass-price" class="form-control" disabled style="background:#e9ecef; font-weight:bold;">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Área de Vidrio (m²)</label>
+                                            <input type="text" id="p-glass-area" class="form-control" disabled style="background:#e9ecef; font-weight:bold;" placeholder="Automatico">
+                                        </div>
+                                    </div>
+
+                                    <!-- Tab: Mano de Obra y Extras -->
+                                    <div id="product-tab-labor" class="product-tab-content grid-form" style="display: none;">
+                                        <!-- Accesorios (colapsado por defecto para no ocupar espacio innecesario) -->
+                                        <details style="grid-column: span 2; margin-bottom: 0.5rem;">
+                                            <summary style="cursor: pointer; font-weight: 600; color: var(--primary); padding-bottom: 0.5rem; border-bottom: 1px solid #ccc;">
+                                                <i class="fa-solid fa-screwdriver-wrench"></i> Accesorios Adicionales
+                                            </summary>
+                                            <div id="accessories-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding-top: 1rem;">
+                                                <!-- Accesorios inyectados via JS -->
+                                            </div>
+                                        </details>
+
+                                        <!-- Mano de Obra -->
+                                        <div style="grid-column: span 2; border-bottom: 1px solid #ccc; margin-bottom: 0.5rem; padding-bottom: 0.5rem; margin-top: 1rem;">
+                                            <h4 style="margin: 0; color: var(--primary);">Mano de Obra</h4>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Nº de Trabajadores</label>
+                                            <input type="number" id="p-labor-workers" class="form-control" value="0" min="0">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Horas por Trabajador</label>
+                                            <input type="number" step="0.5" id="p-labor-hours" class="form-control" value="0" min="0">
+                                        </div>
+                                        <div class="form-group" style="display:none;">
+                                            <label>Costo por Hora ($)</label>
+                                            <input type="number" id="p-labor-cost" class="form-control" value="5.00" disabled>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Transporte ($)</label>
+                                            <input type="number" step="1" id="p-transport" class="form-control" value="0" min="0">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Viáticos ($)</label>
+                                            <input type="number" step="1" id="p-viaticos" class="form-control" value="0" min="0">
+                                        </div>
+                                    </div>
+
+                                    <!-- Final (compartido por las dos pestañas) -->
+                                    <div class="grid-form" style="margin-top: 1rem; border-top: 1px solid #ccc; padding-top: 1rem;">
+                                        <div class="form-group">
+                                            <label>Cantidad de Elementos</label>
+                                            <input type="number" id="p-qty" class="form-control" value="1" min="1">
+                                        </div>
+                                        <div class="form-group" style="display: flex; align-items: flex-end;">
+                                            <button type="button" class="btn btn-outline" id="btn-preview-window" style="width: 100%; justify-content: center; border-color: var(--info); color: var(--info);">
+                                                <i class="fa-solid fa-calculator"></i> Ver Desglose
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Desglose Preview -->
+                                    <div id="preview-breakdown-container" style="display: none; margin-top: 1.5rem; background: white; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--border);">
+                                        <h4 style="margin-top: 0; color: var(--primary); margin-bottom: 1rem;">Desglose de Costos (Costo Directo)</h4>
+                                        <table class="table" style="font-size: 0.85rem; margin-bottom: 1rem;">
+                                            <thead>
+                                                <tr style="background-color: var(--primary-light); color: white;">
+                                                    <th>CÓDIGO</th>
+                                                    <th>DETALLE</th>
+                                                    <th>COSTO</th>
+                                                    <th>MEDIDAS</th>
+                                                    <th>PRECIO</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="preview-breakdown-body">
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="4" style="text-align: right; font-weight: bold;">SUBTOTAL (Costo Directo):</td>
+                                                    <td id="preview-breakdown-total" style="font-weight: bold; color: var(--primary);">$0.00</td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                        <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                                            <button class="btn btn-primary" id="btn-add-item">
+                                                <i class="fa-solid fa-plus"></i> Agregar a Cotización
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                <!-- Shopping Cart / Current List -->
+                                <h4 class="mt-4 mb-3">Elementos Cotizados</h4>
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cant</th>
+                                            <th>Descripción</th>
+                                            <th>Medidas</th>
+                                            <th>Total</th>
+                                            <th><i class="fa-solid fa-cog"></i></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cart-body">
+                                        <!-- Items injected via JS -->
+                                    </tbody>
+                                </table>
+
+                                <div class="flex-end mt-4" style="gap: 1rem;">
+                                    <button class="btn btn-outline" id="btn-prev-step-3"><i class="fa-solid fa-arrow-left"></i> Atrás</button>
+                                    <button class="btn btn-primary" id="btn-next-step-3">Ir al Resumen <i class="fa-solid fa-arrow-right"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- STEP 4: SUMMARY -->
+                            <div id="step-4-content" class="step-content" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h2 style="color: var(--primary);">CASALUM</h2>
+                                        <p>Cotización de Productos de Aluminio</p>
+                                        <p id="summary-revision-label" style="color: var(--text-muted); font-size: 0.85rem;"></p>
+                                    </div>
+                                    <div style="text-align: right;" id="summary-client">
+                                        <!-- Client info injected via JS -->
+                                    </div>
+                                </div>
+
+                                <table class="table mt-4">
+                                    <thead>
+                                        <tr>
+                                            <th>Cant</th>
+                                            <th>Descripción</th>
+                                            <th>Medidas</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="summary-table">
+                                        <!-- Items injected via JS -->
+                                    </tbody>
+                                </table>
+
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <div class="totals-box" style="min-width: 300px;">
+                                        <div class="totals-row">
+                                            <span>Subtotal (Costo Directo):</span>
+                                            <span id="summary-subtotal">$0.00</span>
+                                        </div>
+                                        <div id="summary-margins-admin-only" style="display: none;">
+                                            <div class="totals-row">
+                                                <span id="summary-gastos-label">Gastos Generales:</span>
+                                                <span id="summary-gastos">$0.00</span>
+                                            </div>
+                                            <div class="totals-row">
+                                                <span id="summary-utilidad-label">Utilidad:</span>
+                                                <span id="summary-utilidad">$0.00</span>
+                                            </div>
+                                        </div>
+                                        <div class="totals-row">
+                                            <span>IVA (0%):</span>
+                                            <span id="summary-iva">$0.00</span>
+                                        </div>
+                                        <div id="summary-discount-section">
+                                            <div class="totals-row" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
+                                                <span>Subtotal sin Descuento:</span>
+                                                <span id="summary-subtotal-final">$0.00</span>
+                                            </div>
+                                            <div class="totals-row">
+                                                <span>Descuento (%):</span>
+                                                <input type="number" id="summary-descuento-pct" value="0" min="0" max="100" style="width: 70px; text-align: right; margin-left: auto; padding: 2px 5px; border: 1px solid #ccc; border-radius: 4px;">
+                                            </div>
+                                            <div id="summary-descuento-error" style="display: none; color: var(--danger); font-size: 0.8rem; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem;">El descuento debe estar entre 0% y 100%.</div>
+                                            <div class="totals-row">
+                                                <span style="color: var(--danger);">Valor Descuento:</span>
+                                                <span id="summary-descuento-valor" style="color: var(--danger);">-$0.00</span>
+                                            </div>
+                                        </div>
+                                        <div class="totals-row grand-total">
+                                            <span>TOTAL A PAGAR:</span>
+                                            <span id="summary-total">$0.00</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex-end mt-4" style="gap: 1rem;">
+                                    <button class="btn btn-outline" id="btn-save-as" style="display: none;"><i class="fa-solid fa-code-branch"></i> Guardar como Nueva Versión</button>
+                                    <button class="btn btn-primary" id="btn-print"><i class="fa-solid fa-print"></i> Imprimir PDF</button>
+                                    <button class="btn btn-primary" style="background-color: var(--success);" id="btn-save"><i class="fa-solid fa-save"></i> Guardar Cotización</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Page: Clients -->
+                <div id="page-clients" class="page">
+                    <div class="card">
+                        <div class="card-header" style="flex-direction: column; align-items: stretch; gap: 1rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h2>Directorio de Clientes</h2>
+                            </div>
+                            <div class="search-box">
+                                <i class="fa-solid fa-search"></i>
+                                <input type="text" id="search-directory-client" placeholder="Buscar cliente por nombre o cédula...">
+                            </div>
+                        </div>
+                        <div class="card-body" id="clients-list">
+                            <p class="text-muted">Cargando clientes...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal: Edit Client -->
+                <div id="modal-edit-client" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+                    <div style="background:white; border-radius:var(--radius-lg); padding:2rem; max-width:500px; width:90%; box-shadow:var(--shadow-lg);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                            <h2 style="margin:0; color:var(--primary);">Editar Cliente</h2>
+                            <button type="button" onclick="window.clientManager.closeEditModal()" style="background:none; border:none; cursor:pointer; font-size:1.25rem; color:var(--text-muted); padding:0.25rem;"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <form id="edit-client-form" class="grid-form" style="grid-template-columns:1fr;">
+                            <input type="hidden" id="edit-client-original-id">
+                            <div class="form-group">
+                                <label>Cédula/RUC</label>
+                                <input type="text" id="edit-client-id" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Nombre Completo</label>
+                                <input type="text" id="edit-client-name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Teléfono</label>
+                                <input type="text" id="edit-client-phone" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>Dirección</label>
+                                <input type="text" id="edit-client-address" class="form-control">
+                            </div>
+                            <div id="edit-client-msg" style="font-size:0.875rem; display:none;"></div>
+                            <div class="flex-end mt-4" style="gap:0.75rem;">
+                                <button type="button" class="btn btn-outline" onclick="window.clientManager.closeEditModal()">Cancelar</button>
+                                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Guardar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Modal: Guardar como Nueva Versión -->
+                <div id="modal-save-as" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center; backdrop-filter:blur(4px);">
+                    <div style="background:white; border-radius:var(--radius-lg); padding:2rem; max-width:480px; width:90%; box-shadow:var(--shadow-lg);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h2 style="margin:0; color:var(--primary);">Guardar como Nueva Versión</h2>
+                            <button type="button" onclick="window.quotationManager.closeSaveAsModal()" style="background:none; border:none; cursor:pointer; font-size:1.25rem; color:var(--text-muted); padding:0.25rem;"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <p class="text-muted" style="font-size:0.875rem; margin-top:0;">La cotización original <strong id="save-as-base-code"></strong> no se modifica — se crea un documento nuevo.</p>
+                        <div class="form-group">
+                            <label>Tipo de Versión</label>
+                            <select id="save-as-version-type" class="form-control">
+                                <option value="A">A — Cambios menores (color, vidrio, acabado)</option>
+                                <option value="B">B — Cambios sustanciales (productos distintos)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Código de Versión Sugerido</label>
+                            <input type="text" id="save-as-suggested" class="form-control" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:flex; align-items:center; gap:0.5rem; font-weight:500; cursor:pointer;">
+                                <input type="checkbox" id="save-as-custom-toggle"> Escribir versión manualmente
+                            </label>
+                            <input type="text" id="save-as-custom-value" class="form-control" placeholder="Ej: A.5" style="display:none; margin-top:0.5rem;">
+                        </div>
+                        <div id="save-as-msg" style="font-size:0.875rem; display:none; margin-top:0.5rem;"></div>
+                        <div class="flex-end mt-4" style="gap:0.75rem;">
+                            <button type="button" class="btn btn-outline" onclick="window.quotationManager.closeSaveAsModal()">Cancelar</button>
+                            <button type="button" class="btn btn-primary" id="btn-confirm-save-as"><i class="fa-solid fa-code-branch"></i> Guardar Versión</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: Catálogo -->
+                <div id="page-catalog" class="page">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                        <h2 style="margin: 0;">Catálogo de Productos</h2>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary btn-sm" id="btn-catalog-view-modules">
+                                <i class="fa-solid fa-cubes"></i> Módulos
+                            </button>
+                            <button class="btn btn-outline btn-sm" id="btn-catalog-view-db">
+                                <i class="fa-solid fa-database"></i> Modificar base de datos
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ==================== VISTA: MÓDULOS PREESTABLECIDOS ==================== -->
+                    <div id="catalog-modules-view">
+                        <div style="background: var(--bg-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.25rem;">
+                            <p style="margin: 0 0 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+                                Elija un ítem del catálogo, el proveedor y marque los perfiles, accesorios y mano de obra que hacen falta para fabricarlo.
+                                Al guardarlo queda <strong>preestablecido</strong>: al cotizar solo se elige el módulo e ingresan las medidas.
+                            </p>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                                <select id="module-group-select" class="form-control" style="max-width: 190px;"></select>
+                                <select id="module-item-select" class="form-control" style="min-width: 320px; flex: 1;"></select>
+                                <span id="module-progress" style="font-size: 0.78rem; color: var(--text-muted);"></span>
+                            </div>
+                        </div>
+
+                        <p id="module-readonly-hint" class="text-muted" style="display: none; font-size: 0.85rem;">
+                            <i class="fa-solid fa-lock"></i> Solo los administradores pueden crear o modificar módulos. Puede consultarlos en modo lectura.
+                        </p>
+
+                        <div id="module-empty-state" style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-cubes" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                            <p style="margin-top: 1rem;">Seleccione un ítem del catálogo para crear o revisar su módulo preestablecido.</p>
+                        </div>
+
+                        <div id="module-editor" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+                                <h3 id="module-item-title" style="margin: 0; color: var(--primary); font-size: 1.05rem;"></h3>
+                                <span id="module-status-badge" style="font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #f1f1f1; color: #666;"></span>
+                            </div>
+
+                            <!-- Cabecera: proveedor / categoría. El color y el vidrio se eligen al cotizar. -->
+                            <div class="grid-form" style="grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1.25rem;">
+                                <div class="form-group">
+                                    <label>Proveedor</label>
+                                    <select id="module-brand-select" class="form-control"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Categoría / Sistema</label>
+                                    <select id="module-category-select" class="form-control"></select>
+                                </div>
+                            </div>
+
+                            <!-- Apilados: base de datos del proveedor, luego accesorios, luego mano de obra -->
+                            <div id="module-columns" style="display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start;">
+
+                                <!-- Columna 1: base de datos del proveedor -->
+                                <div class="card" style="margin: 0;">
+                                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        <h4 style="margin: 0; font-size: 0.92rem;"><i class="fa-solid fa-window-frame"></i> Base de Datos del Proveedor</h4>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <input type="text" id="module-profile-filter" class="form-control" placeholder="Buscar código o descripción..." style="max-width: 210px; font-size: 0.8rem; padding: 4px 8px;">
+                                            <label style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer;">
+                                                <input type="checkbox" id="module-only-selected"> Solo usados
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="card-body" style="padding: 0;">
+                                        <div id="module-profiles-table" style="overflow: auto; max-height: 560px;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Columna 2: accesorios -->
+                                <div class="card" style="margin: 0;">
+                                    <div class="card-header">
+                                        <h4 style="margin: 0; font-size: 0.92rem;"><i class="fa-solid fa-screwdriver-wrench"></i> Accesorios</h4>
+                                    </div>
+                                    <div class="card-body" style="padding: 0.5rem 0.9rem;">
+                                        <p style="font-size: 0.72rem; color: var(--text-muted); margin: 0 0 0.5rem;">Cantidad por metro cuadrado de ventana fabricada. Deje en 0 lo que no se use.</p>
+                                        <div id="module-accessories-list" style="max-height: 420px; overflow-y: auto;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Columna 3: mano de obra -->
+                                <div class="card" style="margin: 0;">
+                                    <div class="card-header">
+                                        <h4 style="margin: 0; font-size: 0.92rem;"><i class="fa-solid fa-helmet-safety"></i> Mano de Obra</h4>
+                                    </div>
+                                    <div class="card-body" style="padding: 0.75rem 0.9rem;">
+                                        <div id="module-labor-grid">
+                                            <div class="form-group">
+                                                <label style="font-size: 0.78rem;">Nº de Trabajadores</label>
+                                                <input type="number" min="0" step="1" id="module-labor-workers" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label style="font-size: 0.78rem;">Horas por Trabajador</label>
+                                                <input type="number" min="0" step="0.5" id="module-labor-hours" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label style="font-size: 0.78rem;">Costo por Hora ($)</label>
+                                                <input type="number" min="0" step="0.25" id="module-labor-cost" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label style="font-size: 0.78rem;">Transporte ($)</label>
+                                                <input type="number" min="0" step="1" id="module-labor-transport" class="form-control">
+                                            </div>
+                                            <div class="form-group">
+                                                <label style="font-size: 0.78rem;">Viáticos ($)</label>
+                                                <input type="number" min="0" step="1" id="module-labor-viaticos" class="form-control">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pie: estimado + guardar -->
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-top: 1.25rem; padding-top: 1rem; border-top: 2px solid var(--border);">
+                                <div id="module-estimate" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+                                <div id="module-admin-actions" style="display: none; gap: 0.5rem; flex-wrap: wrap;">
+                                    <button class="btn btn-outline btn-sm" id="btn-module-copy">
+                                        <i class="fa-solid fa-copy"></i> Copiar de otro módulo
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" id="btn-module-delete" style="display: none; border-color: #ef4444; color: #ef4444;">
+                                        <i class="fa-solid fa-trash"></i> Eliminar módulo
+                                    </button>
+                                    <button class="btn btn-primary" id="btn-module-save">
+                                        <i class="fa-solid fa-floppy-disk"></i> Guardar Preestablecido
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ==================== VISTA: BASE DE DATOS ==================== -->
+                    <div id="catalog-db-view" style="display: none;">
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;">
+                        <div id="catalog-admin-actions" style="display: none;">
+                            <button class="btn btn-primary btn-sm" id="btn-catalog-save" style="display: none;">
+                                <i class="fa-solid fa-save"></i> Guardar Cambios
+                            </button>
+                            <button class="btn btn-outline btn-sm" id="btn-catalog-add-product" style="margin-left: 0.5rem;">
+                                <i class="fa-solid fa-plus"></i> Agregar Producto
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Catalog Tabs -->
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border);">
+                        <button class="catalog-tab active" data-tab="profiles" style="padding: 0.6rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s;">
+                            <i class="fa-solid fa-window-frame"></i> Perfiles de Aluminio
+                        </button>
+                        <button class="catalog-tab" data-tab="glass" style="padding: 0.6rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s;">
+                            <i class="fa-solid fa-glass-water"></i> Vidrios
+                        </button>
+                        <button class="catalog-tab" data-tab="accessories" style="padding: 0.6rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s;">
+                            <i class="fa-solid fa-screwdriver-wrench"></i> Accesorios
+                        </button>
+                    </div>
+
+                    <!-- Tab: Profiles -->
+                    <div id="catalog-tab-profiles" class="catalog-tab-content">
+                        <!-- Brand selector -->
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                            <select id="catalog-brand-select" class="form-control" style="max-width: 200px;">
+                            </select>
+                            <select id="catalog-category-select" class="form-control" style="max-width: 280px;">
+                                <option value="">Seleccione categoría...</option>
+                            </select>
+                        </div>
+                        <div id="catalog-profiles-table" style="overflow-x: auto;"></div>
+                    </div>
+
+                    <!-- Tab: Glass -->
+                    <div id="catalog-tab-glass" class="catalog-tab-content" style="display: none;">
+                        <!-- Sub-tabs -->
+                        <div style="display: flex; gap: 0; margin-bottom: 1rem; border-bottom: 2px solid var(--border);">
+                            <button class="glass-sub-tab active" data-glasstab="quotation" style="padding: 0.5rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--primary); border-bottom: 2px solid var(--primary); margin-bottom: -2px; transition: all 0.2s;">
+                                <i class="fa-solid fa-file-invoice"></i> Vidrio para Cotización
+                            </button>
+                            <button class="glass-sub-tab" data-glasstab="sale" style="padding: 0.5rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;">
+                                <i class="fa-solid fa-store"></i> Vidrio para la Venta
+                            </button>
+                        </div>
+                        <div id="catalog-glass-table" style="overflow-x: auto;"></div>
+                        <div id="catalog-glass-sale-table" style="overflow-x: auto; display: none;"></div>
+                    </div>
+
+                    <!-- Tab: Accessories -->
+                    <div id="catalog-tab-accessories" class="catalog-tab-content" style="display: none;">
+                        <div id="catalog-accessories-table" style="overflow-x: auto;"></div>
+                    </div>
+
+                    <!-- Add Product Modal -->
+                    <div id="modal-add-product" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+                        <div style="background: white; padding: 2rem; border-radius: var(--radius); max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                <h3 style="margin: 0; color: var(--primary);">Agregar Nuevo Producto</h3>
+                                <button class="btn btn-sm btn-outline" id="btn-close-add-modal" style="border: none; font-size: 1.2rem;"><i class="fa-solid fa-times"></i></button>
+                            </div>
+                            <div class="grid-form" id="add-product-form" style="grid-template-columns: 1fr 1fr;">
+                                <div class="form-group">
+                                    <label>Marca</label>
+                                    <select id="add-p-brand" class="form-control"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Categoría</label>
+                                    <select id="add-p-category" class="form-control"></select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Código</label>
+                                    <input type="text" id="add-p-code" class="form-control" placeholder="Ej: VER9091">
+                                </div>
+                                <div class="form-group">
+                                    <label>Descripción</label>
+                                    <input type="text" id="add-p-desc" class="form-control" placeholder="Ej: VERTICAL DE HOJA">
+                                </div>
+
+                                <div class="form-group"></div>
+                                <div style="grid-column: span 2;">
+                                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Precios por Color (USD)</label>
+                                    <div id="add-p-prices" class="grid-form" style="grid-template-columns: repeat(3, 1fr); gap: 0.5rem;"></div>
+                                </div>
+                                <div style="grid-column: span 2; display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem;">
+                                    <button class="btn btn-outline" id="btn-cancel-add">Cancelar</button>
+                                    <button class="btn btn-primary" id="btn-confirm-add"><i class="fa-solid fa-plus"></i> Agregar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div><!-- /catalog-db-view -->
+                </div>
+
+                <!-- Page: Glass Quote (cotizar vidrio suelto) -->
+                <div id="page-glass-quote" class="page">
+                    <div class="card" style="max-width: 520px; margin: 0 auto;">
+                        <div class="card-header" style="text-align: center;">
+                            <h2 style="margin: 0;"><i class="fa-solid fa-glass-water" style="color: var(--primary);"></i> Cotizar Vidrio</h2>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.5rem 0 0;">Cálculo rápido de precio de vidrio por medidas</p>
+                        </div>
+                        <div class="card-body">
+                            <div class="grid-form" style="grid-template-columns: 1fr;">
+                                <!-- Tipo de Vidrio -->
+                                <div class="form-group">
+                                    <label><i class="fa-solid fa-layer-group" style="color: var(--primary-light); margin-right: 0.35rem;"></i>Tipo de Vidrio</label>
+                                    <select id="gq-glass-type" class="form-control">
+                                        <option value="">Seleccione el tipo de vidrio...</option>
+                                    </select>
+                                </div>
+
+                                <!-- Base y Altura -->
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-arrows-left-right" style="color: var(--primary-light); margin-right: 0.35rem;"></i>Base (metros)</label>
+                                        <input type="number" id="gq-base" class="form-control" placeholder="Ej: 1.20" step="0.01" min="0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label><i class="fa-solid fa-arrows-up-down" style="color: var(--primary-light); margin-right: 0.35rem;"></i>Altura (metros)</label>
+                                        <input type="number" id="gq-height" class="form-control" placeholder="Ej: 0.80" step="0.01" min="0">
+                                    </div>
+                                </div>
+
+                                <!-- Botón calcular -->
+                                <div style="text-align: center; margin-top: 0.5rem;">
+                                    <button type="button" id="gq-calculate" class="btn btn-primary" style="padding: 0.75rem 2.5rem; font-size: 1rem;">
+                                        <i class="fa-solid fa-calculator"></i> Calcular Precio
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Resultado -->
+                            <div id="gq-result" style="display: none; margin-top: 1.5rem; padding: 1.25rem; border-radius: var(--radius); background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 1px solid #bae6fd; text-align: center;">
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.25rem;" id="gq-result-label"></div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem;" id="gq-result-area"></div>
+                                <div style="font-size: 2rem; font-weight: 700; color: var(--primary);" id="gq-result-price"></div>
+                            </div>
+
+                            <!-- Limpiar / Guardar -->
+                            <div style="text-align: center; margin-top: 1rem; display: flex; justify-content: center; gap: 1rem;">
+                                <button type="button" id="gq-clear" class="btn btn-outline" style="font-size: 0.85rem; padding: 0.5rem 1.5rem;">
+                                    <i class="fa-solid fa-eraser"></i> Limpiar
+                                </button>
+                                <button type="button" id="gq-save" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.5rem 1.5rem; display: none;">
+                                    <i class="fa-solid fa-save"></i> Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: Settings (admin only) -->
+                <div id="page-settings" class="page">
+                    <div class="card" style="max-width: 600px; margin: 0 auto;">
+                        <div class="card-header">
+                            <h2>Ajustes de la Empresa</h2>
+                        </div>
+                        <div class="card-body">
+                            <p id="settings-no-access" class="text-muted" style="display: none;">Solo los administradores pueden ver y modificar estos valores.</p>
+                            <form id="settings-form" class="grid-form" style="grid-template-columns: 1fr;">
+                                <div class="form-group">
+                                    <label>Gastos Generales (%)</label>
+                                    <input type="number" id="set-gastos" class="form-control" min="0" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Utilidad (%)</label>
+                                    <input type="number" id="set-utilidad" class="form-control" min="0" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>IVA (%)</label>
+                                    <input type="number" id="set-iva" class="form-control" value="0" disabled title="El IVA está fijo en 0% y no se puede modificar">
+                                </div>
+                                <div id="settings-msg" style="margin-top: 0.5rem; font-size: 0.875rem; display: none;"></div>
+                                <div class="flex-end mt-4">
+                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Guardar Cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page: Profile -->
+                <div id="page-profile" class="page">
+                    <div class="card" style="max-width: 600px; margin: 0 auto;">
+                        <div class="card-header">
+                            <h2>Mi Perfil</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="profile-form" class="grid-form" style="grid-template-columns: 1fr;">
+                                <div class="form-group">
+                                    <label>Nombre de Usuario (Login)</label>
+                                    <input type="text" id="prof-username" class="form-control" required disabled title="El usuario de login no se puede cambiar">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" id="prof-name" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nueva Contraseña</label>
+                                    <input type="password" id="prof-pass" class="form-control" placeholder="Dejar en blanco para mantener la actual">
+                                </div>
+                                <div id="prof-msg" style="margin-top: 0.5rem; font-size: 0.875rem; display: none;"></div>
+                                <div class="flex-end mt-4">
+                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save"></i> Guardar Cambios</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Lightbox Overlay -->
+    <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+        <button type="button" class="lightbox-close" onclick="closeLightbox()" aria-label="Cerrar" title="Cerrar (Esc)">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <div id="lightbox-title" class="lightbox-title"></div>
+            <img id="lightbox-img" src="" alt="">
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        let currentLightboxIndex = -1;
+        const galleryImages = [];
+        const galleryTitles = [];
+
+        function collectGalleryData() {
+            if (galleryImages.length > 0) return;
+            document.querySelectorAll('.gallery-card').forEach(card => {
+                const img = card.querySelector('img');
+                const title = card.querySelector('.card-title');
+                galleryImages.push(img.src);
+                galleryTitles.push(title ? title.textContent.trim() : '');
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", collectGalleryData);
+
+        function renderLightbox(index) {
+            currentLightboxIndex = index;
+            document.getElementById('lightbox-img').src = galleryImages[index];
+            document.getElementById('lightbox-title').textContent = galleryTitles[index] || '';
+        }
+
+        function openLightbox(card) {
+            collectGalleryData(); // Fallback if DOMContentLoaded already fired before this script
+            const img = card.querySelector('img');
+            renderLightbox(galleryImages.indexOf(img.src));
+            document.getElementById('lightbox').classList.add('active');
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+
+        function showNextImage() {
+            if (currentLightboxIndex === -1) return;
+            renderLightbox((currentLightboxIndex + 1) % galleryImages.length);
+        }
+
+        function showPrevImage() {
+            if (currentLightboxIndex === -1) return;
+            renderLightbox((currentLightboxIndex - 1 + galleryImages.length) % galleryImages.length);
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+            if (e.key === 'Escape') closeLightbox();
+            else if (e.key === 'ArrowRight') showNextImage();
+            else if (e.key === 'ArrowLeft') showPrevImage();
+        });
+    </script>
+    <!-- PDF-Lib: conserva la plantilla corporativa y escribe datos vectoriales sobre ella -->
+    <script src="assets/pdf-lib.min.js"></script>
+    <script src="assets/plantilla.js?v=1"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+
+    <script src="data/seed.js?v=5"></script>
+    <script src="data/catalog-items.js?v=3"></script>
+    <script src="js/auth.js?v=3"></script>
+    <script src="js/db.js?v=3"></script>
+    <script src="js/calculator.js?v=5"></script>
+    <script src="js/ventanaFija1100.js?v=8"></script>
+    <script src="js/quotations.js?v=24"></script>
+    <script src="js/clients.js?v=6"></script>
+    <script src="js/pdf.js?v=2"></script>
+    <script src="js/catalog.js?v=6"></script>
+    <script src="js/modules.js?v=4"></script>
+    <script src="js/settings.js?v=2"></script>
+    <script src="js/app.js?v=10"></script>
+</body>
+</html>
