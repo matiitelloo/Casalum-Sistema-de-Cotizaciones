@@ -24,6 +24,13 @@ window.MODULE_FORMULA_BASES = [
 ];
 
 class ModuleManager {
+    /**
+     * Valor de "proveedor" que indica que la receta no está atada a una marca:
+     * los perfiles pueden venir de Cedal, Fisa y Femec a la vez, y al cotizar
+     * se resuelve contra la marca elegida (por rol genérico, ver calculator.js).
+     */
+    static ALL_BRANDS = '__all__';
+
     constructor() {
         this.isAdmin = false;
         this.currentGroup = '';
@@ -239,12 +246,30 @@ class ModuleManager {
         };
     }
 
+    /** true si la receta está en modo "Todos los proveedores". */
+    isAllBrands() {
+        return !!this.draft && this.draft.brand === ModuleManager.ALL_BRANDS;
+    }
+
+    /**
+     * Marca concreta con la que se arma la vista previa de costo. En modo "Todos"
+     * no hay una sola marca, así que se toma la primera que tenga catálogo: el
+     * estimado es orientativo, el precio real sale de la marca que se elija al cotizar.
+     */
+    estimateBrand() {
+        if (!this.draft) return '';
+        if (!this.isAllBrands()) return this.draft.brand;
+        const firstRow = (this.draft.profiles || []).find(p => p.brand);
+        if (firstRow) return firstRow.brand;
+        return Object.keys(window.SEED_DATA.brands)[0] || '';
+    }
+
     /**
      * Color con el que se muestran los precios de referencia en el editor.
      * El módulo NO fija color: el precio real sale del color que se elige al cotizar.
      */
     referenceColor() {
-        const brand = window.SEED_DATA.brands[this.draft ? this.draft.brand : ''];
+        const brand = window.SEED_DATA.brands[this.estimateBrand()];
         return brand && brand.colors.length ? brand.colors[0] : '';
     }
 
@@ -264,31 +289,52 @@ class ModuleManager {
         // Marca / proveedor
         const brandSel = document.getElementById('module-brand-select');
         if (brandSel) {
-            brandSel.innerHTML = '';
+            brandSel.innerHTML = `<option value="${ModuleManager.ALL_BRANDS}">— Todos los proveedores —</option>`;
             Object.keys(window.SEED_DATA.brands).forEach(k => {
                 brandSel.innerHTML += `<option value="${k}">${window.SEED_DATA.brands[k].name}</option>`;
             });
-            if (!window.SEED_DATA.brands[d.brand]) d.brand = Object.keys(window.SEED_DATA.brands)[0] || '';
+            if (d.brand !== ModuleManager.ALL_BRANDS && !window.SEED_DATA.brands[d.brand]) {
+                d.brand = Object.keys(window.SEED_DATA.brands)[0] || '';
+            }
             brandSel.value = d.brand;
-            if (window.updateBrandLogo) window.updateBrandLogo('module-brand-logo', d.brand);
+            // En modo "Todos" no hay un logo único que mostrar.
+            if (window.updateBrandLogo) {
+                window.updateBrandLogo('module-brand-logo', this.isAllBrands() ? '' : d.brand);
+            }
         }
 
+        const allBrands = this.isAllBrands();
         const brand = window.SEED_DATA.brands[d.brand];
 
-        // Categoría principal (los perfiles pueden venir de cualquier categoría de la marca)
+        // Categoría principal (los perfiles pueden venir de cualquier categoría de la marca).
+        // En modo "Todos" las categorías se repiten entre proveedores, así que el filtro
+        // por categoría se desactiva y se muestra la base completa de los tres.
         const catSel = document.getElementById('module-category-select');
-        if (catSel && brand) {
-            catSel.innerHTML = '<option value="__all__">— Toda la base de datos —</option>';
-            Object.keys(brand.categories).forEach(c => {
-                catSel.innerHTML += `<option value="${c}">${c}</option>`;
-            });
-            catSel.value = brand.categories[d.category] ? d.category : '__all__';
+        if (catSel) {
+            if (allBrands) {
+                catSel.innerHTML = '<option value="__all__">— Toda la base de datos (3 proveedores) —</option>';
+                catSel.value = '__all__';
+                d.category = '';
+            } else if (brand) {
+                catSel.innerHTML = '<option value="__all__">— Toda la base de datos —</option>';
+                Object.keys(brand.categories).forEach(c => {
+                    catSel.innerHTML += `<option value="${c}">${c}</option>`;
+                });
+                catSel.value = brand.categories[d.category] ? d.category : '__all__';
+            }
+        }
+
+        // Aviso de cómo funciona el modo "Todos": sin rol genérico la fila solo
+        // sirve para su propio proveedor, que es el error fácil de cometer acá.
+        const hint = document.getElementById('module-allbrands-hint');
+        if (hint) {
+            hint.style.display = allBrands ? 'block' : 'none';
         }
 
         // Los selects de la cabecera son de solo lectura para no-admin
-        [brandSel, catSel].forEach(el => {
-            if (el) el.disabled = !this.isAdmin;
-        });
+        if (brandSel) brandSel.disabled = !this.isAdmin;
+        // En modo "Todos" el filtro por categoría no aplica (ver arriba).
+        if (catSel) catSel.disabled = !this.isAdmin || allBrands;
     }
 
     handleHeaderChange(id) {
@@ -297,12 +343,18 @@ class ModuleManager {
         const el = document.getElementById(id);
 
         if (id === 'module-brand-select') {
-            if (d.profiles.length && !confirm('Cambiar de proveedor borrará los perfiles ya seleccionados en este módulo. ¿Continuar?')) {
+            // Pasar de una marca a "Todos" no borra nada: los perfiles ya elegidos
+            // siguen siendo válidos, solo se les fija la marca de la que salieron.
+            const toAll = el.value === ModuleManager.ALL_BRANDS;
+            if (toAll) {
+                d.profiles.forEach(p => { if (!p.brand) p.brand = d.brand; });
+            } else if (d.profiles.length && !confirm('Cambiar de proveedor borrará los perfiles ya seleccionados en este módulo. ¿Continuar?')) {
                 el.value = d.brand;
                 return;
+            } else {
+                d.profiles = [];
             }
             d.brand = el.value;
-            d.profiles = [];
             d.category = '';
             this.renderHeader();
         } else if (id === 'module-category-select') {
@@ -318,27 +370,59 @@ class ModuleManager {
     // COLUMNA 1: BASE DE DATOS DEL PROVEEDOR
     // ============================================================
 
-    /** Todos los perfiles de la marca; si hay categoría fija, solo esa. */
+    /**
+     * Perfiles disponibles para elegir. Con una marca fija son los de esa marca
+     * (y, si hay categoría fija, solo esa categoría). En modo "Todos" se listan
+     * los de los tres proveedores, cada fila etiquetada con la marca a la que
+     * pertenece — por eso los códigos llevan prefijo CED-/FIS-/FEM-.
+     */
     visibleProducts() {
         const d = this.draft;
-        const brand = window.SEED_DATA.brands[d.brand];
-        if (!brand) return [];
-
-        const cats = d.category && brand.categories[d.category]
-            ? [d.category]
-            : Object.keys(brand.categories);
+        const brandKeys = this.isAllBrands()
+            ? Object.keys(window.SEED_DATA.brands)
+            : [d.brand];
 
         const out = [];
-        cats.forEach(cat => {
-            brand.categories[cat].products.forEach(p => {
-                out.push({ category: cat, product: p });
+        brandKeys.forEach(brandKey => {
+            const brand = window.SEED_DATA.brands[brandKey];
+            if (!brand) return;
+
+            const cats = !this.isAllBrands() && d.category && brand.categories[d.category]
+                ? [d.category]
+                : Object.keys(brand.categories);
+
+            cats.forEach(cat => {
+                brand.categories[cat].products.forEach(p => {
+                    out.push({ brandKey: brandKey, category: cat, product: p });
+                });
             });
         });
         return out;
     }
 
-    findProfileRow(code, category) {
-        return this.draft.profiles.find(p => p.code === code && p.category === category);
+    /**
+     * Marca efectiva de una fila guardada. Las recetas viejas (de una sola marca)
+     * no guardan `brand` en cada perfil: en ese caso vale la marca de la receta.
+     */
+    rowBrand(row) {
+        return row.brand || (this.draft ? this.draft.brand : '');
+    }
+
+    findProfileRow(code, category, brandKey) {
+        return this.draft.profiles.find(p =>
+            p.code === code &&
+            p.category === category &&
+            (!brandKey || this.rowBrand(p) === brandKey)
+        );
+    }
+
+    /** Fila apuntada por un input de la tabla de perfiles. */
+    rowFromEvent(e) {
+        return this.findProfileRow(
+            e.target.getAttribute('data-code'),
+            e.target.getAttribute('data-cat'),
+            e.target.getAttribute('data-brand')
+        );
     }
 
     renderProfiles() {
@@ -347,10 +431,11 @@ class ModuleManager {
 
         const d = this.draft;
         const editable = this.isAdmin;
-        const rows = this.visibleProducts().filter(({ category, product }) => {
-            if (this.onlySelected && !this.findProfileRow(product.code, category)) return false;
+        const rows = this.visibleProducts().filter(({ brandKey, category, product }) => {
+            if (this.onlySelected && !this.findProfileRow(product.code, category, brandKey)) return false;
             if (!this.profileFilter) return true;
-            const hay = `${product.code} ${product.description} ${category}`.toLowerCase();
+            const brandName = window.SEED_DATA.brands[brandKey] ? window.SEED_DATA.brands[brandKey].name : brandKey;
+            const hay = `${product.code} ${product.description} ${category} ${brandName}`.toLowerCase();
             return hay.indexOf(this.profileFilter) !== -1;
         });
 
@@ -376,14 +461,21 @@ class ModuleManager {
                 <th style="padding:6px 8px; text-align:center;" title="Etiqueta compartida entre proveedores: si Cedal, Fisa y Femec tienen un perfil con el mismo rol, esta receta cotiza con cualquiera de los tres sin duplicarla.">Rol genérico (multi-proveedor)</th>
             </tr></thead><tbody>`;
 
-        let lastCat = null;
-        rows.forEach(({ category, product }) => {
-            if (category !== lastCat) {
-                html += `<tr><td colspan="6" style="padding:4px 8px; background:#eef4ef; font-weight:700; color:var(--primary); font-size:0.75rem;">${category}</td></tr>`;
-                lastCat = category;
+        let lastGroup = null;
+        rows.forEach(({ brandKey, category, product }) => {
+            // En modo "Todos" la misma categoría existe en los tres proveedores,
+            // así que el encabezado agrupa por marca + categoría.
+            const brandName = window.SEED_DATA.brands[brandKey] ? window.SEED_DATA.brands[brandKey].name : brandKey;
+            const groupKey = `${brandKey}|${category}`;
+            if (groupKey !== lastGroup) {
+                const label = this.isAllBrands()
+                    ? `${window.escapeHtml(brandName)} &nbsp;·&nbsp; ${window.escapeHtml(category)}`
+                    : window.escapeHtml(category);
+                html += `<tr><td colspan="6" style="padding:4px 8px; background:#eef4ef; font-weight:700; color:var(--primary); font-size:0.75rem;">${label}</td></tr>`;
+                lastGroup = groupKey;
             }
 
-            const row = this.findProfileRow(product.code, category);
+            const row = this.findProfileRow(product.code, category, brandKey);
             const used = !!row;
             const formula = row ? row.formula : '';
             const fixedQty = row ? row.fixedQty : 1;
@@ -392,13 +484,13 @@ class ModuleManager {
 
             html += `<tr style="${used ? 'background:#f2fbf3;' : ''}">
                 <td style="padding:4px 8px; text-align:center;">
-                    <input type="checkbox" class="mod-p-use" data-code="${product.code}" data-cat="${category}" ${used ? 'checked' : ''} ${editable ? '' : 'disabled'} style="width:16px;height:16px;">
+                    <input type="checkbox" class="mod-p-use" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}" ${used ? 'checked' : ''} ${editable ? '' : 'disabled'} style="width:16px;height:16px;">
                 </td>
                 <td style="padding:4px 8px; font-weight:600; color:var(--primary);">${product.code}</td>
                 <td style="padding:4px 8px;">${product.description}</td>
                 <td style="padding:4px 8px;">
                     <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap;">
-                        <select class="mod-p-formula" data-code="${product.code}" data-cat="${category}" style="padding:2px; font-size:0.75rem;" ${used && editable ? '' : 'disabled'}>
+                        <select class="mod-p-formula" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}" style="padding:2px; font-size:0.75rem;" ${used && editable ? '' : 'disabled'}>
                             <option value="" ${!formula?'selected':''}>Seleccione...</option>
                             <option value="width_1" ${formula==='width_1'?'selected':''}>Base x1</option>
                             <option value="width_2" ${formula==='width_2'?'selected':''}>Base x2</option>
@@ -410,23 +502,23 @@ class ModuleManager {
                             <option value="lineal" ${isLineal?'selected':''}>Coeficientes (compuesta / módulos-1 / ×módulos)</option>
                             <option value="fijo" ${formula==='fijo'?'selected':''}>Fijo</option>
                         </select>
-                        <input type="number" step="0.01" min="0" class="mod-p-val" data-code="${product.code}" data-cat="${category}"
+                        <input type="number" step="0.01" min="0" class="mod-p-val" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}"
                             value="${fixedQty}" title="Cantidad fija" style="width:58px; padding:2px; font-size:0.75rem; text-align:center; ${formula === 'fijo' ? '' : 'display:none;'}" ${used && editable ? '' : 'disabled'}>
-                        <span class="mod-p-lineal" data-code="${product.code}" data-cat="${category}" style="display:${isLineal ? 'inline-flex' : 'none'}; gap:3px; align-items:center; flex-wrap:wrap;">
+                        <span class="mod-p-lineal" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}" style="display:${isLineal ? 'inline-flex' : 'none'}; gap:3px; align-items:center; flex-wrap:wrap;">
                             ${coefFields.map(([key, label]) => `
                                 <label style="display:flex; flex-direction:column; align-items:center; font-size:0.62rem; color:var(--text-muted);">${label}
-                                    <input type="number" step="0.01" class="mod-p-coef" data-coef="${key}" data-code="${product.code}" data-cat="${category}"
+                                    <input type="number" step="0.01" class="mod-p-coef" data-coef="${key}" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}"
                                         value="${row && row[key] ? row[key] : ''}" placeholder="0" style="width:44px; padding:2px; font-size:0.72rem; text-align:center;" ${used && editable ? '' : 'disabled'}>
                                 </label>`).join('')}
                             <label style="display:flex; flex-direction:column; align-items:center; font-size:0.62rem; color:var(--text-muted);">+K
-                                <input type="number" step="0.01" class="mod-p-coef" data-coef="fixedQty" data-code="${product.code}" data-cat="${category}"
+                                <input type="number" step="0.01" class="mod-p-coef" data-coef="fixedQty" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}"
                                     value="${row && row.fixedQty ? row.fixedQty : ''}" placeholder="0" style="width:44px; padding:2px; font-size:0.72rem; text-align:center;" ${used && editable ? '' : 'disabled'}>
                             </label>
                         </span>
                     </div>
                 </td>
                 <td style="padding:4px 8px; text-align:center;">
-                    <input type="text" class="mod-p-role" data-code="${product.code}" data-cat="${category}"
+                    <input type="text" class="mod-p-role" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}"
                         value="${window.escapeHtml(roleVal)}" placeholder="ej: ventana-t45-marco" style="width:150px; padding:2px; font-size:0.72rem;" ${used && editable ? '' : 'disabled'}>
                 </td>
             </tr>`;
@@ -459,24 +551,32 @@ class ModuleManager {
     toggleProfile(e) {
         const code = e.target.getAttribute('data-code');
         const cat = e.target.getAttribute('data-cat');
+        const brandKey = e.target.getAttribute('data-brand') || this.draft.brand;
         const d = this.draft;
 
         if (e.target.checked) {
-            const brand = window.SEED_DATA.brands[d.brand];
-            const prod = brand.categories[cat].products.find(p => p.code === code);
+            const brand = window.SEED_DATA.brands[brandKey];
+            const prod = brand && brand.categories[cat]
+                ? brand.categories[cat].products.find(p => p.code === code)
+                : null;
             // Si el producto ya trae un rol genérico etiquetado (ver data/seed.js),
             // se precarga acá para no tener que volver a escribirlo a mano.
             const role = (prod && Array.isArray(prod.genericRoles) && prod.genericRoles.length) ? prod.genericRoles[0] : '';
             d.profiles.push({
                 code: code,
                 category: cat,
+                // La marca del perfil se guarda siempre: en modo "Todos" una misma
+                // receta mezcla perfiles de Cedal, Fisa y Femec.
+                brand: brandKey,
                 description: prod ? prod.description : '',
                 formula: '',
                 fixedQty: 1,
                 role: role
             });
         } else {
-            d.profiles = d.profiles.filter(p => !(p.code === code && p.category === cat));
+            d.profiles = d.profiles.filter(p =>
+                !(p.code === code && p.category === cat && this.rowBrand(p) === brandKey)
+            );
         }
 
         this.markDirty();
@@ -485,7 +585,7 @@ class ModuleManager {
     }
 
     changeProfileFormula(e) {
-        const row = this.findProfileRow(e.target.getAttribute('data-code'), e.target.getAttribute('data-cat'));
+        const row = this.rowFromEvent(e);
         if (!row) return;
         row.formula = e.target.value;
         this.markDirty();
@@ -494,7 +594,7 @@ class ModuleManager {
     }
 
     changeProfileValue(e) {
-        const row = this.findProfileRow(e.target.getAttribute('data-code'), e.target.getAttribute('data-cat'));
+        const row = this.rowFromEvent(e);
         if (!row) return;
         const val = parseFloat(e.target.value);
         const safe = Number.isNaN(val) || val < 0 ? 0 : val;
@@ -506,7 +606,7 @@ class ModuleManager {
 
     /** Coeficientes de la fórmula lineal (coefBase, coefAltura, coefBaseMod, coefAlturaMod, coefArea, fixedQty=K). */
     changeProfileCoef(e) {
-        const row = this.findProfileRow(e.target.getAttribute('data-code'), e.target.getAttribute('data-cat'));
+        const row = this.rowFromEvent(e);
         if (!row) return;
         const key = e.target.getAttribute('data-coef');
         const val = parseFloat(e.target.value);
@@ -519,7 +619,7 @@ class ModuleManager {
 
     /** Rol genérico (multi-proveedor) de la fila. Vacío = solo funciona con la marca guardada. */
     changeProfileRole(e) {
-        const row = this.findProfileRow(e.target.getAttribute('data-code'), e.target.getAttribute('data-cat'));
+        const row = this.rowFromEvent(e);
         if (!row) return;
         row.role = e.target.value.trim();
         this.markDirty();
@@ -740,9 +840,10 @@ class ModuleManager {
 
         const previewModules = 1;
         const previewCtx = { width: 1, height: 1, perimeter: 4, area: 1, modules: previewModules };
+        const estBrand = this.estimateBrand();
         const result = window.calculator.calculateWindowCost({
             width: 1, height: 1,
-            brand: d.brand, system: d.category, color: this.referenceColor(),
+            brand: estBrand, system: d.category, color: this.referenceColor(),
             glassType: '', glassArea: 0,
             modules: previewModules,
             accessories: d.accessories.map(a => ({ name: a.name, price: a.price, qty: window.calculator.resolveAccessoryQty(a, previewCtx) })),
@@ -750,7 +851,12 @@ class ModuleManager {
             moduleProfiles: d.profiles
         });
 
-        el.innerHTML = `Costo de referencia (1.00 x 1.00 m, sin vidrio, color ${this.referenceColor()}):
+        // En modo "Todos" el estimado se arma con un proveedor concreto y se aclara
+        // cuál, porque el costo real depende de la marca que se elija al cotizar.
+        const estBrandName = window.SEED_DATA.brands[estBrand] ? window.SEED_DATA.brands[estBrand].name : estBrand;
+        const brandNote = this.isAllBrands() ? `, referencia ${estBrandName}` : '';
+
+        el.innerHTML = `Costo de referencia (1.00 x 1.00 m, sin vidrio, color ${this.referenceColor()}${brandNote}):
             <strong>$${result.total.toFixed(2)}</strong>
             &nbsp;·&nbsp; ${d.profiles.length} perfil(es), ${d.accessories.length} accesorio(s)`;
     }
@@ -856,7 +962,10 @@ class ModuleManager {
             return;
         }
 
-        const list = configured.map((m, i) => `${i + 1}. ${m.itemName} (${window.SEED_DATA.brands[m.brand] ? window.SEED_DATA.brands[m.brand].name : m.brand})`).join('\n');
+        const brandLabel = (b) => b === ModuleManager.ALL_BRANDS
+            ? 'Todos los proveedores'
+            : (window.SEED_DATA.brands[b] ? window.SEED_DATA.brands[b].name : b);
+        const list = configured.map((m, i) => `${i + 1}. ${m.itemName} (${brandLabel(m.brand)})`).join('\n');
         const answer = prompt('Escriba el número del módulo que desea copiar:\n\n' + list);
         if (answer === null) return;
         const idx = parseInt(answer, 10) - 1;

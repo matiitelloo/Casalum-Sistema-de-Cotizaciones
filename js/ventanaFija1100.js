@@ -68,7 +68,7 @@
      * con las medidas, módulos, marca y color reales pedidos por el cliente.
      */
     function calcularCostoDirecto(baseCliente, alturaCliente, numModulos, opts) {
-        const { brandData, color, glassType, incluirMullon } = opts;
+        const { brandData, color, glassType, incluirMullon, labor } = opts;
 
         const horizontal = buscarPerfilPorRolGenerico(brandData, ROLES.HORIZONTAL);
         const vertical = buscarPerfilPorRolGenerico(brandData, ROLES.VERTICAL);
@@ -124,9 +124,26 @@
         const costoVinil = vinil ? vinil.pricePerUnit * vinilQty : 0;
         const costoSilicon = silicon ? silicon.pricePerUnit * siliconQty : 0;
 
-        // Mano de obra: fija por cantidad de módulos (no por tamaño), 2 unidades por módulo + 2, a $5 cada una.
-        const unidadesManoObra = 2 * numModulos + 2;
-        const costoManoObra = unidadesManoObra * MANO_OBRA_COSTO_UNITARIO;
+        // Mano de obra. Si quien cotiza mandó valores (los del formulario), mandan
+        // esos: antes se ignoraban y editarlos no cambiaba nada en pantalla.
+        // Sin valores, se cae a la fórmula de siempre: 2 unidades por módulo + 2.
+        //
+        // Las dos ramas usan la misma cuenta que el resto del sistema
+        // (calculator.calculateWindowCost): trabajadores x horas x costo por hora,
+        // más transporte y viáticos. Con la receta preestablecida de la 1100
+        // (1 trabajador, 2 x módulos + 2 horas) da exactamente el mismo número
+        // que antes, así que las cotizaciones existentes no cambian de precio.
+        const num = v => (typeof v === 'number' && !Number.isNaN(v)) ? v : 0;
+        const costoHora = num(window.calculator && window.calculator.settings
+            && window.calculator.settings.laborCostPerHour) || MANO_OBRA_COSTO_UNITARIO;
+
+        const trabajadores = labor ? num(labor.workers) : 1;
+        const horas = labor ? num(labor.hours) : (2 * numModulos + 2);
+        const transporte = labor ? num(labor.transport) : 0;
+        const viaticos = labor ? num(labor.viaticos) : 0;
+
+        const unidadesManoObra = trabajadores * horas;
+        const costoManoObra = unidadesManoObra * costoHora + transporte + viaticos;
 
         const subtotal = costoHorizontal + costoVertical + costoJunquillo + costoMullon
             + costoVidrio + costoTornillos + costoVinil + costoSilicon + costoManoObra;
@@ -147,7 +164,10 @@
                 tornillos: { qty: tornillosQty, costo: costoTornillos },
                 vinil: { qty: vinilQty, costo: costoVinil },
                 silicon: { qty: siliconQty, costo: costoSilicon },
-                manoObra: { unidades: unidadesManoObra, costoUnitario: MANO_OBRA_COSTO_UNITARIO, costo: costoManoObra },
+                manoObra: {
+                    unidades: unidadesManoObra, costoUnitario: costoHora, costo: costoManoObra,
+                    trabajadores, horas, transporte, viaticos
+                },
                 subtotal,
                 gastosGenerales,
                 utilidad
@@ -167,10 +187,12 @@
      * @param {string} params.color - Color elegido (debe existir en brand.colors).
      * @param {string} [params.glassType] - Tipo de vidrio (window.SEED_DATA.glass[].type).
      * @param {boolean} [params.incluirMullon] - Si el cliente pidió mullón (opcional, poco común).
+     * @param {Object} [params.labor] - Mano de obra del formulario: { workers, hours, transport, viaticos }.
+     *   Si no se manda, se usa la fórmula por defecto (1 trabajador, 2 x módulos + 2 horas).
      * @returns {Object} { precioFinal, areaTotal, marca, desglose }
      */
     function cotizarVentanaFija1100(params) {
-        const { baseCliente, alturaCliente, numModulos, brand, color, glassType, incluirMullon = false } = params;
+        const { baseCliente, alturaCliente, numModulos, brand, color, glassType, incluirMullon = false, labor = null } = params;
 
         if (!(baseCliente > 0) || !(alturaCliente > 0)) {
             throw new Error('Base_Cliente y Altura_Cliente deben ser mayores a 0.');
@@ -185,7 +207,7 @@
         if (!brandData) throw new Error(`Marca "${brand}" no encontrada en el catálogo.`);
 
         const { precioFinal, desglose } = calcularCostoDirecto(baseCliente, alturaCliente, numModulos, {
-            brandData, color, glassType, incluirMullon
+            brandData, color, glassType, incluirMullon, labor
         });
 
         return {

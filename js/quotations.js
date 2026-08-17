@@ -829,8 +829,11 @@ class QuotationManager {
     applyModule(mod) {
         this.applyingModule = true;
 
+        // Un módulo "Todos los proveedores" no fija la marca: la elige quien cotiza
+        // y los perfiles se resuelven por rol genérico contra esa marca.
+        const isAllBrands = mod.brand === '__all__';
         const brandSelect = document.getElementById('p-brand');
-        if (brandSelect && mod.brand) {
+        if (brandSelect && mod.brand && !isAllBrands) {
             brandSelect.value = mod.brand;
             this.updateSystemDropdown();   // recarga los colores de esa marca
         }
@@ -926,7 +929,10 @@ class QuotationManager {
             brand: data.brand,
             color: data.color,
             glassType: data.glassType,
-            incluirMullon: !!data.mullon
+            incluirMullon: !!data.mullon,
+            // Mano de obra editable: sin esto, cambiar los campos del formulario
+            // no movía el total porque el cotizador la calculaba por su cuenta.
+            labor: data.labor
         });
     }
 
@@ -953,7 +959,25 @@ class QuotationManager {
         line('ACC', 'Tornillos y tacos', d.tornillos.qty, d.tornillos.costo, 'und');
         line('ACC', 'Vinil', d.vinil.qty, d.vinil.costo, 'und');
         line('ACC', 'Silicón', d.silicon.qty, d.silicon.costo, 'und');
-        line('MOB', 'Mano de Obra', d.manoObra.unidades, d.manoObra.costo, 'und');
+        // Se detalla la cuenta (trabajadores x horas, + transporte/viáticos) para que
+        // se vea reflejado lo que se escribe en el formulario de mano de obra.
+        const mo = d.manoObra;
+        const extras = (mo.transporte || 0) + (mo.viaticos || 0);
+        const moDesc = 'Mano de Obra'
+            + (mo.trabajadores !== undefined ? ` (${mo.trabajadores} x ${mo.horas} h)` : '')
+            + (extras > 0 ? ' + transporte/viáticos' : '');
+        // No se usa line(): con 0 horas pero transporte cargado la cantidad es 0 y
+        // la fila se descartaría, escondiendo un costo que igual suma al subtotal.
+        if (mo.costo > 0) {
+            rows.push({
+                code: 'MOB',
+                desc: moDesc,
+                unitPrice: mo.unidades > 0 ? mo.costo / mo.unidades : mo.costo,
+                qty: mo.unidades,
+                qtyString: mo.unidades > 0 ? mo.unidades.toFixed(2) + ' und' : 'Global',
+                total: mo.costo
+            });
+        }
         return rows;
     }
 
@@ -1066,7 +1090,9 @@ class QuotationManager {
         const mod = this.activeModule;
 
         if (mod) {
-            const brandName = window.SEED_DATA.brands[mod.brand] ? window.SEED_DATA.brands[mod.brand].name : mod.brand;
+            const brandName = mod.brand === '__all__'
+                ? 'todos los proveedores'
+                : (window.SEED_DATA.brands[mod.brand] ? window.SEED_DATA.brands[mod.brand].name : mod.brand);
             const nAcc = (mod.accessories || []).length;
             const labor = mod.labor || {};
             const hasLabor = (labor.workers && (labor.hours || labor.hoursFormula)) || labor.transport || labor.viaticos;

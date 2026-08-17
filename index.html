@@ -869,6 +869,14 @@
                                 </div>
                             </div>
 
+                            <!-- Solo visible con "Todos los proveedores" (ver js/modules.js) -->
+                            <p id="module-allbrands-hint" style="display: none; margin: -0.75rem 0 1.25rem; padding: 0.6rem 0.75rem; background: #eef4ef; border-left: 3px solid var(--primary); border-radius: 4px; font-size: 0.8rem; color: var(--text-muted);">
+                                <i class="fa-solid fa-circle-info"></i>
+                                Esta receta sirve para <strong>Cedal, Fisa y Femec</strong>: se cotiza una sola vez y al cotizar se resuelve
+                                con el proveedor que se elija. Para que un perfil funcione en los tres, cárguele un
+                                <strong>rol genérico</strong>. Un perfil sin rol solo va a cotizar con su propio proveedor.
+                            </p>
+
                             <!-- Apilados: base de datos del proveedor, luego accesorios, luego mano de obra -->
                             <div id="module-columns" style="display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start;">
 
@@ -985,6 +993,9 @@
                         <button class="catalog-tab" data-tab="accessories" style="padding: 0.6rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s;">
                             <i class="fa-solid fa-screwdriver-wrench"></i> Accesorios
                         </button>
+                        <button class="catalog-tab" data-tab="roles" style="padding: 0.6rem 1.2rem; border: none; background: none; cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); border-bottom: 3px solid transparent; transition: all 0.2s;">
+                            <i class="fa-solid fa-tags"></i> Roles Genéricos
+                        </button>
                     </div>
 
                     <!-- Tab: Profiles -->
@@ -1021,6 +1032,24 @@
                         <div id="catalog-accessories-table" style="overflow-x: auto;"></div>
                     </div>
 
+                    <!-- Tab: Roles Genéricos (matriz rol x proveedor) -->
+                    <div id="catalog-tab-roles" class="catalog-tab-content" style="display: none;">
+                        <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1rem;">
+                            Un <strong>rol genérico</strong> es la función que cumple un perfil (ej. "el horizontal de la ventana fija").
+                            Al asignar el mismo rol al perfil equivalente de cada proveedor, una receta preestablecida se carga
+                            <strong>una sola vez</strong> y cotiza con Cedal, Fisa y Femec.
+                            Un rol que no esté asignado en los tres no va a cotizar en los que falten.
+                        </p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
+                            <input type="text" id="roles-filter" class="form-control" placeholder="Buscar rol o perfil..." style="max-width: 260px;">
+                            <label style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.82rem; color: var(--text-muted);">
+                                <input type="checkbox" id="roles-only-incomplete" style="width: auto;"> Solo incompletos
+                            </label>
+                            <span id="roles-summary" style="font-size: 0.82rem; color: var(--text-muted); margin-left: auto;"></span>
+                        </div>
+                        <div id="catalog-roles-table" style="overflow-x: auto;"></div>
+                    </div>
+
                     <!-- Add Product Modal -->
                     <div id="modal-add-product" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
                         <div style="background: white; padding: 2rem; border-radius: var(--radius); max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md);">
@@ -1039,7 +1068,7 @@
                                 </div>
                                 <div class="form-group">
                                     <label>Código</label>
-                                    <input type="text" id="add-p-code" class="form-control" placeholder="Ej: VER9091">
+                                    <input type="text" id="add-p-code" class="form-control" placeholder="Ej: VER9091 (se guarda como CED-VER9091)">
                                 </div>
                                 <div class="form-group">
                                     <label>Descripción</label>

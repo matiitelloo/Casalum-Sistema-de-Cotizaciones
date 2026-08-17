@@ -54,7 +54,7 @@ window.SEED_DATA = {
       "Ventana Corrediza 1300": {
         "products": [
           {
-            "code": "VER9091",
+            "code": "FEM-VER9091",
             "description": "VERTICAL DE HOJA CERRADO",
             "unit": "ml",
             "prices": {
@@ -67,7 +67,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE5630",
+            "code": "FEM-RIE5630",
             "description": "RIEL SUPERIOR E INFERIOR",
             "unit": "ml",
             "prices": {
@@ -80,7 +80,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR5011",
+            "code": "FEM-HOR5011",
             "description": "HORIZONTAL DE HOJA",
             "unit": "ml",
             "prices": {
@@ -93,7 +93,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM2160",
+            "code": "FEM-JAM2160",
             "description": "JAMBA MARCO",
             "unit": "ml",
             "prices": {
@@ -106,7 +106,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER4886",
+            "code": "FEM-VER4886",
             "description": "VERTICAL DE HOJA ABIERTO",
             "unit": "ml",
             "prices": {
@@ -119,7 +119,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER4819",
+            "code": "FEM-VER4819",
             "description": "VERTICAL DE HOJA CERRADO ECO",
             "unit": "ml",
             "prices": {
@@ -132,7 +132,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "MAL8147",
+            "code": "FEM-MAL8147",
             "description": "MALLA CORREDIZA",
             "unit": "ml",
             "prices": {
@@ -145,7 +145,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER1829",
+            "code": "FEM-VER1829",
             "description": "VERTICAL DE HOJA ABIERTO 2",
             "unit": "ml",
             "prices": {
@@ -158,7 +158,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "MAL7849",
+            "code": "FEM-MAL7849",
             "description": "MALLA CORREDIZA 2",
             "unit": "ml",
             "prices": {
@@ -171,7 +171,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER1936",
+            "code": "FEM-VER1936",
             "description": "VERTICAL DE HOJA CERRADO PES",
             "unit": "ml",
             "prices": {
@@ -184,7 +184,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR2203",
+            "code": "FEM-HOR2203",
             "description": "HORIZONTAL DE HOJA 2",
             "unit": "ml",
             "prices": {
@@ -201,7 +201,7 @@ window.SEED_DATA = {
       "Ventana Fija Estandar": {
         "products": [
           {
-            "code": "HOR6094",
+            "code": "FEM-HOR6094",
             "description": "HORIZONTAL/VERTICAL CON TORNILLERO",
             "unit": "ml",
             "prices": {
@@ -214,7 +214,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR2125",
+            "code": "FEM-HOR2125",
             "description": "HORIZONTAL/VERTICAL SIN TORNILLERO",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-horizontal", "ventana-fija-1100-vertical"],
@@ -228,7 +228,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0896",
+            "code": "FEM-JUN0896",
             "description": "JUNQUILLO",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-junquillo"],
@@ -246,7 +246,7 @@ window.SEED_DATA = {
       "Ventana Proyectable": {
         "products": [
           {
-            "code": "DIV7153",
+            "code": "FEM-DIV7153",
             "description": "DIVISOR (VP)",
             "unit": "ml",
             "prices": {
@@ -259,7 +259,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0696",
+            "code": "FEM-JUN0696",
             "description": "JUNQUILLO",
             "unit": "ml",
             "prices": {
@@ -272,7 +272,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOJ6114",
+            "code": "FEM-HOJ6114",
             "description": "HOJA",
             "unit": "ml",
             "prices": {
@@ -285,7 +285,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "MAR0620",
+            "code": "FEM-MAR0620",
             "description": "MARCO",
             "unit": "ml",
             "prices": {
@@ -298,7 +298,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0740",
+            "code": "FEM-JUN0740",
             "description": "JUNQUILLO 2",
             "unit": "ml",
             "prices": {
@@ -315,7 +315,7 @@ window.SEED_DATA = {
       "Puerta Corrediza Estandar": {
         "products": [
           {
-            "code": "RIE6530",
+            "code": "FEM-RIE6530",
             "description": "RIEL SUPERIOR (PCS)",
             "unit": "ml",
             "prices": {
@@ -328,7 +328,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM4989",
+            "code": "FEM-JAM4989",
             "description": "JAMBA MARCO (PCS)",
             "unit": "ml",
             "prices": {
@@ -341,7 +341,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER2244",
+            "code": "FEM-VER2244",
             "description": "VERTICAL ENTRECIERRE",
             "unit": "ml",
             "prices": {
@@ -354,7 +354,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER7561",
+            "code": "FEM-VER7561",
             "description": "VERTICAL (PCS)",
             "unit": "ml",
             "prices": {
@@ -367,7 +367,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE2397",
+            "code": "FEM-RIE2397",
             "description": "RIEL INFERIOR (PCS)",
             "unit": "ml",
             "prices": {
@@ -380,7 +380,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER3505",
+            "code": "FEM-VER3505",
             "description": "VERTICAL HOJA PESADO",
             "unit": "ml",
             "prices": {
@@ -393,7 +393,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR1904",
+            "code": "FEM-HOR1904",
             "description": "HORIZONTAL INFERIOR",
             "unit": "ml",
             "prices": {
@@ -406,7 +406,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR6409",
+            "code": "FEM-HOR6409",
             "description": "HORIZONTAL SUPERIOR",
             "unit": "ml",
             "prices": {
@@ -423,7 +423,7 @@ window.SEED_DATA = {
       "Alfajias": {
         "products": [
           {
-            "code": "ALF3410",
+            "code": "FEM-ALF3410",
             "description": "ALFAJIA-114",
             "unit": "ml",
             "prices": {
@@ -436,7 +436,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ALF9812",
+            "code": "FEM-ALF9812",
             "description": "ALFAJIA-160",
             "unit": "ml",
             "prices": {
@@ -453,7 +453,7 @@ window.SEED_DATA = {
       "Tubos con Aleta": {
         "products": [
           {
-            "code": "CAN6209",
+            "code": "FEM-CAN6209",
             "description": "CANAL CON ALETA 3X1",
             "unit": "ml",
             "prices": {
@@ -466,7 +466,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB3300",
+            "code": "FEM-TUB3300",
             "description": "TUBO CON ALETA 3X1",
             "unit": "ml",
             "prices": {
@@ -483,7 +483,7 @@ window.SEED_DATA = {
       "Tubos Rectangulares": {
         "products": [
           {
-            "code": "TUB7097",
+            "code": "FEM-TUB7097",
             "description": "TUBO RECTANGULAR 4 X 1-1/2",
             "unit": "ml",
             "prices": {
@@ -496,7 +496,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB5934",
+            "code": "FEM-TUB5934",
             "description": "TUBO RECTANGULAR 3 X 1-1/2",
             "unit": "ml",
             "prices": {
@@ -509,7 +509,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB4153",
+            "code": "FEM-TUB4153",
             "description": "TUBO RECTANGULAR 3 X 1",
             "unit": "ml",
             "prices": {
@@ -522,7 +522,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB5646",
+            "code": "FEM-TUB5646",
             "description": "TUBO RECTANGULAR 2 X 1-1/2",
             "unit": "ml",
             "prices": {
@@ -535,7 +535,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB7189",
+            "code": "FEM-TUB7189",
             "description": "TUBO RECTANGULAR 50X25MM",
             "unit": "ml",
             "prices": {
@@ -548,7 +548,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB7607",
+            "code": "FEM-TUB7607",
             "description": "TUBO RECTANGULAR 50X40MM",
             "unit": "ml",
             "prices": {
@@ -561,7 +561,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB9210",
+            "code": "FEM-TUB9210",
             "description": "TUBO RECTANGULAR 70X30MM",
             "unit": "ml",
             "prices": {
@@ -574,7 +574,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB5628",
+            "code": "FEM-TUB5628",
             "description": "TUBO RECTANGULAR 40X60MM",
             "unit": "ml",
             "prices": {
@@ -587,7 +587,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB9438",
+            "code": "FEM-TUB9438",
             "description": "TUBO RECTANGULAR 75X25MM",
             "unit": "ml",
             "prices": {
@@ -600,7 +600,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB6469",
+            "code": "FEM-TUB6469",
             "description": "TUBO RECTANGULAR 2-3/4 X 1-1/4",
             "unit": "ml",
             "prices": {
@@ -613,7 +613,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB8540",
+            "code": "FEM-TUB8540",
             "description": "TUBO RECTANGULAR 1-1/2 X 3/4",
             "unit": "ml",
             "prices": {
@@ -626,7 +626,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB4946",
+            "code": "FEM-TUB4946",
             "description": "TUBO RECTANGULAR 150X75MM",
             "unit": "ml",
             "prices": {
@@ -639,7 +639,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB5744",
+            "code": "FEM-TUB5744",
             "description": "TUBO RECTANGULAR 2-3/4 X 1-1/4 X 1.2MM",
             "unit": "ml",
             "prices": {
@@ -652,7 +652,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB9897",
+            "code": "FEM-TUB9897",
             "description": "TUBO RECTANGULAR 100X40X1.4",
             "unit": "ml",
             "prices": {
@@ -669,7 +669,7 @@ window.SEED_DATA = {
       "Tubos Cuadrados": {
         "products": [
           {
-            "code": "TUB4277",
+            "code": "FEM-TUB4277",
             "description": "TUBO CUADRADO 1-1/4",
             "unit": "ml",
             "prices": {
@@ -682,7 +682,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB6651",
+            "code": "FEM-TUB6651",
             "description": "TUBO CUADRADO 1-1/2",
             "unit": "ml",
             "prices": {
@@ -695,7 +695,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB8630",
+            "code": "FEM-TUB8630",
             "description": "TUBO CUADRADO 25X25MM",
             "unit": "ml",
             "prices": {
@@ -708,7 +708,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB2329",
+            "code": "FEM-TUB2329",
             "description": "TUBO CUADRADO 40X40MM",
             "unit": "ml",
             "prices": {
@@ -721,7 +721,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB6833",
+            "code": "FEM-TUB6833",
             "description": "TUBO CUADRADO 30X30MM",
             "unit": "ml",
             "prices": {
@@ -734,7 +734,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB4717",
+            "code": "FEM-TUB4717",
             "description": "TUBO CUADRADO 40X40 2",
             "unit": "ml",
             "prices": {
@@ -747,7 +747,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB6684",
+            "code": "FEM-TUB6684",
             "description": "TUBO CUADRADO 120X120MM",
             "unit": "ml",
             "prices": {
@@ -760,7 +760,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB5407",
+            "code": "FEM-TUB5407",
             "description": "TUBO CUADRADO 120X120X1.7MM",
             "unit": "ml",
             "prices": {
@@ -773,7 +773,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB1214",
+            "code": "FEM-TUB1214",
             "description": "TUBO CUADRADO 1-1/2 X 1.1MM",
             "unit": "ml",
             "prices": {
@@ -802,7 +802,7 @@ window.SEED_DATA = {
       "Ventana Corrediza 1300": {
         "products": [
           {
-            "code": "VER7326",
+            "code": "CED-VER7326",
             "description": "VERTICAL CERRADO",
             "unit": "ml",
             "prices": {
@@ -814,7 +814,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE9877",
+            "code": "CED-RIE9877",
             "description": "RIE. SUPERIOR/INFERIOR",
             "unit": "ml",
             "prices": {
@@ -826,7 +826,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR7739",
+            "code": "CED-HOR7739",
             "description": "HORIZONTAL",
             "unit": "ml",
             "prices": {
@@ -838,7 +838,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM6376",
+            "code": "CED-JAM6376",
             "description": "JAMBA",
             "unit": "ml",
             "prices": {
@@ -850,7 +850,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE6455",
+            "code": "CED-RIE6455",
             "description": "RIE. INFERIOR",
             "unit": "ml",
             "prices": {
@@ -862,7 +862,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER7570",
+            "code": "CED-VER7570",
             "description": "VERTICAL ABIERTO",
             "unit": "ml",
             "prices": {
@@ -874,7 +874,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE2564",
+            "code": "CED-RIE2564",
             "description": "RIE. INFERIOR 7 PERFILES",
             "unit": "ml",
             "prices": {
@@ -886,7 +886,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ADA3483",
+            "code": "CED-ADA3483",
             "description": "ADAPTADOR",
             "unit": "ml",
             "prices": {
@@ -902,7 +902,7 @@ window.SEED_DATA = {
       "Junquillos": {
         "products": [
           {
-            "code": "MUL7498",
+            "code": "CED-MUL7498",
             "description": "MULLON",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-mullon"],
@@ -915,7 +915,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0971",
+            "code": "CED-JUN0971",
             "description": "JUNQUILLO TRIANGULAR 1-1/2 ESPALDA",
             "unit": "ml",
             "prices": {
@@ -927,7 +927,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0242",
+            "code": "CED-JUN0242",
             "description": "JUNQUILLO TRIANGULAR 1-1/2 TAPA",
             "unit": "ml",
             "prices": {
@@ -939,7 +939,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0733",
+            "code": "CED-JUN0733",
             "description": "JUNQUILLOS TRIANG 1-1/4 ESPALDA",
             "unit": "ml",
             "prices": {
@@ -951,7 +951,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0807",
+            "code": "CED-JUN0807",
             "description": "JUNQUILLO TRIANG 1-1/4 TAPA",
             "unit": "ml",
             "prices": {
@@ -963,7 +963,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0234",
+            "code": "CED-JUN0234",
             "description": "JUNQUILLO ESPALDA REDONDO",
             "unit": "ml",
             "prices": {
@@ -975,7 +975,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0581",
+            "code": "CED-JUN0581",
             "description": "JUNQUILLOS TAPA REDONDO",
             "unit": "ml",
             "prices": {
@@ -987,7 +987,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "REV8063",
+            "code": "CED-REV8063",
             "description": "REVESTIMIENTO/PANELADO",
             "unit": "ml",
             "prices": {
@@ -1003,7 +1003,7 @@ window.SEED_DATA = {
       "Ventana Fija Estandar": {
         "products": [
           {
-            "code": "HOR1106",
+            "code": "CED-HOR1106",
             "description": "HORIZONTAL SIN VENA (ESTANDAR)",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-horizontal"],
@@ -1016,7 +1016,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER6808",
+            "code": "CED-VER6808",
             "description": "VERTICAL CON VENA (ESTANDAR)",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-vertical"],
@@ -1029,7 +1029,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0861",
+            "code": "CED-JUN0861",
             "description": "JUNQUILLO C/FELPERO/PISAVIDRIO",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-junquillo"],
@@ -1046,7 +1046,7 @@ window.SEED_DATA = {
       "Ventana Fija Economica": {
         "products": [
           {
-            "code": "HOR2824",
+            "code": "CED-HOR2824",
             "description": "HORIZONTAL V/FIJA (ECONOMICA)",
             "unit": "ml",
             "prices": {
@@ -1058,7 +1058,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER1409",
+            "code": "CED-VER1409",
             "description": "VERTICAL (ECONOMICA)",
             "unit": "ml",
             "prices": {
@@ -1070,7 +1070,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0583",
+            "code": "CED-JUN0583",
             "description": "JUNQUILLO SIN FELPERO",
             "unit": "ml",
             "prices": {
@@ -1086,7 +1086,7 @@ window.SEED_DATA = {
       "Ventana Proyectable": {
         "products": [
           {
-            "code": "MAR0928",
+            "code": "CED-MAR0928",
             "description": "MARCO DOBLE",
             "unit": "ml",
             "prices": {
@@ -1098,7 +1098,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0876",
+            "code": "CED-JUN0876",
             "description": "JUNQUILLO REDONDO",
             "unit": "ml",
             "prices": {
@@ -1110,7 +1110,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0879",
+            "code": "CED-JUN0879",
             "description": "JUNQUILLO TRIANGULAR",
             "unit": "ml",
             "prices": {
@@ -1122,7 +1122,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "PER8653",
+            "code": "CED-PER8653",
             "description": "PERIMETRAL HOJA",
             "unit": "ml",
             "prices": {
@@ -1134,7 +1134,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "PER1794",
+            "code": "CED-PER1794",
             "description": "PERIMETRAL MARCO",
             "unit": "ml",
             "prices": {
@@ -1150,7 +1150,7 @@ window.SEED_DATA = {
       "Tubos y Canales": {
         "products": [
           {
-            "code": "TUB7316",
+            "code": "CED-TUB7316",
             "description": "TUBO RECTANGULAR 3X1-1/2",
             "unit": "ml",
             "prices": {
@@ -1162,7 +1162,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "CAN3683",
+            "code": "CED-CAN3683",
             "description": "CANAL CON ALETA 3X1",
             "unit": "ml",
             "prices": {
@@ -1174,7 +1174,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB4245",
+            "code": "CED-TUB4245",
             "description": "TUBO DE 1-1/2 X 1-1/2",
             "unit": "ml",
             "prices": {
@@ -1186,7 +1186,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB4210",
+            "code": "CED-TUB4210",
             "description": "TUBO RECTANGULAR 2 X 1-1/2",
             "unit": "ml",
             "prices": {
@@ -1202,7 +1202,7 @@ window.SEED_DATA = {
       "Puerta Corrediza": {
         "products": [
           {
-            "code": "ADA1518",
+            "code": "CED-ADA1518",
             "description": "ADAPTADOR PUERTA CORREDERA",
             "unit": "ml",
             "prices": {
@@ -1214,7 +1214,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR4933",
+            "code": "CED-HOR4933",
             "description": "HORIZONTAL INFERIOR",
             "unit": "ml",
             "prices": {
@@ -1226,7 +1226,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "PER4123",
+            "code": "CED-PER4123",
             "description": "PERIMETRAL MOVIL",
             "unit": "ml",
             "prices": {
@@ -1238,7 +1238,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ENT2505",
+            "code": "CED-ENT2505",
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
@@ -1250,7 +1250,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM5238",
+            "code": "CED-JAM5238",
             "description": "JAMBA",
             "unit": "ml",
             "prices": {
@@ -1262,7 +1262,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "CAB9458",
+            "code": "CED-CAB9458",
             "description": "CABEZAL",
             "unit": "ml",
             "prices": {
@@ -1274,7 +1274,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "BAS7525",
+            "code": "CED-BAS7525",
             "description": "BASE",
             "unit": "ml",
             "prices": {
@@ -1286,7 +1286,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER3583",
+            "code": "CED-VER3583",
             "description": "VERTICAL",
             "unit": "ml",
             "prices": {
@@ -1298,7 +1298,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER7712",
+            "code": "CED-VER7712",
             "description": "VERTICAL CHAPA",
             "unit": "ml",
             "prices": {
@@ -1314,7 +1314,7 @@ window.SEED_DATA = {
       "Puerta Corrediza Economica": {
         "products": [
           {
-            "code": "JAM2432",
+            "code": "CED-JAM2432",
             "description": "JAMBA PARANTE CHAPA",
             "unit": "ml",
             "prices": {
@@ -1326,7 +1326,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM7649",
+            "code": "CED-JAM7649",
             "description": "JAMBA MARCO",
             "unit": "ml",
             "prices": {
@@ -1338,7 +1338,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE1053",
+            "code": "CED-RIE1053",
             "description": "RIEL SUPERIOR",
             "unit": "ml",
             "prices": {
@@ -1350,7 +1350,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE9483",
+            "code": "CED-RIE9483",
             "description": "RIEL INFERIOR",
             "unit": "ml",
             "prices": {
@@ -1362,7 +1362,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR2531",
+            "code": "CED-HOR2531",
             "description": "HORIZONTAL SUPERIOR",
             "unit": "ml",
             "prices": {
@@ -1374,7 +1374,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR2560",
+            "code": "CED-HOR2560",
             "description": "HORIZONTAL INFERIOR",
             "unit": "ml",
             "prices": {
@@ -1386,7 +1386,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ENT6451",
+            "code": "CED-ENT6451",
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
@@ -1402,7 +1402,7 @@ window.SEED_DATA = {
       "Puerta T45": {
         "products": [
           {
-            "code": "MAR0451",
+            "code": "CED-MAR0451",
             "description": "MARCO CEDAL",
             "unit": "ml",
             "prices": {
@@ -1414,7 +1414,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ADA5208",
+            "code": "CED-ADA5208",
             "description": "ADAPTADOR DE RIEL",
             "unit": "ml",
             "prices": {
@@ -1426,7 +1426,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOJ5905",
+            "code": "CED-HOJ5905",
             "description": "HOJA CEDAL",
             "unit": "ml",
             "prices": {
@@ -1438,7 +1438,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ENT5595",
+            "code": "CED-ENT5595",
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
@@ -1454,7 +1454,7 @@ window.SEED_DATA = {
       "Cortinero Bano Niquelado": {
         "products": [
           {
-            "code": "CAB1924",
+            "code": "CED-CAB1924",
             "description": "CABEZAL CAB VIDRIO TEMPLADO CEDAL",
             "unit": "ml",
             "prices": {
@@ -1466,7 +1466,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "BAS6939",
+            "code": "CED-BAS6939",
             "description": "BASE CB VIDRIO TEMPLADO CEDAL",
             "unit": "ml",
             "prices": {
@@ -1478,7 +1478,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM8113",
+            "code": "CED-JAM8113",
             "description": "JAMBA C/ VIDRIO TEMPLADO",
             "unit": "ml",
             "prices": {
@@ -1490,7 +1490,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR6738",
+            "code": "CED-HOR6738",
             "description": "HORIZONTAL SUPERIOR CEDAL",
             "unit": "ml",
             "prices": {
@@ -1518,7 +1518,7 @@ window.SEED_DATA = {
       "Ventana Corrediza 1300": {
         "products": [
           {
-            "code": "VER7128",
+            "code": "FIS-VER7128",
             "description": "VERTICAL DE HOJA REFORZADO",
             "unit": "ml",
             "prices": {
@@ -1530,7 +1530,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE2588",
+            "code": "FIS-RIE2588",
             "description": "RIEL DE CUATRO ALETAS",
             "unit": "ml",
             "prices": {
@@ -1542,7 +1542,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR8735",
+            "code": "FIS-HOR8735",
             "description": "HORIZONTAL DE HOJA",
             "unit": "ml",
             "prices": {
@@ -1554,7 +1554,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM8169",
+            "code": "FIS-JAM8169",
             "description": "JAMBA MARCO",
             "unit": "ml",
             "prices": {
@@ -1566,7 +1566,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "PAR4254",
+            "code": "FIS-PAR4254",
             "description": "PARANTE DE HOJA ECON CERRADO",
             "unit": "ml",
             "prices": {
@@ -1578,7 +1578,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER8593",
+            "code": "FIS-VER8593",
             "description": "VERTICAL DE HOJA ECONOMICA",
             "unit": "ml",
             "prices": {
@@ -1590,7 +1590,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR1356",
+            "code": "FIS-HOR1356",
             "description": "HOR PARA TRES HOJAS",
             "unit": "ml",
             "prices": {
@@ -1602,7 +1602,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR1049",
+            "code": "FIS-HOR1049",
             "description": "HORIZONTAL DE HOJA ECONOMICA",
             "unit": "ml",
             "prices": {
@@ -1614,7 +1614,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "PER8047",
+            "code": "FIS-PER8047",
             "description": "PERFIL MALLA CORREDIZA",
             "unit": "ml",
             "prices": {
@@ -1626,7 +1626,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ALF3068",
+            "code": "FIS-ALF3068",
             "description": "ALFAJIA DE 16CM",
             "unit": "ml",
             "prices": {
@@ -1638,7 +1638,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ALF9482",
+            "code": "FIS-ALF9482",
             "description": "ALFAJIA DE 11.42CM",
             "unit": "ml",
             "prices": {
@@ -1650,7 +1650,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "PAR9417",
+            "code": "FIS-PAR9417",
             "description": "PARANTE DE HOJA ESTANDAR",
             "unit": "ml",
             "prices": {
@@ -1662,7 +1662,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE6045",
+            "code": "FIS-RIE6045",
             "description": "RIEL DE TRES ALETAS INCLINADO",
             "unit": "ml",
             "prices": {
@@ -1674,7 +1674,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE9371",
+            "code": "FIS-RIE9371",
             "description": "RIEL DE TRES ALETAS PLANA",
             "unit": "ml",
             "prices": {
@@ -1690,7 +1690,7 @@ window.SEED_DATA = {
       "Ventana Fija": {
         "products": [
           {
-            "code": "VER1622",
+            "code": "FIS-VER1622",
             "description": "VERTICAL CON NERVIO",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-vertical"],
@@ -1703,7 +1703,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR7312",
+            "code": "FIS-HOR7312",
             "description": "HORIZONTAL SIN NERVIO",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-horizontal"],
@@ -1716,7 +1716,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0526",
+            "code": "FIS-JUN0526",
             "description": "JUNQUILLO ESTANDAR",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-junquillo"],
@@ -1729,7 +1729,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER1314",
+            "code": "FIS-VER1314",
             "description": "VERTICAL CON NERVIO ECONOMICA",
             "unit": "ml",
             "prices": {
@@ -1741,7 +1741,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER0920",
+            "code": "FIS-VER0920",
             "description": "VERTICAL SIN NERVIO ECONOMICA",
             "unit": "ml",
             "prices": {
@@ -1753,7 +1753,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "MUL2699",
+            "code": "FIS-MUL2699",
             "description": "MULLON",
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-mullon"],
@@ -1770,7 +1770,7 @@ window.SEED_DATA = {
       "Puerta Batiente": {
         "products": [
           {
-            "code": "JUN0184",
+            "code": "FIS-JUN0184",
             "description": "JUNQUILLO TRIANG VID 10MM TAPA",
             "unit": "ml",
             "prices": {
@@ -1782,7 +1782,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0010",
+            "code": "FIS-JUN0010",
             "description": "JUNQUILLO TRIANG VID 10MM ESPALDA",
             "unit": "ml",
             "prices": {
@@ -1794,7 +1794,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0325",
+            "code": "FIS-JUN0325",
             "description": "JUNQUILLO TRIANG VID 6MM TAPA",
             "unit": "ml",
             "prices": {
@@ -1806,7 +1806,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0904",
+            "code": "FIS-JUN0904",
             "description": "JUNQUILLO REDONDO TAPA",
             "unit": "ml",
             "prices": {
@@ -1818,7 +1818,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0746",
+            "code": "FIS-JUN0746",
             "description": "JUNQUILLO REDONDO ESPALDA",
             "unit": "ml",
             "prices": {
@@ -1830,7 +1830,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0063",
+            "code": "FIS-JUN0063",
             "description": "JUNQUILLO TRIANG VID 6MM ESPALDA",
             "unit": "ml",
             "prices": {
@@ -1842,7 +1842,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JUN0188",
+            "code": "FIS-JUN0188",
             "description": "JUNQUILLO RED 6MM TAPA",
             "unit": "ml",
             "prices": {
@@ -1854,7 +1854,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "CAN2041",
+            "code": "FIS-CAN2041",
             "description": "CANAL 7.0X2.5 CON ALETA",
             "unit": "ml",
             "prices": {
@@ -1866,7 +1866,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "CAN0148",
+            "code": "FIS-CAN0148",
             "description": "CANAL 7.0X3.8 CON ALETA",
             "unit": "ml",
             "prices": {
@@ -1878,7 +1878,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "CAN5517",
+            "code": "FIS-CAN5517",
             "description": "CANAL 7.5X2.5 SIN ALETA",
             "unit": "ml",
             "prices": {
@@ -1890,7 +1890,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "CAN6001",
+            "code": "FIS-CAN6001",
             "description": "CANAL 7.6X3.8 SIN ALETA",
             "unit": "ml",
             "prices": {
@@ -1902,7 +1902,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB2526",
+            "code": "FIS-TUB2526",
             "description": "TUBO 7.6X2.5 CON ALETA ECON",
             "unit": "ml",
             "prices": {
@@ -1914,7 +1914,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB8537",
+            "code": "FIS-TUB8537",
             "description": "TUBO 7.6X3.8 CON ALETA",
             "unit": "ml",
             "prices": {
@@ -1926,7 +1926,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB2066",
+            "code": "FIS-TUB2066",
             "description": "TUBO 7.6X2.5 DOBLE ALETA",
             "unit": "ml",
             "prices": {
@@ -1938,7 +1938,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "FEL6459",
+            "code": "FIS-FEL6459",
             "description": "FELPERO",
             "unit": "ml",
             "prices": {
@@ -1950,7 +1950,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "PAN7735",
+            "code": "FIS-PAN7735",
             "description": "PANELADO",
             "unit": "ml",
             "prices": {
@@ -1966,7 +1966,7 @@ window.SEED_DATA = {
       "Ventana Proyectable": {
         "products": [
           {
-            "code": "HOR5745",
+            "code": "FIS-HOR5745",
             "description": "HORIZONTAL INFERIOR DE HOJA",
             "unit": "ml",
             "prices": {
@@ -1978,7 +1978,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR2388",
+            "code": "FIS-HOR2388",
             "description": "HORIZONTAL SUPERIOR DE HOJA",
             "unit": "ml",
             "prices": {
@@ -1990,7 +1990,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM4658",
+            "code": "FIS-JAM4658",
             "description": "JAMBA CHAPA",
             "unit": "ml",
             "prices": {
@@ -2002,7 +2002,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM9761",
+            "code": "FIS-JAM9761",
             "description": "JAMBA MARCO",
             "unit": "ml",
             "prices": {
@@ -2014,7 +2014,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE5384",
+            "code": "FIS-RIE5384",
             "description": "RIEL SUPERIOR",
             "unit": "ml",
             "prices": {
@@ -2026,7 +2026,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE1133",
+            "code": "FIS-RIE1133",
             "description": "RIEL INFERIOR",
             "unit": "ml",
             "prices": {
@@ -2038,7 +2038,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE2953",
+            "code": "FIS-RIE2953",
             "description": "RIEL INFERIOR DOBLE",
             "unit": "ml",
             "prices": {
@@ -2050,7 +2050,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER9635",
+            "code": "FIS-VER9635",
             "description": "VERTICAL DE HOJA FIJA",
             "unit": "ml",
             "prices": {
@@ -2062,7 +2062,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ENT3538",
+            "code": "FIS-ENT3538",
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
@@ -2074,7 +2074,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ADA9788",
+            "code": "FIS-ADA9788",
             "description": "ADAPTADOR",
             "unit": "ml",
             "prices": {
@@ -2086,7 +2086,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR3275",
+            "code": "FIS-HOR3275",
             "description": "HORIZONTAL DE MALLA",
             "unit": "ml",
             "prices": {
@@ -2098,7 +2098,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "VER9084",
+            "code": "FIS-VER9084",
             "description": "VERTICAL DE MALLA",
             "unit": "ml",
             "prices": {
@@ -2110,7 +2110,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE9977",
+            "code": "FIS-RIE9977",
             "description": "RIEL DOBLE",
             "unit": "ml",
             "prices": {
@@ -2126,7 +2126,7 @@ window.SEED_DATA = {
       "Tubos Varios": {
         "products": [
           {
-            "code": "TUB1046",
+            "code": "FIS-TUB1046",
             "description": "TUBO 3.8X3.8 SIN TEMPLE",
             "unit": "ml",
             "prices": {
@@ -2138,7 +2138,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB2333",
+            "code": "FIS-TUB2333",
             "description": "TUBO 3.8X3.8 STANDARD",
             "unit": "ml",
             "prices": {
@@ -2150,7 +2150,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB7806",
+            "code": "FIS-TUB7806",
             "description": "TUBO 5.0X3.8",
             "unit": "ml",
             "prices": {
@@ -2162,7 +2162,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB1124",
+            "code": "FIS-TUB1124",
             "description": "TUBO 3.6X3.8",
             "unit": "ml",
             "prices": {
@@ -2174,7 +2174,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB8553",
+            "code": "FIS-TUB8553",
             "description": "TUBO 30.1X3.8 ALIVIANDO",
             "unit": "ml",
             "prices": {
@@ -2186,7 +2186,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB5867",
+            "code": "FIS-TUB5867",
             "description": "TUBO 3.1X3.1",
             "unit": "ml",
             "prices": {
@@ -2198,7 +2198,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB6977",
+            "code": "FIS-TUB6977",
             "description": "TUBO 3.8X3.8 LIVIANO",
             "unit": "ml",
             "prices": {
@@ -2210,7 +2210,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB6551",
+            "code": "FIS-TUB6551",
             "description": "TUBO 1.9X3.8",
             "unit": "ml",
             "prices": {
@@ -2222,7 +2222,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TUB7714",
+            "code": "FIS-TUB7714",
             "description": "TUBO DE 2.5X2.5",
             "unit": "ml",
             "prices": {
@@ -2238,7 +2238,7 @@ window.SEED_DATA = {
       "Puerta Europea": {
         "products": [
           {
-            "code": "ADA1687",
+            "code": "FIS-ADA1687",
             "description": "ADAPTADOR DE RIEL",
             "unit": "ml",
             "prices": {
@@ -2250,7 +2250,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "RIE4140",
+            "code": "FIS-RIE4140",
             "description": "RIEL INFERIOR/SUPERIOR",
             "unit": "ml",
             "prices": {
@@ -2262,7 +2262,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOJ1376",
+            "code": "FIS-HOJ1376",
             "description": "HOJA VERTICAL/HORIZONTAL",
             "unit": "ml",
             "prices": {
@@ -2274,7 +2274,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR8599",
+            "code": "FIS-HOR8599",
             "description": "HOJA VERT/HORIZ V CAMARA",
             "unit": "ml",
             "prices": {
@@ -2286,7 +2286,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ENT5050",
+            "code": "FIS-ENT5050",
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
@@ -2298,7 +2298,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ADA1117",
+            "code": "FIS-ADA1117",
             "description": "ADAPTADOR ESQUINERO",
             "unit": "ml",
             "prices": {
@@ -2310,7 +2310,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ADA9617",
+            "code": "FIS-ADA9617",
             "description": "ADAPTADOR DE HOJA",
             "unit": "ml",
             "prices": {
@@ -2322,7 +2322,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "ALM9138",
+            "code": "FIS-ALM9138",
             "description": "ALMA TIRADERA",
             "unit": "ml",
             "prices": {
@@ -2334,7 +2334,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "TIR2507",
+            "code": "FIS-TIR2507",
             "description": "TIRADERA ALETA DE PUERTA",
             "unit": "ml",
             "prices": {
@@ -2350,7 +2350,7 @@ window.SEED_DATA = {
       "Cabina Vidrio Templado Niquelado": {
         "products": [
           {
-            "code": "CAB7547",
+            "code": "FIS-CAB7547",
             "description": "CABEZAL MARCO NIQUELADO",
             "unit": "ml",
             "prices": {
@@ -2362,7 +2362,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "BAS1326",
+            "code": "FIS-BAS1326",
             "description": "BASE MARCO NIQUELADO",
             "unit": "ml",
             "prices": {
@@ -2374,7 +2374,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "JAM1219",
+            "code": "FIS-JAM1219",
             "description": "JAMBA MARCO NIQUELADO",
             "unit": "ml",
             "prices": {
@@ -2386,7 +2386,7 @@ window.SEED_DATA = {
             }
           },
           {
-            "code": "HOR4357",
+            "code": "FIS-HOR4357",
             "description": "HORIZONTAL SUPERIOR HOJA NIQUELADO",
             "unit": "ml",
             "prices": {
@@ -2481,19 +2481,19 @@ window.SEED_DATA = {
       category: "",
       profiles: [
         {
-          code: "HOR1106", category: "Ventana Fija Estandar", description: "HORIZONTAL SIN VENA (ESTANDAR)",
+          code: "CED-HOR1106", category: "Ventana Fija Estandar", description: "HORIZONTAL SIN VENA (ESTANDAR)",
           role: "ventana-fija-1100-horizontal", formula: "lineal", coefBase: 2
         },
         {
-          code: "VER6808", category: "Ventana Fija Estandar", description: "VERTICAL CON VENA (ESTANDAR)",
+          code: "CED-VER6808", category: "Ventana Fija Estandar", description: "VERTICAL CON VENA (ESTANDAR)",
           role: "ventana-fija-1100-vertical", formula: "lineal", coefAlturaMod: 2
         },
         {
-          code: "JUN0861", category: "Ventana Fija Estandar", description: "JUNQUILLO C/FELPERO/PISAVIDRIO",
+          code: "CED-JUN0861", category: "Ventana Fija Estandar", description: "JUNQUILLO C/FELPERO/PISAVIDRIO",
           role: "ventana-fija-1100-junquillo", formula: "lineal", coefBase: 2, coefAlturaMod: 2
         },
         {
-          code: "MUL7498", category: "Junquillos", description: "MULLON",
+          code: "CED-MUL7498", category: "Junquillos", description: "MULLON",
           role: "ventana-fija-1100-mullon", formula: "lineal", coefAltura: -1, coefAlturaMod: 1
         }
       ],
@@ -2516,19 +2516,19 @@ window.SEED_DATA = {
       category: "",
       profiles: [
         {
-          code: "HOR1106", category: "Ventana Fija Estandar", description: "HORIZONTAL SIN VENA (ESTANDAR)",
+          code: "CED-HOR1106", category: "Ventana Fija Estandar", description: "HORIZONTAL SIN VENA (ESTANDAR)",
           role: "ventana-fija-1100-horizontal", formula: "lineal", coefBase: 2
         },
         {
-          code: "VER6808", category: "Ventana Fija Estandar", description: "VERTICAL CON VENA (ESTANDAR)",
+          code: "CED-VER6808", category: "Ventana Fija Estandar", description: "VERTICAL CON VENA (ESTANDAR)",
           role: "ventana-fija-1100-vertical", formula: "lineal", coefAlturaMod: 2
         },
         {
-          code: "JUN0861", category: "Ventana Fija Estandar", description: "JUNQUILLO C/FELPERO/PISAVIDRIO",
+          code: "CED-JUN0861", category: "Ventana Fija Estandar", description: "JUNQUILLO C/FELPERO/PISAVIDRIO",
           role: "ventana-fija-1100-junquillo", formula: "lineal", coefBase: 2, coefAlturaMod: 2
         },
         {
-          code: "MUL7498", category: "Junquillos", description: "MULLON",
+          code: "CED-MUL7498", category: "Junquillos", description: "MULLON",
           role: "ventana-fija-1100-mullon", formula: "lineal", coefAltura: -1, coefAlturaMod: 1
         }
       ],

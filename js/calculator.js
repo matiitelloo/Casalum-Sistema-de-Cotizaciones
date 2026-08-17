@@ -228,6 +228,9 @@ class Calculator {
             // Sin ese rol etiquetado en esta marca todavía: no inventamos precio.
             return null;
         }
+        // Sin rol, la fila solo resuelve dentro de su propio proveedor. Los códigos
+        // llevan prefijo por marca (CED-/FIS-/FEM-), así que buscar el código de
+        // otra marca acá simplemente no encuentra nada, que es lo correcto.
         return this.findProductInBrand(brandData, row.code, row.category);
     }
 
@@ -266,7 +269,9 @@ class Calculator {
 
                 const prod = this.resolveModuleProduct(row, brandData);
                 if (!prod) {
-                    const label = row.role ? `el rol "${row.role}"` : `el perfil ${row.code}`;
+                    const label = row.role
+                        ? `el rol "${row.role}"`
+                        : `el perfil ${row.code} (sin rol genérico, solo sirve para ${row.brand || 'su proveedor'})`;
                     console.warn(`Módulo: ${label} no está disponible en la base de ${brand}`);
                     return;
                 }
