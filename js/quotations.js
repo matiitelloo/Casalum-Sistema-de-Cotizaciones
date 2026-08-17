@@ -30,7 +30,12 @@ class QuotationManager {
         // Bind stepper clicks
         document.querySelectorAll('.stepper .step').forEach((el, index) => {
             el.addEventListener('click', () => {
-                this.goToStep(index + 1);
+                const destino = index + 1;
+                // Hacer clic en el número del paso saltaba TODAS las validaciones
+                // que sí hacen los botones "Siguiente": se podía llegar a Detalles
+                // (o al Resumen) sin cliente y sin productos, y sin ningún aviso.
+                if (!this.canGoToStep(destino)) return;
+                this.goToStep(destino);
             });
         });
 
@@ -403,6 +408,36 @@ class QuotationManager {
         // Sin Cliente ni Detalles no hay a dónde volver desde Productos.
         const prevBtn3 = document.getElementById('btn-prev-step-3');
         if (prevBtn3) prevBtn3.style.display = this.isQuickQuote ? 'none' : '';
+    }
+
+    /**
+     * ¿Se puede saltar al paso `destino` desde el actual? Aplica las mismas
+     * condiciones que los botones "Siguiente", para que el stepper no sea un
+     * atajo que las esquive.
+     *
+     * Volver atrás nunca se bloquea: revisar lo ya cargado no rompe nada, y
+     * exigir requisitos para retroceder dejaría al usuario encerrado.
+     *
+     * @returns {boolean} false si falta algo (ya avisa por pantalla).
+     */
+    canGoToStep(destino) {
+        if (destino <= this.currentStep) return true;
+
+        // Para pasar del Paso 1 hace falta un cliente válido. En Cotización
+        // Rápida no se pide: ese modo oculta el paso de Cliente y asigna
+        // "Consumidor Final" solo, así que exigirlo acá lo trabaría.
+        if (destino >= 2 && !this.isQuickQuote
+            && window.clientManager && !window.clientManager.validateClientForm()) {
+            return false;
+        }
+
+        // Al Resumen solo se llega con algo cotizado.
+        if (destino >= 4 && this.cart.length === 0) {
+            notify.warning('Debe agregar al menos un producto a la cotización.');
+            return false;
+        }
+
+        return true;
     }
 
     goToStep(step) {

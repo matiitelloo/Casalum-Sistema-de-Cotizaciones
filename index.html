@@ -211,14 +211,9 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Header for Welcome Message -->
-            <div style="display: flex; justify-content: flex-end; align-items: center; padding: 1rem 2rem; background: white; border-bottom: 1px solid var(--border);">
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    <span style="font-weight: 500;">Bienvenido, <span id="current-user-name" style="color: var(--primary);"></span></span>
-                    <button id="btn-logout" class="btn btn-sm btn-outline" style="border-color: var(--danger); color: var(--danger);">Salir</button>
-                </div>
-            </div>
-
+            <!-- La franja de "Bienvenido / Salir" que iba acá se quitó: duplicaba
+                 el encabezado de abajo, que ya muestra el usuario y tiene
+                 "Cerrar sesión" en su menú desplegable. -->
             <header class="top-header">
                 <div class="header-title" style="display: flex; align-items: center; gap: 1rem;">
                     <button id="mobile-menu-btn" class="btn btn-outline" style="padding: 0.5rem; border: none; font-size: 1.25rem; display: none;" onclick="document.getElementById('sidebar').classList.add('active'); document.getElementById('sidebar-overlay').classList.add('active');">
@@ -1292,7 +1287,7 @@
     <script src="js/db.js?v=3"></script>
     <script src="js/calculator.js?v=7"></script>
     <script src="js/ventanaFija1100.js?v=9"></script>
-    <script src="js/quotations.js?v=30"></script>
+    <script src="js/quotations.js?v=31"></script>
     <script src="js/clients.js?v=8"></script>
     <script src="js/pdf.js?v=3"></script>
     <script src="js/catalog.js?v=10"></script>
