@@ -338,8 +338,8 @@ class QuotationManager {
     }
 
     /** Tira el borrador y deja el asistente limpio, sin salir de la pantalla. */
-    discardDraft() {
-        if (!confirm('¿Descartar la cotización en curso y empezar de cero? No se puede deshacer.')) return;
+    async discardDraft() {
+        if (!(await notify.confirm('¿Descartar la cotización en curso y empezar de cero? No se puede deshacer.', { danger: true, confirmText: 'Descartar' }))) return;
 
         this.clearDraft();
         this.cart = [];
@@ -1702,8 +1702,11 @@ class QuotationManager {
         summarySubtotal.textContent = `$${this.totals.subtotalRaw.toFixed(2)}`;
 
         // Cotización rápida: resumen minimalista (Subtotal, IVA, Total), sin
-        // desglose de márgenes ni descuento.
-        if (summaryMarginsBox) summaryMarginsBox.style.display = this.isQuickQuote ? 'none' : '';
+        // desglose de márgenes ni descuento. Gastos Generales y Utilidad son
+        // el margen del negocio: solo el admin los ve, aunque haya vendedores
+        // con cuenta propia armando cotizaciones.
+        const isAdmin = !!(window.authManager && window.authManager.currentUser && window.authManager.currentUser.role === 'admin');
+        if (summaryMarginsBox) summaryMarginsBox.style.display = (this.isQuickQuote || !isAdmin) ? 'none' : '';
         const summaryDiscountSection = document.getElementById('summary-discount-section');
         if (summaryDiscountSection) summaryDiscountSection.style.display = this.isQuickQuote ? 'none' : '';
 
@@ -1720,7 +1723,12 @@ class QuotationManager {
         const pctErrorEl = document.getElementById('summary-descuento-error');
         const outOfRange = !isNaN(pctRaw) && (pctRaw < 0 || pctRaw > 100);
         if (pctErrorEl) pctErrorEl.style.display = outOfRange ? 'block' : 'none';
-        const pct = isNaN(pctRaw) ? 0 : Math.min(100, Math.max(0, pctRaw));
+        // Fuera de rango (ej. 150%) no se recorta a 100 — eso aplicaría un
+        // descuento del 100% sin que el usuario lo haya pedido, dejando el
+        // total en $0.00 mientras se ve el aviso de error. Se ignora el
+        // descuento hasta que corrija el número: el total muestra el valor
+        // real sin descontar nada.
+        const pct = (isNaN(pctRaw) || outOfRange) ? 0 : pctRaw;
         const discountValor = baseTotal * (pct / 100);
         const finalTotal = baseTotal - discountValor;
         

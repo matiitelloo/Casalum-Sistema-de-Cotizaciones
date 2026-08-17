@@ -664,7 +664,7 @@ class App {
     }
 
     async deleteQuotation(id) {
-        if (!confirm('¿Está seguro de que desea eliminar esta cotización? Esta acción no se puede deshacer.')) {
+        if (!(await notify.confirm('¿Está seguro de que desea eliminar esta cotización? Esta acción no se puede deshacer.', { danger: true, confirmText: 'Eliminar' }))) {
             return;
         }
 

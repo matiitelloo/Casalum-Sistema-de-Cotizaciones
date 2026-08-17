@@ -139,6 +139,48 @@
         clear: () => {
             const c = document.getElementById('notify-container');
             if (c) Array.from(c.children).forEach(cerrar);
+        },
+
+        /**
+         * Reemplazo de confirm() nativo: no congela la página, se puede
+         * estilizar y distingue una confirmación normal de una destructiva
+         * (opts.danger, botón rojo). Devuelve una Promise<boolean> — hay que
+         * usarla con await desde una función async.
+         *   if (!(await notify.confirm('¿Eliminar este ítem?', { danger: true }))) return;
+         */
+        confirm: (mensaje, opciones) => {
+            const opts = opciones || {};
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.className = 'notify-confirm-overlay';
+                overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(4px);';
+                overlay.innerHTML = `
+                    <div class="notify-confirm-box" role="alertdialog" aria-modal="true" style="background:#fff; border-radius:var(--radius-lg); padding:1.75rem; max-width:420px; width:90%; box-shadow:var(--shadow-lg);">
+                        ${opts.titulo ? `<h3 style="margin:0 0 0.75rem; color:var(--primary);">${esc(opts.titulo)}</h3>` : ''}
+                        <p style="margin:0 0 1.5rem; color:var(--text-main); font-size:0.95rem; line-height:1.4; white-space:pre-line;">${esc(mensaje)}</p>
+                        <div style="display:flex; justify-content:flex-end; gap:0.75rem;">
+                            <button type="button" class="btn btn-outline notify-confirm-cancel">${esc(opts.cancelText || 'Cancelar')}</button>
+                            <button type="button" class="btn ${opts.danger ? 'btn-danger' : 'btn-primary'} notify-confirm-ok">${esc(opts.confirmText || 'Confirmar')}</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(overlay);
+
+                let cerrado = false;
+                const cerrarModal = (resultado) => {
+                    if (cerrado) return;
+                    cerrado = true;
+                    document.removeEventListener('keydown', onKey);
+                    overlay.remove();
+                    resolve(resultado);
+                };
+                const onKey = e => { if (e.key === 'Escape') cerrarModal(false); };
+                document.addEventListener('keydown', onKey);
+                overlay.addEventListener('click', e => { if (e.target === overlay) cerrarModal(false); });
+                overlay.querySelector('.notify-confirm-cancel').addEventListener('click', () => cerrarModal(false));
+                const okBtn = overlay.querySelector('.notify-confirm-ok');
+                okBtn.addEventListener('click', () => cerrarModal(true));
+                okBtn.focus();
+            });
         }
     };
 

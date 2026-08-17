@@ -363,7 +363,7 @@ class ModuleManager {
      *
      * @returns {boolean} false si el usuario canceló (hay que dejar todo como estaba).
      */
-    changeBrand(select) {
+    async changeBrand(select) {
         const d = this.draft;
         const destino = select.value;
         const anterior = d.brand;
@@ -404,7 +404,7 @@ class ModuleManager {
                 + `(les falta el rol genérico) y se van a quitar de la receta:\n\n· `
                 + perdidos.join('\n· ')
                 + `\n\nLos puede mapear en Catálogo → Roles Genéricos. ¿Continuar igual?`;
-            if (!confirm(aviso)) {
+            if (!(await notify.confirm(aviso, { danger: true, confirmText: 'Continuar' }))) {
                 select.value = anterior;   // se deshace el cambio en pantalla
                 return false;
             }
@@ -421,13 +421,13 @@ class ModuleManager {
         return true;
     }
 
-    handleHeaderChange(id) {
+    async handleHeaderChange(id) {
         const d = this.draft;
         if (!d) return;
         const el = document.getElementById(id);
 
         if (id === 'module-brand-select') {
-            if (!this.changeBrand(el)) return;
+            if (!(await this.changeBrand(el))) return;
         } else if (id === 'module-category-select') {
             d.category = el.value === '__all__' ? '' : el.value;
         }
@@ -981,7 +981,7 @@ class ModuleManager {
         if (!this.draft) return;
 
         if (!this.draft.profiles.length) {
-            if (!confirm('Este módulo no tiene ningún perfil seleccionado. ¿Guardar de todas formas?')) return;
+            if (!(await notify.confirm('Este módulo no tiene ningún perfil seleccionado. ¿Guardar de todas formas?'))) return;
         }
 
         const btn = document.getElementById('btn-module-save');
@@ -1020,7 +1020,7 @@ class ModuleManager {
 
     async deleteModule() {
         if (!this.isAdmin) return;
-        if (!confirm('¿Eliminar el módulo preestablecido de este ítem? Se podrá volver a crear cuando quiera.')) return;
+        if (!(await notify.confirm('¿Eliminar el módulo preestablecido de este ítem? Se podrá volver a crear cuando quiera.', { danger: true, confirmText: 'Eliminar' }))) return;
 
         delete window.SEED_DATA.modules[this.currentItemId];
         this.dirty = false;

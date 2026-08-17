@@ -223,7 +223,7 @@ class ClientManager {
     }
 
     async deleteClient(id) {
-        if(confirm('¿Está seguro de eliminar este cliente?')) {
+        if (await notify.confirm('¿Está seguro de eliminar este cliente?', { danger: true, confirmText: 'Eliminar' })) {
             await window.dbManager.delete('clients', id);
             this.loadClientsList();
             window.app.updateDashboardStats();

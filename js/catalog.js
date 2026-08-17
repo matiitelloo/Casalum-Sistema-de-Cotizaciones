@@ -312,8 +312,8 @@ class CatalogManager {
         this.markChanged();
     }
 
-    deleteProduct(idx) {
-        if (!confirm('¿Eliminar este producto del catálogo?')) return;
+    async deleteProduct(idx) {
+        if (!(await notify.confirm('¿Eliminar este producto del catálogo?', { danger: true, confirmText: 'Eliminar' }))) return;
         const brand = window.SEED_DATA.brands[this.currentBrand];
         const cat = brand.categories[this.currentCategory];
         cat.products.splice(idx, 1);
@@ -414,8 +414,8 @@ class CatalogManager {
         this.markChanged();
     }
 
-    deleteGlass(idx) {
-        if (!confirm('¿Eliminar este tipo de vidrio?')) return;
+    async deleteGlass(idx) {
+        if (!(await notify.confirm('¿Eliminar este tipo de vidrio?', { danger: true, confirmText: 'Eliminar' }))) return;
         window.SEED_DATA.glass.splice(idx, 1);
         this.markChanged();
         this.renderGlassTable();
@@ -488,8 +488,8 @@ class CatalogManager {
         this.markChanged();
     }
 
-    deleteGlassSale(idx) {
-        if (!confirm('¿Eliminar este tipo de vidrio de venta?')) return;
+    async deleteGlassSale(idx) {
+        if (!(await notify.confirm('¿Eliminar este tipo de vidrio de venta?', { danger: true, confirmText: 'Eliminar' }))) return;
         window.SEED_DATA.glassSale.splice(idx, 1);
         this.markChanged();
         this.renderGlassSaleTable();
@@ -594,7 +594,7 @@ class CatalogManager {
         this.renderRolesTable();
     }
 
-    deleteRole(role) {
+    async deleteRole(role) {
         const usedBy = Object.values(window.SEED_DATA.modules || {})
             .filter(m => (m.profiles || []).some(p => p.role === role))
             .map(m => m.itemName);
@@ -603,7 +603,7 @@ class CatalogManager {
             ? `\n\nATENCIÓN: lo usan ${usedBy.length} receta(s) preestablecida(s):\n· ${usedBy.join('\n· ')}\nEsas recetas van a dejar de cotizar ese perfil.`
             : '';
 
-        if (!confirm(`¿Quitar el rol "${role}" de todos los proveedores?${warn}`)) return;
+        if (!(await notify.confirm(`¿Quitar el rol "${role}" de todos los proveedores?${warn}`, { danger: true, confirmText: 'Quitar' }))) return;
 
         Object.keys(window.SEED_DATA.brands || {}).forEach(bk => {
             const brand = window.SEED_DATA.brands[bk];
@@ -793,8 +793,8 @@ class CatalogManager {
         this.markChanged();
     }
 
-    deleteAccessory(idx) {
-        if (!confirm('¿Eliminar este accesorio?')) return;
+    async deleteAccessory(idx) {
+        if (!(await notify.confirm('¿Eliminar este accesorio?', { danger: true, confirmText: 'Eliminar' }))) return;
         window.SEED_DATA.accessories.splice(idx, 1);
         this.markChanged();
         this.renderAccessoriesTable();
