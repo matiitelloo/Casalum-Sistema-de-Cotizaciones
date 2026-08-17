@@ -337,26 +337,97 @@ class ModuleManager {
         if (catSel) catSel.disabled = !this.isAdmin || allBrands;
     }
 
+    /** Producto de una marca que cumple ese rol genérico, con su categoría. */
+    findProductByRole(brandKey, role) {
+        const brand = window.SEED_DATA.brands[brandKey];
+        if (!brand || !role) return null;
+        for (const cat of Object.keys(brand.categories || {})) {
+            const hit = (brand.categories[cat].products || []).find(
+                p => Array.isArray(p.genericRoles) && p.genericRoles.includes(role)
+            );
+            if (hit) return { product: hit, category: cat };
+        }
+        return null;
+    }
+
+    /**
+     * Cambia el proveedor de la receta.
+     *
+     * Antes esto borraba todos los perfiles: elegir Fisa en una receta armada
+     * con Cedal dejaba el módulo vacío, como si no hubiera nada guardado. Ya no
+     * hace falta: si un perfil tiene rol genérico, su equivalente en el
+     * proveedor nuevo se encuentra solo, que es justamente para lo que están
+     * los roles. Solo se pierden los que no tienen rol (o cuyo rol no está
+     * asignado en el proveedor destino), y en ese caso se avisa cuáles son y
+     * se pide confirmación.
+     *
+     * @returns {boolean} false si el usuario canceló (hay que dejar todo como estaba).
+     */
+    changeBrand(select) {
+        const d = this.draft;
+        const destino = select.value;
+        const anterior = d.brand;
+
+        // Pasar a "Todos" no toca nada: los perfiles ya elegidos siguen siendo
+        // válidos, solo se les fija la marca de la que salieron.
+        if (destino === ModuleManager.ALL_BRANDS) {
+            d.profiles.forEach(p => { if (!p.brand) p.brand = anterior; });
+            d.brand = destino;
+            d.category = '';
+            this.renderHeader();
+            return true;
+        }
+
+        const conservados = [];
+        const perdidos = [];
+
+        d.profiles.forEach(row => {
+            const equivalente = row.role ? this.findProductByRole(destino, row.role) : null;
+            if (!equivalente) {
+                perdidos.push(row.description || row.code);
+                return;
+            }
+            // Se mantiene la fórmula y los coeficientes; cambia solo a qué
+            // producto apuntan.
+            conservados.push(Object.assign({}, row, {
+                code: equivalente.product.code,
+                category: equivalente.category,
+                description: equivalente.product.description,
+                brand: destino
+            }));
+        });
+
+        if (perdidos.length) {
+            const nombreDestino = window.SEED_DATA.brands[destino]
+                ? window.SEED_DATA.brands[destino].name : destino;
+            const aviso = `Estos perfiles no tienen equivalente en ${nombreDestino} `
+                + `(les falta el rol genérico) y se van a quitar de la receta:\n\n· `
+                + perdidos.join('\n· ')
+                + `\n\nLos puede mapear en Catálogo → Roles Genéricos. ¿Continuar igual?`;
+            if (!confirm(aviso)) {
+                select.value = anterior;   // se deshace el cambio en pantalla
+                return false;
+            }
+        }
+
+        d.profiles = conservados;
+        d.brand = destino;
+        d.category = '';
+        this.renderHeader();
+
+        if (conservados.length) {
+            notify.success(`${conservados.length} perfil(es) reapuntados a ${window.SEED_DATA.brands[destino].name}.`);
+        }
+        return true;
+    }
+
     handleHeaderChange(id) {
         const d = this.draft;
         if (!d) return;
         const el = document.getElementById(id);
 
         if (id === 'module-brand-select') {
-            // Pasar de una marca a "Todos" no borra nada: los perfiles ya elegidos
-            // siguen siendo válidos, solo se les fija la marca de la que salieron.
-            const toAll = el.value === ModuleManager.ALL_BRANDS;
-            if (toAll) {
-                d.profiles.forEach(p => { if (!p.brand) p.brand = d.brand; });
-            } else if (d.profiles.length && !confirm('Cambiar de proveedor borrará los perfiles ya seleccionados en este módulo. ¿Continuar?')) {
-                el.value = d.brand;
-                return;
-            } else {
-                d.profiles = [];
-            }
-            d.brand = el.value;
-            d.category = '';
-            this.renderHeader();
+            if (!this.changeBrand(el)) return;
         } else if (id === 'module-category-select') {
             d.category = el.value === '__all__' ? '' : el.value;
         }
@@ -440,7 +511,18 @@ class ModuleManager {
         });
 
         if (!rows.length) {
-            container.innerHTML = '<p class="text-muted" style="padding:1rem;">No hay perfiles que coincidan con el filtro.</p>';
+            // El mensaje dice cuál de los dos filtros está vaciando la lista: con
+            // "Solo usados" tildado y ningún perfil marcado, "no coincide con el
+            // filtro" hacía parecer que la receta se había perdido.
+            let motivo;
+            if (this.onlySelected && !d.profiles.length) {
+                motivo = 'Este módulo todavía no tiene perfiles marcados. Destilde <strong>Solo usados</strong> para ver la base del proveedor y elegirlos.';
+            } else if (this.onlySelected) {
+                motivo = 'Ningún perfil marcado coincide con la búsqueda.';
+            } else {
+                motivo = 'No hay perfiles que coincidan con el filtro.';
+            }
+            container.innerHTML = `<p class="text-muted" style="padding:1rem;">${motivo}</p>`;
             return;
         }
 
