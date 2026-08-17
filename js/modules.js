@@ -895,7 +895,7 @@ class ModuleManager {
     // GUARDAR / BORRAR / COPIAR
     // ============================================================
     async saveModule() {
-        if (!this.isAdmin) { alert('Solo los administradores pueden guardar módulos.'); return; }
+        if (!this.isAdmin) { notify.warning('Solo los administradores pueden guardar módulos.'); return; }
         if (!this.draft) return;
 
         if (!this.draft.profiles.length) {
@@ -918,12 +918,12 @@ class ModuleManager {
             this.dirty = false;
             if (btn) { btn.disabled = false; btn.innerHTML = original; btn.classList.remove('btn-pulse'); }
             this.refreshAfterSave();
-            alert('Módulo preestablecido guardado. Ya está disponible al cotizar.');
+            notify.success('Módulo preestablecido guardado. Ya está disponible al cotizar.');
         } catch (e) {
             console.error('Error guardando módulo:', e);
             if (btn) { btn.disabled = false; btn.innerHTML = original; }
             this.refreshAfterSave();
-            alert('No se pudo guardar en la nube. El módulo quedó guardado localmente en este equipo.');
+            notify.error('No se pudo guardar en la nube. El módulo quedó guardado localmente en este equipo.');
         }
     }
 
@@ -958,7 +958,7 @@ class ModuleManager {
             .map(id => window.SEED_DATA.modules[id]);
 
         if (!configured.length) {
-            alert('Todavía no hay ningún otro módulo preestablecido para copiar.');
+            notify.info('Todavía no hay ningún otro módulo preestablecido para copiar.');
             return;
         }
 
@@ -970,7 +970,7 @@ class ModuleManager {
         if (answer === null) return;
         const idx = parseInt(answer, 10) - 1;
         if (Number.isNaN(idx) || idx < 0 || idx >= configured.length) {
-            alert('Número no válido.');
+            notify.warning('Número no válido.');
             return;
         }
 

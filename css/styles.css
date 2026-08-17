@@ -899,3 +899,123 @@ h4 {
         border: 1px solid #ddd;
     }
 }
+
+/* ============================================================
+   AVISOS FLOTANTES (js/notify.js)
+   Reemplazan a los alert() del navegador.
+   ============================================================ */
+
+#notify-container {
+    position: fixed;
+    top: calc(var(--header-height) + 12px);
+    right: 20px;
+    z-index: 3000;               /* por encima de los modales (z-index 1000) */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: min(380px, calc(100vw - 40px));
+    pointer-events: none;        /* deja hacer click en la página detrás */
+}
+
+.notify {
+    pointer-events: auto;        /* pero el aviso sí es clickeable */
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--notify-color, var(--primary));
+    box-shadow: var(--shadow-md);
+    font-size: 0.87rem;
+    line-height: 1.4;
+    color: var(--text-main);
+    animation: notify-entrar var(--duration) var(--ease-smooth);
+}
+
+.notify-icono {
+    color: var(--notify-color, var(--primary));
+    font-size: 1rem;
+    margin-top: 1px;
+    flex-shrink: 0;
+}
+
+.notify-cuerpo {
+    flex: 1;
+    min-width: 0;                /* permite que el texto largo corte bien */
+}
+
+.notify-titulo {
+    display: block;
+    color: var(--notify-color, var(--primary));
+    font-size: 0.82rem;
+    margin-bottom: 2px;
+}
+
+.notify-texto {
+    display: block;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;     /* códigos largos no desbordan la tarjeta */
+}
+
+.notify-cerrar {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 2px 4px;
+    line-height: 1;
+    flex-shrink: 0;
+    border-radius: 4px;
+    transition: color var(--duration) var(--ease-smooth),
+                background var(--duration) var(--ease-smooth);
+}
+
+.notify-cerrar:hover {
+    color: var(--text-main);
+    background: var(--bg-alt);
+}
+
+@keyframes notify-entrar {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes notify-salir {
+    from { opacity: 1; transform: translateX(0); max-height: 200px; }
+    to   { opacity: 0; transform: translateX(24px); max-height: 0; }
+}
+
+.notify-saliendo {
+    animation: notify-salir var(--duration) var(--ease-smooth) forwards;
+}
+
+/* Botón ocupado: el spinner ya lo pone js/notify.js */
+.btn-cargando {
+    opacity: 0.75;
+    cursor: progress;
+}
+
+/* En celular el aviso ocupa el ancho, arriba de todo */
+@media (max-width: 768px) {
+    #notify-container {
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        width: auto;
+    }
+}
+
+/* Quien pide menos movimiento no ve deslizamientos */
+@media (prefers-reduced-motion: reduce) {
+    .notify,
+    .notify-saliendo {
+        animation: none;
+    }
+}
+
+/* Los avisos no se imprimen */
+@media print {
+    #notify-container { display: none !important; }
+}

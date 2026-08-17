@@ -583,7 +583,7 @@ class CatalogManager {
         // Se comparan también los recién creados: todavía no están en ningún
         // producto, así que allGenericRoles() por sí sola no los ve.
         if (this.allGenericRoles().concat(this.pendingRoles || []).includes(name)) {
-            alert('Ese rol ya existe.');
+            notify.warning('Ese rol ya existe.');
             return;
         }
         // El rol nace sin asignar: queda listado como incompleto hasta que se le
@@ -860,7 +860,7 @@ class CatalogManager {
         const unit = 'ml'; // Hardcoded since UI field is removed
 
         if (!code || !desc) {
-            alert('Debe ingresar el código y la descripción del producto.');
+            notify.warning('Debe ingresar el código y la descripción del producto.');
             return;
         }
 
@@ -873,7 +873,7 @@ class CatalogManager {
 
         const brand = window.SEED_DATA.brands[brandKey];
         if (!brand || !brand.categories[catName]) {
-            alert('Marca o categoría no válida.');
+            notify.warning('Marca o categoría no válida.');
             return;
         }
 
@@ -883,7 +883,7 @@ class CatalogManager {
 
         const dup = brand.categories[catName].products.some(p => p.code === finalCode);
         if (dup) {
-            alert(`Ya existe un producto con el código ${finalCode} en esta categoría.`);
+            notify.warning(`Ya existe un producto con el código ${finalCode} en esta categoría.`);
             return;
         }
 
@@ -900,7 +900,7 @@ class CatalogManager {
         document.getElementById('add-p-code').value = '';
         document.getElementById('add-p-desc').value = '';
 
-        alert('Producto agregado exitosamente.');
+        notify.success('Producto agregado exitosamente.');
     }
 
     // ============================================================
@@ -935,14 +935,14 @@ class CatalogManager {
             if (window.quotationManager) {
                 window.quotationManager.populateDropdowns();
             }
-            alert('Catálogo actualizado y guardado correctamente en la base de datos. Los cambios se reflejarán en las nuevas cotizaciones.');
+            notify.success('Catálogo actualizado y guardado correctamente en la base de datos. Los cambios se reflejarán en las nuevas cotizaciones.');
         } catch (e) {
             console.error('Error saving catalog:', e);
             if (saveBtn) {
                 saveBtn.disabled = false;
                 saveBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Cambios';
             }
-            alert('Error al guardar en la base de datos. Los cambios se guardaron localmente.');
+            notify.error('Error al guardar en la base de datos. Los cambios se guardaron localmente.');
         }
     }
 

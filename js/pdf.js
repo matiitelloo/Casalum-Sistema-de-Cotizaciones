@@ -9,7 +9,7 @@ class PDFGenerator {
     async generate(manager) {
         const client = window.clientManager?.currentClient;
         const cart = manager.cart || [];
-        if (!client || !cart.length) return alert('Debe seleccionar un cliente y agregar al menos un producto.');
+        if (!client || !cart.length) return notify.warning('Debe seleccionar un cliente y agregar al menos un producto.');
         try {
             await this.ensurePdfLibrary();
             const quote = await this.resolveQuoteNumber(manager);
@@ -43,7 +43,7 @@ class PDFGenerator {
             this.download(bytes, `${meta.number}-${this.safe(client.name)}.pdf`);
         } catch (error) {
             console.error('Error de PDF corporativo:', error);
-            alert(`No fue posible generar el PDF corporativo: ${error.message || 'error desconocido'}`);
+            notify.error(`No fue posible generar el PDF corporativo: ${error.message || 'error desconocido'}`);
         }
     }
 

@@ -105,7 +105,7 @@ class ClientManager {
         const name = document.getElementById('client-name').value;
         
         if (!id || !name) {
-            alert('Por favor ingrese al menos Cédula/RUC y Nombre del cliente.');
+            notify.warning('Por favor ingrese al menos Cédula/RUC y Nombre del cliente.');
             return false;
         }
         this.autoSaveClient();

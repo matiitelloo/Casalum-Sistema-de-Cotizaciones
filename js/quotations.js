@@ -676,7 +676,7 @@ class QuotationManager {
         if (nextBtn) {
             nextBtn.addEventListener('click', () => {
                 if (this.cart.length === 0) {
-                    alert('Debe agregar al menos un producto a la cotización.');
+                    notify.warning('Debe agregar al menos un producto a la cotización.');
                     return;
                 }
                 this.goToStep(4);
@@ -987,7 +987,7 @@ class QuotationManager {
         try {
             vf = this.getVentanaFija1100Result(data);
         } catch (e) {
-            alert(e.message);
+            notify.warning(e.message);
             return;
         }
 
@@ -1018,7 +1018,7 @@ class QuotationManager {
     /** Calcula, aplica márgenes (settings vigentes) y agrega la Ventana Fija 1100 al carrito. */
     addVentanaFija1100ToCart(data) {
         if (!Number.isInteger(data.qty) || data.qty < 1) {
-            alert('La cantidad de elementos debe ser un número entero mayor o igual a 1.');
+            notify.warning('La cantidad de elementos debe ser un número entero mayor o igual a 1.');
             return;
         }
 
@@ -1026,7 +1026,7 @@ class QuotationManager {
         try {
             vf = this.getVentanaFija1100Result(data);
         } catch (e) {
-            alert(e.message);
+            notify.warning(e.message);
             return;
         }
 
@@ -1123,13 +1123,38 @@ class QuotationManager {
             btnSave.addEventListener('click', () => this.saveQuotation());
         }
 
+        // Volver al paso de Productos sin perder lo ya cargado: goToStep no toca
+        // el carrito, solo cambia de vista.
+        const btnAddMore = document.getElementById('btn-add-more-items');
+        if (btnAddMore) {
+            btnAddMore.addEventListener('click', () => {
+                this.goToStep(3);
+                // Cae en la sub-pestaña de Productos, que es donde se agrega.
+                this.switchProductTab('productos');
+                const step3 = document.getElementById('step-3-content');
+                if (step3) step3.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+
         const btnPrint = document.getElementById('btn-print');
         if (btnPrint) {
-            btnPrint.addEventListener('click', () => {
-                if (window.pdfGenerator) {
-                    window.pdfGenerator.generate(this);
-                } else {
-                    alert('Generador de PDF no disponible.');
+            btnPrint.addEventListener('click', async () => {
+                if (!window.pdfGenerator) {
+                    notify.error('Generador de PDF no disponible.');
+                    return;
+                }
+                // Armar el PDF tarda: se avisa mientras tanto y el botón queda
+                // bloqueado para no disparar dos veces la misma descarga.
+                window.setButtonLoading(btnPrint, true, 'Generando...');
+                const aviso = notify.loading('Generando el PDF...');
+                try {
+                    await window.pdfGenerator.generate(this);
+                    aviso.done('PDF generado');
+                } catch (e) {
+                    console.error('Error generando PDF', e);
+                    aviso.fail(`No se pudo generar el PDF: ${e.message || 'error desconocido'}`);
+                } finally {
+                    window.setButtonLoading(btnPrint, false);
                 }
             });
         }
@@ -1286,12 +1311,12 @@ class QuotationManager {
         }
 
         if (!data.brand || !data.system || !data.color || data.width <= 0 || data.height <= 0) {
-            alert('Por favor complete los datos básicos de la ventana (Sistema, Marca, Color, Ancho y Alto).');
+            notify.warning('Por favor complete los datos básicos de la ventana (Sistema, Marca, Color, Ancho y Alto).');
             return;
         }
 
         if (!data.glassType) {
-            alert('Debe seleccionar el tipo de vidrio.');
+            notify.warning('Debe seleccionar el tipo de vidrio.');
             document.getElementById('p-glass').focus();
             return;
         }
@@ -1332,45 +1357,45 @@ class QuotationManager {
         }
 
         if (!data.brand || !data.system || !data.color || data.width <= 0 || data.height <= 0) {
-            alert('Complete todos los campos requeridos de aluminio.');
+            notify.warning('Complete todos los campos requeridos de aluminio.');
             return;
         }
 
         // El vidrio es obligatorio en toda ventana: sin él la cotización sale incompleta.
         if (!data.glassType) {
-            alert('Debe seleccionar el tipo de vidrio antes de agregar el producto.');
+            notify.warning('Debe seleccionar el tipo de vidrio antes de agregar el producto.');
             this.switchProductTab('productos');
             document.getElementById('p-glass').focus();
             return;
         }
 
         if (!Number.isInteger(data.qty) || data.qty < 1) {
-            alert('La cantidad de elementos debe ser un número entero mayor o igual a 1.');
+            notify.warning('La cantidad de elementos debe ser un número entero mayor o igual a 1.');
             return;
         }
 
         if (!Number.isInteger(data.labor.workers) || data.labor.workers < 0) {
-            alert('El número de trabajadores debe ser un entero mayor o igual a 0.');
+            notify.warning('El número de trabajadores debe ser un entero mayor o igual a 0.');
             return;
         }
         if (data.labor.hours < 0 || data.labor.transport < 0 || data.labor.viaticos < 0) {
-            alert('Horas, transporte y viáticos no pueden ser negativos.');
+            notify.warning('Horas, transporte y viáticos no pueden ser negativos.');
             return;
         }
 
         if (data.modules !== null && (!Number.isInteger(data.modules) || data.modules < 0)) {
-            alert('Módulos debe ser un número entero mayor o igual a 0.');
+            notify.warning('Módulos debe ser un número entero mayor o igual a 0.');
             return;
         }
         if (data.leaves !== null && (!Number.isInteger(data.leaves) || data.leaves < 0)) {
-            alert('Hojas debe ser un número entero mayor o igual a 0.');
+            notify.warning('Hojas debe ser un número entero mayor o igual a 0.');
             return;
         }
 
         const costResult = window.calculator.calculateWindowCost(data);
 
         if (costResult.total === 0) {
-            alert('No se pudo calcular el precio. Revise los colores y el sistema.');
+            notify.error('No se pudo calcular el precio. Revise los colores y el sistema.');
             return;
         }
 
@@ -1705,7 +1730,7 @@ class QuotationManager {
 
     async saveQuotation() {
         if (!window.clientManager.currentClient || this.cart.length === 0) {
-            alert('Datos incompletos para guardar.');
+            notify.warning('Datos incompletos para guardar.');
             return;
         }
 
@@ -1738,15 +1763,21 @@ class QuotationManager {
             quotation.id = this.editingId;
         }
 
+        // Guardar va a la nube: sin señal de progreso parecía que no pasaba nada.
+        const btn = document.getElementById('btn-save');
+        window.setButtonLoading(btn, true, 'Guardando...');
+
         try {
             const savedQuotation = await window.dbManager.save('quotations', quotation);
             this.id = savedQuotation.id; // assigned ID
 
-            alert(this.editingId ? `Cotización actualizada (${revisionLabel}).` : `Cotización guardada: ${revisionLabel}`);
+            notify.success(this.editingId ? `Cotización actualizada (${revisionLabel}).` : `Cotización guardada: ${revisionLabel}`);
             this.resetWizardAfterSave();
         } catch (e) {
             console.error('Error saving quotation', e);
-            alert('Hubo un error al guardar la cotización.');
+            notify.error('Hubo un error al guardar la cotización.');
+        } finally {
+            window.setButtonLoading(btn, false);
         }
     }
 
@@ -1772,7 +1803,7 @@ class QuotationManager {
 
     openSaveAsModal() {
         if (!this.baseCode) {
-            alert('Guardá la cotización primero para poder crear una nueva versión.');
+            notify.warning('Guardá la cotización primero para poder crear una nueva versión.');
             return;
         }
         document.getElementById('save-as-base-code').textContent = this.baseCode;
@@ -1841,11 +1872,11 @@ class QuotationManager {
     /** Crea un documento NUEVO ligado al mismo baseCode, sin modificar la cotización original. */
     async saveQuotationAs(versionType, versionNumber, customLabel) {
         if (!window.clientManager.currentClient || this.cart.length === 0) {
-            alert('Datos incompletos para guardar.');
+            notify.warning('Datos incompletos para guardar.');
             return;
         }
         if (!this.baseCode) {
-            alert('Esta cotización no tiene un código base todavía. Guardala primero.');
+            notify.warning('Esta cotización no tiene un código base todavía. Guardala primero.');
             return;
         }
 
@@ -1877,7 +1908,7 @@ class QuotationManager {
         try {
             await window.dbManager.save('quotations', quotation);
             this.closeSaveAsModal();
-            alert(`Nueva versión guardada: ${revisionLabel}`);
+            notify.success(`Nueva versión guardada: ${revisionLabel}`);
             this.resetWizardAfterSave();
         } catch (e) {
             console.error('Error saving quotation version', e);

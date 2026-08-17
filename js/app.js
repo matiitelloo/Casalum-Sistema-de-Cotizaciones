@@ -42,6 +42,8 @@ class App {
     }
 
     setupNavigation() {
+        this.bindHistoryNavigation();
+
         // Solo los nav-item que realmente navegan a una página (excluye el botón que
         // abre/cierra el submenú "Cotización", que no tiene data-page).
         const navButtons = document.querySelectorAll('.nav-item[data-page]');
@@ -200,7 +202,9 @@ class App {
         if (!document.getElementById(`page-${pageId}`)) return;         // sección que ya no existe
         if (pageId === 'settings' && user.role !== 'admin') return;     // no la puede ver
 
-        this.navigate(pageId);
+        // replace: la restauración es la primera pantalla de la sesión, no un
+        // paso al que se pueda "volver" con la flecha de atrás.
+        this.navigate(pageId, { replace: true });
         this.syncNavActive(pageId);
 
         // Si se recuperó una cotización en curso se vuelve al paso donde la dejó;
@@ -209,6 +213,49 @@ class App {
             const step = draftRestored ? (window.quotationManager.currentStep || 1) : 1;
             window.quotationManager.goToStep(step);
         }
+    }
+
+    // ============================================================
+    // HISTORIAL DEL NAVEGADOR (flechas atrás / adelante)
+    // ============================================================
+
+    /**
+     * Deja la sección actual en el historial del navegador, para que las
+     * flechas de atrás y adelante se muevan entre secciones en vez de sacar
+     * al usuario de la aplicación entera.
+     */
+    pushHistory(pageId, replace) {
+        const estado = { casalumPage: pageId };
+        const url = '#' + pageId;
+        const actual = history.state && history.state.casalumPage;
+
+        // Repetir la misma sección no genera una entrada nueva: si no, había
+        // que apretar atrás varias veces para salir de donde ya se estaba.
+        if (!replace && actual === pageId) return;
+
+        if (replace || actual === undefined) {
+            history.replaceState(estado, '', url);
+        } else {
+            history.pushState(estado, '', url);
+        }
+    }
+
+    /** Conecta las flechas del navegador con la navegación interna. */
+    bindHistoryNavigation() {
+        window.addEventListener('popstate', e => {
+            const pageId = (e.state && e.state.casalumPage)
+                || (location.hash ? location.hash.slice(1) : '')
+                || 'dashboard';
+
+            if (!document.getElementById(`page-${pageId}`)) return;
+
+            // Sección de admin: si el usuario no puede verla, no se abre.
+            const user = window.authManager && window.authManager.currentUser;
+            if (pageId === 'settings' && (!user || user.role !== 'admin')) return;
+
+            this.navigate(pageId, { fromHistory: true });
+            this.syncNavActive(pageId);
+        });
     }
 
     /** Deja marcado en el menú lateral el botón de la sección abierta. */
@@ -237,12 +284,24 @@ class App {
         });
     }
 
-    navigate(pageId) {
+    /**
+     * @param {string} pageId
+     * @param {Object} [opts]
+     * @param {boolean} [opts.fromHistory] - true si viene de las flechas del
+     *   navegador: en ese caso NO se agrega una entrada nueva al historial,
+     *   porque el navegador ya se movió solo (si no, quedaría trabado).
+     * @param {boolean} [opts.replace] - reemplaza la entrada actual en vez de
+     *   apilar una nueva (para la restauración inicial de sesión).
+     */
+    navigate(pageId, opts) {
         const targetPage = document.getElementById(`page-${pageId}`);
         if (!targetPage) {
             console.warn(`navigate(): página desconocida "${pageId}", se ignora.`);
             return;
         }
+
+        const o = opts || {};
+        if (!o.fromHistory) this.pushHistory(pageId, o.replace);
 
         this.rememberPage(pageId);
 
@@ -318,9 +377,9 @@ class App {
                 const base = parseFloat(baseInput.value);
                 const height = parseFloat(heightInput.value);
 
-                if (!type) { alert('Seleccione un tipo de vidrio.'); return; }
-                if (!base || base <= 0) { alert('Ingrese la base en metros.'); return; }
-                if (!height || height <= 0) { alert('Ingrese la altura en metros.'); return; }
+                if (!type) { notify.warning('Seleccione un tipo de vidrio.'); return; }
+                if (!base || base <= 0) { notify.warning('Ingrese la base en metros.'); return; }
+                if (!height || height <= 0) { notify.warning('Ingrese la altura en metros.'); return; }
 
                 const glassData = window.SEED_DATA.glassSale || window.SEED_DATA.glass;
                 const glass = glassData.find(g => g.type === type);
@@ -365,7 +424,7 @@ class App {
                             };
 
                             await window.dbManager.save('quotations', quotation);
-                            alert('Cotización de vidrio guardada en el historial.');
+                            notify.success('Cotización de vidrio guardada en el historial.');
 
                             // Reset
                             baseInput.value = '';
@@ -375,7 +434,7 @@ class App {
                             saveBtn.style.display = 'none';
                         } catch (e) {
                             console.error('Error saving glass quote', e);
-                            alert('Hubo un error al guardar la cotización.');
+                            notify.error('Hubo un error al guardar la cotización.');
                         }
                     };
                 }
@@ -552,7 +611,7 @@ class App {
             this.loadRecentQuotations(false);
         } catch (e) {
             console.error('Error updating quotation status', e);
-            alert('Hubo un error al actualizar el estado de la cotización.');
+            notify.error('Hubo un error al actualizar el estado de la cotización.');
         }
     }
 
@@ -595,7 +654,7 @@ class App {
         if (window.pdfGenerator) {
             window.pdfGenerator.generate(tempQM);
         } else {
-            alert('Generador de PDF no disponible.');
+            notify.error('Generador de PDF no disponible.');
         }
 
         // Restore
@@ -621,7 +680,7 @@ class App {
             this.updateDashboardStats();
         } catch (e) {
             console.error('Error deleting quotation', e);
-            alert('Hubo un error al intentar eliminar la cotización.');
+            notify.error('Hubo un error al intentar eliminar la cotización.');
         }
     }
     
