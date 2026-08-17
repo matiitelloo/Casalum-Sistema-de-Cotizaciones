@@ -101,6 +101,7 @@ class Calculator {
      *            + coefBaseMod     x Base   x Módulos
      *            + coefAlturaMod   x Altura x Módulos
      *            + coefArea        x (Base x Altura)
+     *            + coefModulos     x Módulos            (sin medida: piezas sueltas)
      *            + fixedQty                              (constante K)
      *
      * Con esto, sin casos especiales, salen todos los patrones vistos:
@@ -112,6 +113,8 @@ class Calculator {
      *     -> Altura x Módulos - Altura = Altura x (Módulos-1)
      *   - Marco que crece con módulos pero no borra el fijo (perfil en tubo):
      *     coefBase=2, coefAltura=1, coefAlturaMod=1  -> Base x2 + Altura x(Módulos+1)
+     *   - Piezas sueltas por módulo (anclas de la ventana en tubo):
+     *     coefModulos=2, fixedQty=2                  -> 2 x Módulos + 2
      *
      * El resultado nunca es negativo (se pisa en 0) porque una cantidad de
      * material no puede ser negativa aunque la combinación de coeficientes
@@ -129,6 +132,7 @@ class Calculator {
             + num('coefBaseMod') * ctx.width * modules
             + num('coefAlturaMod') * ctx.height * modules
             + num('coefArea') * ctx.area
+            + num('coefModulos') * modules
             + num('fixedQty');
         return qty < 0 ? 0 : qty;
     }

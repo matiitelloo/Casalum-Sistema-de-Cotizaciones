@@ -531,7 +531,7 @@ class ModuleManager {
         const coefFields = [
             ['coefBase', 'Base'], ['coefAltura', 'Alto'],
             ['coefBaseMod', 'Base×Mód'], ['coefAlturaMod', 'Alto×Mód'],
-            ['coefArea', 'Área']
+            ['coefArea', 'Área'], ['coefModulos', 'Módulos']
         ];
 
         let html = `<table class="table" style="font-size:0.78rem; min-width:900px;">
@@ -716,7 +716,8 @@ class ModuleManager {
         const editable = this.isAdmin;
         const coefFields = [
             ['coefBase', 'Base'], ['coefAltura', 'Alto'],
-            ['coefBaseMod', 'Base×Mód'], ['coefAlturaMod', 'Alto×Mód'], ['coefArea', 'Área']
+            ['coefBaseMod', 'Base×Mód'], ['coefAlturaMod', 'Alto×Mód'], ['coefArea', 'Área'],
+            ['coefModulos', 'Módulos']
         ];
 
         let html = '';
@@ -795,7 +796,7 @@ class ModuleManager {
                 row = { name: name, qty: 0, price: acc ? acc.pricePerUnit : 0 };
                 this.draft.accessories.push(row);
             }
-            row.qtyFormula = { coefBase: 0, coefAltura: 0, coefBaseMod: 0, coefAlturaMod: 0, coefArea: 0, fixedQty: 0 };
+            row.qtyFormula = { coefBase: 0, coefAltura: 0, coefBaseMod: 0, coefAlturaMod: 0, coefArea: 0, coefModulos: 0, fixedQty: 0 };
         } else if (row) {
             delete row.qtyFormula;
             if (!row.qty) this.draft.accessories = this.draft.accessories.filter(a => a.name !== name);
