@@ -2482,7 +2482,11 @@ window.SEED_DATA = {
     { name: 'Sistema MB-004', pricePerUnit: 105.00, unit: 'und' },
     { name: 'Sistema MB-008', pricePerUnit: 90.00, unit: 'und' },
     { name: 'Sistema BM-007 en angulo 90', pricePerUnit: 190.00, unit: 'und' },
-    { name: 'Sistema MB-009 en angulo 90', pricePerUnit: 170.00, unit: 'und' }
+    { name: 'Sistema MB-009 en angulo 90', pricePerUnit: 170.00, unit: 'und' },
+    // Ventana fija en tubo: 2 anclas por módulo más 2 (VENTANAS FIJAS.xlsx,
+    // hoja "V. FIJA TUBO"). Va aparte de "Anclas para tubo 7x4" ($0.25), que
+    // es de otra medida.
+    { name: 'Ancla', pricePerUnit: 0.45, unit: 'und' }
   ],
   /**
    * Módulos preestablecidos por ítem del catálogo (ver js/modules.js). itemId -> receta.
@@ -2660,6 +2664,59 @@ window.SEED_DATA = {
       labor: { workers: 1, hours: 8, transport: 0, viaticos: 0 },
       updatedAt: null,
       updatedBy: "importado de CABINA DE BAÑO ACTUALIZADO.xlsx"
+    },
+
+    /**
+     * Ventana fija en tubo 4x4.
+     * Fuente: VENTANAS FIJAS.xlsx, hoja "V. FIJA TUBO".
+     *
+     * Una sola receta sirve para 1, 2, 3 y 4 módulos: todo escala por fórmula.
+     *   marco     = Base x2 + Alto x(Módulos+1)   -> 4, 5, 6, 7
+     *   junquillo = Base x2 + Alto x2 x Módulos   -> 4, 6, 8, 10  (espalda y tapa)
+     *   vinil     = igual que el junquillo
+     *   ancla     = 2 x Módulos + 2               -> 4, 6, 8, 10
+     *
+     * Esa hoja trae bloques duplicados para 2 y 3 módulos con fórmulas que no
+     * coinciden entre sí. Se tomaron los que siguen el patrón de 1 y 4 módulos
+     * (para 2 módulos el segundo bloque, para 3 módulos el primero); los otros
+     * dos invierten Base con Alto o traen un ajuste manual de 0,5 que no
+     * aparece en ninguna otra parte.
+     *
+     * Tornillos (40, 80/100, 100, 200) y mano de obra (4, 5, 7, 14) no siguen
+     * ningún patrón en la hoja, así que quedan como valor de arranque para
+     * cargar a mano al cotizar.
+     */
+    "ventana-fija-en-tubo--ventana-fija-1-modulo": {
+      itemId: "ventana-fija-en-tubo--ventana-fija-1-modulo",
+      itemName: "VENTANA FIJA 1 MODULO",
+      group: "VENTANAS",
+      family: "VENTANA FIJA EN TUBO",
+      note: "",
+      brand: "cedal",
+      category: "",
+      profiles: [
+        {
+          code: "CED-TUB4245", category: "Tubos y Canales", description: "TUBO DE 1-1/2 X 1-1/2 (MARCO)",
+          role: "ventana-tubo-marco", formula: "lineal", coefBase: 2, coefAltura: 1, coefAlturaMod: 1
+        },
+        {
+          code: "CED-JUN0971", category: "Junquillos", description: "JUNQUILLO TRIANGULAR 1-1/2 ESPALDA",
+          role: "ventana-tubo-junquillo-espalda", formula: "lineal", coefBase: 2, coefAlturaMod: 2
+        },
+        {
+          code: "CED-JUN0242", category: "Junquillos", description: "JUNQUILLO TRIANGULAR 1-1/2 TAPA",
+          role: "ventana-tubo-junquillo-tapa", formula: "lineal", coefBase: 2, coefAlturaMod: 2
+        }
+      ],
+      accessories: [
+        { name: "Vinil", qty: 0, price: 0.85, qtyFormula: { coefBase: 2, coefAlturaMod: 2 } },
+        { name: "Ancla", qty: 0, price: 0.45, qtyFormula: { coefModulos: 2, fixedQty: 2 } },
+        { name: "Silicon", qty: 1, price: 2.2 },
+        { name: "Tornillos y tacos", qty: 40, price: 0.05 }
+      ],
+      labor: { workers: 1, hours: 4, transport: 0, viaticos: 0 },
+      updatedAt: null,
+      updatedBy: "importado de VENTANAS FIJAS.xlsx"
     }
   },
   defaultSettings: {
