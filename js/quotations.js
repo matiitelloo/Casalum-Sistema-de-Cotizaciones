@@ -1152,6 +1152,71 @@ class QuotationManager {
         info.style.color = '#b45309';
     }
 
+    /** Menú "Guardar como": PDF (plantilla corporativa) o Word (editable). */
+    bindExportMenu() {
+        const btn = document.getElementById('btn-print');
+        const menu = document.getElementById('export-dropdown');
+        if (!btn || !menu) return;
+
+        const abrir = (mostrar) => {
+            menu.style.display = mostrar ? 'block' : 'none';
+            btn.setAttribute('aria-expanded', mostrar ? 'true' : 'false');
+        };
+
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            abrir(menu.style.display === 'none');
+        });
+
+        // Cerrar al hacer clic afuera o con Escape.
+        document.addEventListener('click', (e) => {
+            if (!menu.contains(e.target) && e.target !== btn) abrir(false);
+        });
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') abrir(false);
+        });
+
+        // Resaltado al pasar el mouse, como el resto de los menús.
+        menu.querySelectorAll('button').forEach(op => {
+            op.addEventListener('mouseover', () => op.style.background = 'var(--bg-main)');
+            op.addEventListener('mouseout', () => op.style.background = 'none');
+        });
+
+        const pdfBtn = document.getElementById('btn-export-pdf');
+        const wordBtn = document.getElementById('btn-export-word');
+        if (pdfBtn) pdfBtn.addEventListener('click', () => { abrir(false); this.exportar('pdf'); });
+        if (wordBtn) wordBtn.addEventListener('click', () => { abrir(false); this.exportar('word'); });
+    }
+
+    /**
+     * Genera el archivo en el formato pedido. El botón queda bloqueado mientras
+     * dura para no disparar dos descargas del mismo documento.
+     */
+    async exportar(formato) {
+        const esWord = formato === 'word';
+        const generador = esWord ? window.wordGenerator : window.pdfGenerator;
+        const nombre = esWord ? 'Word' : 'PDF';
+
+        if (!generador) {
+            notify.error(`Generador de ${nombre} no disponible.`);
+            return;
+        }
+
+        const btn = document.getElementById('btn-print');
+        window.setButtonLoading(btn, true, 'Generando...');
+        const aviso = notify.loading(`Generando el documento ${nombre}...`);
+
+        try {
+            await generador.generate(this);
+            aviso.done(`Documento ${nombre} generado`);
+        } catch (e) {
+            console.error(`Error generando ${nombre}`, e);
+            aviso.fail(`No se pudo generar el ${nombre}: ${e.message || 'error desconocido'}`);
+        } finally {
+            window.setButtonLoading(btn, false);
+        }
+    }
+
     bindStep4Events() {
         const btnSave = document.getElementById('btn-save');
         if (btnSave) {
@@ -1171,28 +1236,7 @@ class QuotationManager {
             });
         }
 
-        const btnPrint = document.getElementById('btn-print');
-        if (btnPrint) {
-            btnPrint.addEventListener('click', async () => {
-                if (!window.pdfGenerator) {
-                    notify.error('Generador de PDF no disponible.');
-                    return;
-                }
-                // Armar el PDF tarda: se avisa mientras tanto y el botón queda
-                // bloqueado para no disparar dos veces la misma descarga.
-                window.setButtonLoading(btnPrint, true, 'Generando...');
-                const aviso = notify.loading('Generando el PDF...');
-                try {
-                    await window.pdfGenerator.generate(this);
-                    aviso.done('PDF generado');
-                } catch (e) {
-                    console.error('Error generando PDF', e);
-                    aviso.fail(`No se pudo generar el PDF: ${e.message || 'error desconocido'}`);
-                } finally {
-                    window.setButtonLoading(btnPrint, false);
-                }
-            });
-        }
+        this.bindExportMenu();
 
         const btnSaveAs = document.getElementById('btn-save-as');
         if (btnSaveAs) {
@@ -1649,9 +1693,7 @@ class QuotationManager {
         this.totals = window.calculator.calculateTotalQuotation(this.cart, window.calculator.settings);
 
         const summaryMarginsBox = document.getElementById('summary-margins-admin-only');
-        const summaryGastosLabel = document.getElementById('summary-gastos-label');
         const summaryGastos = document.getElementById('summary-gastos');
-        const summaryUtilidadLabel = document.getElementById('summary-utilidad-label');
         const summaryUtilidad = document.getElementById('summary-utilidad');
 
         const summarySubtotalFinal = document.getElementById('summary-subtotal-final');
@@ -1659,17 +1701,15 @@ class QuotationManager {
 
         summarySubtotal.textContent = `$${this.totals.subtotalRaw.toFixed(2)}`;
 
-        const isAdmin = !!(window.authManager && window.authManager.currentUser && window.authManager.currentUser.role === 'admin');
-        // Cotización rápida: resumen minimalista (Subtotal, IVA, Total), sin desglose de
-        // márgenes ni descuento, ni para admin.
-        if (summaryMarginsBox) summaryMarginsBox.style.display = (isAdmin && !this.isQuickQuote) ? '' : 'none';
+        // Cotización rápida: resumen minimalista (Subtotal, IVA, Total), sin
+        // desglose de márgenes ni descuento.
+        if (summaryMarginsBox) summaryMarginsBox.style.display = this.isQuickQuote ? 'none' : '';
         const summaryDiscountSection = document.getElementById('summary-discount-section');
         if (summaryDiscountSection) summaryDiscountSection.style.display = this.isQuickQuote ? 'none' : '';
 
-        if (summaryGastosLabel) summaryGastosLabel.textContent = `Gastos Generales (${(this.totals.gastosPct * 100).toFixed(0)}%):`;
+        // Las etiquetas quedan fijas en el HTML: antes se les pegaba el
+        // porcentaje ("Gastos Generales (14%)"), y el resumen va sin ese detalle.
         if (summaryGastos) summaryGastos.textContent = `$${this.totals.gastosValor.toFixed(2)}`;
-
-        if (summaryUtilidadLabel) summaryUtilidadLabel.textContent = `Utilidad (${(this.totals.utilidadPct * 100).toFixed(0)}%):`;
         if (summaryUtilidad) summaryUtilidad.textContent = `$${this.totals.utilidadValor.toFixed(2)}`;
 
         if (summaryIva) summaryIva.textContent = `$${this.totals.ivaValor.toFixed(2)}`;

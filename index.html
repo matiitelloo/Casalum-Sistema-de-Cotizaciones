@@ -679,40 +679,42 @@
                                 <div style="display: flex; justify-content: flex-end;">
                                     <div class="totals-box" style="min-width: 300px;">
                                         <div class="totals-row">
-                                            <span>Subtotal (Costo Directo):</span>
+                                            <span>SUBTOTAL</span>
                                             <span id="summary-subtotal">$0.00</span>
                                         </div>
-                                        <div id="summary-margins-admin-only" style="display: none;">
+                                        <div id="summary-margins-admin-only">
                                             <div class="totals-row">
-                                                <span id="summary-gastos-label">Gastos Generales:</span>
+                                                <span id="summary-gastos-label">GASTOS GENERALES</span>
                                                 <span id="summary-gastos">$0.00</span>
                                             </div>
                                             <div class="totals-row">
-                                                <span id="summary-utilidad-label">Utilidad:</span>
+                                                <span id="summary-utilidad-label">UTILIDAD</span>
                                                 <span id="summary-utilidad">$0.00</span>
                                             </div>
                                         </div>
                                         <div class="totals-row">
-                                            <span>IVA (0%):</span>
+                                            <span>IVA (0%)</span>
                                             <span id="summary-iva">$0.00</span>
                                         </div>
                                         <div id="summary-discount-section">
                                             <div class="totals-row" style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
-                                                <span>Subtotal sin Descuento:</span>
+                                                <span>SUBTOTAL SIN DESCUENTO</span>
                                                 <span id="summary-subtotal-final">$0.00</span>
                                             </div>
                                             <div class="totals-row">
-                                                <span>Descuento (%):</span>
-                                                <input type="number" id="summary-descuento-pct" value="0" min="0" max="100" style="width: 70px; text-align: right; margin-left: auto; padding: 2px 5px; border: 1px solid #ccc; border-radius: 4px;">
+                                                <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                                    DESCUENTO
+                                                    <input type="number" id="summary-descuento-pct" value="0" min="0" max="100" aria-label="Porcentaje de descuento" style="width: 62px; text-align: right; padding: 2px 5px; border: 1px solid #ccc; border-radius: 4px;">%
+                                                </span>
                                             </div>
                                             <div id="summary-descuento-error" style="display: none; color: var(--danger); font-size: 0.8rem; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem;">El descuento debe estar entre 0% y 100%.</div>
                                             <div class="totals-row">
-                                                <span style="color: var(--danger);">Valor Descuento:</span>
+                                                <span style="color: var(--danger);">VALOR DESCUENTO</span>
                                                 <span id="summary-descuento-valor" style="color: var(--danger);">-$0.00</span>
                                             </div>
                                         </div>
                                         <div class="totals-row grand-total">
-                                            <span>TOTAL A PAGAR:</span>
+                                            <span>TOTAL A PAGAR</span>
                                             <span id="summary-total">$0.00</span>
                                         </div>
                                     </div>
@@ -721,7 +723,22 @@
                                 <div class="flex-end mt-4" style="gap: 1rem;">
                                     <button class="btn btn-outline" id="btn-add-more-items"><i class="fa-solid fa-cart-plus"></i> Agregar más ítems</button>
                                     <button class="btn btn-outline" id="btn-save-as" style="display: none;"><i class="fa-solid fa-code-branch"></i> Guardar como Nueva Versión</button>
-                                    <button class="btn btn-primary" id="btn-print"><i class="fa-solid fa-print"></i> Imprimir PDF</button>
+                                    <!-- "Guardar como": PDF (plantilla corporativa) o Word (editable) -->
+                                    <div style="position: relative;">
+                                        <button class="btn btn-primary" id="btn-print" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fa-solid fa-download"></i> Guardar como <i class="fa-solid fa-chevron-down" style="font-size: 0.7rem; margin-left: 0.25rem;"></i>
+                                        </button>
+                                        <div id="export-dropdown" role="menu" style="display: none; position: absolute; bottom: calc(100% + 6px); right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow-md); min-width: 210px; z-index: 200; overflow: hidden; padding: 0.25rem 0;">
+                                            <button type="button" role="menuitem" id="btn-export-pdf" style="background: none; border: none; text-align: left; padding: 0.7rem 1.1rem; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 0.7rem; font-family: inherit; font-size: 0.875rem; color: var(--text-main);">
+                                                <i class="fa-solid fa-file-pdf" style="width: 16px; color: var(--danger);"></i>
+                                                <span>Documento PDF</span>
+                                            </button>
+                                            <button type="button" role="menuitem" id="btn-export-word" style="background: none; border: none; text-align: left; padding: 0.7rem 1.1rem; width: 100%; cursor: pointer; display: flex; align-items: center; gap: 0.7rem; font-family: inherit; font-size: 0.875rem; color: var(--text-main);">
+                                                <i class="fa-solid fa-file-word" style="width: 16px; color: var(--primary-light);"></i>
+                                                <span>Documento Word</span>
+                                            </button>
+                                        </div>
+                                    </div>
                                     <button class="btn btn-primary" style="background-color: var(--success);" id="btn-save"><i class="fa-solid fa-save"></i> Guardar Cotización</button>
                                 </div>
                             </div>
@@ -1287,9 +1304,10 @@
     <script src="js/db.js?v=3"></script>
     <script src="js/calculator.js?v=7"></script>
     <script src="js/ventanaFija1100.js?v=9"></script>
-    <script src="js/quotations.js?v=31"></script>
+    <script src="js/quotations.js?v=33"></script>
     <script src="js/clients.js?v=8"></script>
     <script src="js/pdf.js?v=3"></script>
+    <script src="js/word.js?v=1"></script>
     <script src="js/catalog.js?v=10"></script>
     <script src="js/modules.js?v=8"></script>
     <script src="js/settings.js?v=3"></script>
