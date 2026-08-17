@@ -1457,6 +1457,7 @@ window.SEED_DATA = {
             "code": "CED-CAB1924",
             "description": "CABEZAL CAB VIDRIO TEMPLADO CEDAL",
             "unit": "ml",
+            "genericRoles": ["cabina-cabezal"],
             "prices": {
               "natural": 16.22,
               "negro": 16.22,
@@ -1469,6 +1470,7 @@ window.SEED_DATA = {
             "code": "CED-BAS6939",
             "description": "BASE CB VIDRIO TEMPLADO CEDAL",
             "unit": "ml",
+            "genericRoles": ["cabina-base"],
             "prices": {
               "natural": 4.34,
               "negro": 4.34,
@@ -1481,6 +1483,7 @@ window.SEED_DATA = {
             "code": "CED-JAM8113",
             "description": "JAMBA C/ VIDRIO TEMPLADO",
             "unit": "ml",
+            "genericRoles": ["cabina-jamba"],
             "prices": {
               "natural": 3.19,
               "negro": 3.19,
@@ -1493,6 +1496,7 @@ window.SEED_DATA = {
             "code": "CED-HOR6738",
             "description": "HORIZONTAL SUPERIOR CEDAL",
             "unit": "ml",
+            "genericRoles": ["cabina-horizontal-superior"],
             "prices": {
               "natural": 5.18,
               "negro": 5.18,
@@ -2353,6 +2357,7 @@ window.SEED_DATA = {
             "code": "FIS-CAB7547",
             "description": "CABEZAL MARCO NIQUELADO",
             "unit": "ml",
+            "genericRoles": ["cabina-cabezal"],
             "prices": {
               "natural": 14.44,
               "negro": 14.44,
@@ -2365,6 +2370,7 @@ window.SEED_DATA = {
             "code": "FIS-BAS1326",
             "description": "BASE MARCO NIQUELADO",
             "unit": "ml",
+            "genericRoles": ["cabina-base"],
             "prices": {
               "natural": 4.99,
               "negro": 4.99,
@@ -2377,6 +2383,7 @@ window.SEED_DATA = {
             "code": "FIS-JAM1219",
             "description": "JAMBA MARCO NIQUELADO",
             "unit": "ml",
+            "genericRoles": ["cabina-jamba"],
             "prices": {
               "natural": 3.19,
               "negro": 3.19,
@@ -2389,6 +2396,7 @@ window.SEED_DATA = {
             "code": "FIS-HOR4357",
             "description": "HORIZONTAL SUPERIOR HOJA NIQUELADO",
             "unit": "ml",
+            "genericRoles": ["cabina-horizontal-superior"],
             "prices": {
               "natural": 5.35,
               "negro": 5.35,
@@ -2411,7 +2419,12 @@ window.SEED_DATA = {
     { type: 'Deslustrado 4mm', weight: 10, pricePerM2: 12.00 },
     { type: 'Deslustrado 6mm', weight: 15, pricePerM2: 14.00 },
     { type: 'Laminado claro 3+3', weight: 16, pricePerM2: 22.00 },
-    { type: 'Laminado claro 4+4', weight: 22, pricePerM2: 32.00 }
+    { type: 'Laminado claro 4+4', weight: 22, pricePerM2: 32.00 },
+    // Templados: los usan las cabinas de baño (CABINA DE BAÑO ACTUALIZADO.xlsx,
+    // precios al 13/05/2025). No se venden por m² sueltos como los anteriores.
+    { type: 'Templado 6mm', weight: 15, pricePerM2: 26.00 },
+    { type: 'Templado 8mm', weight: 20, pricePerM2: 34.00 },
+    { type: 'Templado 8mm con diseno', weight: 20, pricePerM2: 52.00 }
   ],
   glassSale: [
     { type: 'Claro 2mm', pricePerM2: 4.20 },
@@ -2451,7 +2464,25 @@ window.SEED_DATA = {
     { name: 'Escuadra de travesano fem', pricePerUnit: 1.50, unit: 'und' },
     { name: 'Limitador de apertura', pricePerUnit: 9.00, unit: 'und' },
     { name: 'Anclas para tubo 7x4', pricePerUnit: 0.25, unit: 'und' },
-    { name: 'Brazos de acero 12 pulgadas', pricePerUnit: 8.50, unit: 'und' }
+    { name: 'Brazos de acero 12 pulgadas', pricePerUnit: 8.50, unit: 'und' },
+    // Cabinas de baño (CABINA DE BAÑO ACTUALIZADO.xlsx). Van aparte de sus
+    // parecidos de ventana: la rueda de puerta de cabina no es la misma que la
+    // "Ruedas doble de ventana" ($0.50), y el tope de cabina va a $0.50 contra
+    // los $0.25 del tope de ventana que ya estaba cargado.
+    { name: 'Ruedas de puerta de cabina', pricePerUnit: 1.50, unit: 'und' },
+    { name: 'Boton acero inoxidable', pricePerUnit: 8.00, unit: 'und' },
+    { name: 'Topes de cabina', pricePerUnit: 0.50, unit: 'und' },
+    { name: 'Guia de cabina', pricePerUnit: 0.50, unit: 'und' },
+    { name: 'Cinta masking', pricePerUnit: 1.00, unit: 'und' },
+    // Cabinas de baño en acero inoxidable (hoja "ACERO INOXIDABLE" del mismo
+    // Excel). Cada cabina lleva UN sistema y son excluyentes entre sí: van
+    // como accesorio, con cantidad 1 en el que corresponda y 0 en el resto,
+    // porque el motor de módulos todavía no tiene una fila de "elegir una
+    // opción de una lista" (ver el pendiente de "selección única").
+    { name: 'Sistema MB-004', pricePerUnit: 105.00, unit: 'und' },
+    { name: 'Sistema MB-008', pricePerUnit: 90.00, unit: 'und' },
+    { name: 'Sistema BM-007 en angulo 90', pricePerUnit: 190.00, unit: 'und' },
+    { name: 'Sistema MB-009 en angulo 90', pricePerUnit: 170.00, unit: 'und' }
   ],
   /**
    * Módulos preestablecidos por ítem del catálogo (ver js/modules.js). itemId -> receta.
@@ -2540,6 +2571,95 @@ window.SEED_DATA = {
       labor: { workers: 1, hours: 6, transport: 0, viaticos: 0, hoursFormula: { coefModulos: 2, base: 2 } },
       updatedAt: null,
       updatedBy: "importado de VENTANAS FIJAS.xlsx"
+    },
+
+    /**
+     * Cabina de baño en marco de aluminio y vidrio templado.
+     * Fuente: CABINA DE BAÑO ACTUALIZADO.xlsx, hoja "MARCO DE ALUMINIO"
+     * (precios al 13/05/2025).
+     *
+     * A diferencia de las ventanas, acá NINGUNA cantidad depende de los
+     * módulos: el "2 MODULOS" del nombre son las dos hojas de vidrio, pero la
+     * hoja de cálculo mide todo contra Base y Altura solamente. Por eso todos
+     * los coeficientes son coefBase/coefAltura y no hay ningún coefBaseMod.
+     *
+     * Los perfiles van por rol genérico, así que la misma receta cotiza con
+     * Cedal o con Fisa (los dos tienen los cuatro perfiles etiquetados).
+     * Femec no fabrica esta línea: al elegirlo no va a resolver los perfiles.
+     */
+    "cabina-en-aluminio--cabina-corrediza-2-modulos": {
+      itemId: "cabina-en-aluminio--cabina-corrediza-2-modulos",
+      itemName: "CABINA CORREDIZA 2 MODULOS",
+      group: "CABINAS DE BAÑO",
+      family: "CABINA EN ALUMINIO",
+      note: "",
+      brand: "cedal",
+      category: "",
+      profiles: [
+        {
+          code: "CED-CAB1924", category: "Cortinero Bano Niquelado", description: "CABEZAL CAB VIDRIO TEMPLADO CEDAL",
+          role: "cabina-cabezal", formula: "lineal", coefBase: 1
+        },
+        {
+          code: "CED-BAS6939", category: "Cortinero Bano Niquelado", description: "BASE CB VIDRIO TEMPLADO CEDAL",
+          role: "cabina-base", formula: "lineal", coefBase: 1
+        },
+        {
+          code: "CED-JAM8113", category: "Cortinero Bano Niquelado", description: "JAMBA C/ VIDRIO TEMPLADO",
+          role: "cabina-jamba", formula: "lineal", coefAltura: 2
+        },
+        {
+          code: "CED-HOR6738", category: "Cortinero Bano Niquelado", description: "HORIZONTAL SUPERIOR CEDAL",
+          role: "cabina-horizontal-superior", formula: "lineal", coefBase: 1
+        }
+      ],
+      accessories: [
+        { name: "Ruedas de puerta de cabina", qty: 2, price: 1.5 },
+        { name: "Boton acero inoxidable", qty: 1, price: 8 },
+        { name: "Tornillos y tacos", qty: 20, price: 0.05 },
+        { name: "Topes de cabina", qty: 4, price: 0.5 },
+        { name: "Guia de cabina", qty: 1, price: 0.5 },
+        { name: "Silicon", qty: 1, price: 2.2 }
+      ],
+      labor: { workers: 1, hours: 8, transport: 0, viaticos: 0 },
+      updatedAt: null,
+      updatedBy: "importado de CABINA DE BAÑO ACTUALIZADO.xlsx"
+    },
+
+    /**
+     * Cabina de baño en sistema M&B (acero inoxidable) y vidrio templado.
+     * Fuente: CABINA DE BAÑO ACTUALIZADO.xlsx, hoja "ACERO INOXIDABLE".
+     *
+     * No lleva perfiles de aluminio: el marco ES el sistema M&B, que se compra
+     * armado. Por eso `profiles` va vacío y todo el costo del herraje entra por
+     * accesorios.
+     *
+     * OJO: el sistema M&B queda en 0 a propósito. Cada cabina lleva uno solo y
+     * son excluyentes (MB-004 / MB-008 / BM-007 / MB-009), así que hay que
+     * poner 1 en el que corresponda al cotizar. Cuando el editor de módulos
+     * tenga fila de "selección única" esto se va a poder dejar preelegido.
+     */
+    "cabinas-acero-y-vidrio--cabina-corrediza-2-modulos": {
+      itemId: "cabinas-acero-y-vidrio--cabina-corrediza-2-modulos",
+      itemName: "CABINA CORREDIZA 2 MODULOS",
+      group: "CABINAS DE BAÑO",
+      family: "CABINAS ACERO Y VIDRIO",
+      note: "Solo corrediza",
+      brand: "cedal",
+      category: "",
+      profiles: [],
+      accessories: [
+        { name: "Sistema MB-004", qty: 0, price: 105 },
+        { name: "Sistema MB-008", qty: 0, price: 90 },
+        { name: "Sistema BM-007 en angulo 90", qty: 0, price: 190 },
+        { name: "Sistema MB-009 en angulo 90", qty: 0, price: 170 },
+        { name: "Tornillos y tacos", qty: 30, price: 0.05 },
+        { name: "Cinta masking", qty: 0.5, price: 1 },
+        { name: "Silicon", qty: 1, price: 2.2 }
+      ],
+      labor: { workers: 1, hours: 8, transport: 0, viaticos: 0 },
+      updatedAt: null,
+      updatedBy: "importado de CABINA DE BAÑO ACTUALIZADO.xlsx"
     }
   },
   defaultSettings: {
