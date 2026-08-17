@@ -12,7 +12,15 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read, write: if isSignedIn() && request.auth.uid == userId;
+      allow read: if isSignedIn() && request.auth.uid == userId;
+      // El usuario puede crear su propio perfil, pero solo con rol 'user' — nunca
+      // puede autoasignarse admin (auth.js siempre crea el perfil inicial así).
+      allow create: if isSignedIn() && request.auth.uid == userId &&
+        request.resource.data.role == 'user';
+      // Puede actualizar su perfil (nombre, etc.) pero el campo role no puede cambiar
+      // por esta vía — asignar/quitar admin se hace a mano desde la consola de Firebase.
+      allow update: if isSignedIn() && request.auth.uid == userId &&
+        request.resource.data.role == resource.data.role;
     }
 
     match /catalog/{docId} {

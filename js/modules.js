@@ -149,7 +149,7 @@ class ModuleManager {
             }
             const configured = !!window.SEED_DATA.modules[it.id];
             const note = it.note ? ` — ${it.note}` : '';
-            html += `<option value="${it.id}">${configured ? '✔ ' : ''}${it.name}${note}</option>`;
+            html += `<option value="${window.escapeHtml(it.id)}">${configured ? '✔ ' : ''}${window.escapeHtml(it.name)}${window.escapeHtml(note)}</option>`;
         });
         if (currentFamily !== null) html += '</optgroup>';
         sel.innerHTML += html;
@@ -255,9 +255,9 @@ class ModuleManager {
         const item = window.CATALOG_ITEMS_BY_ID[d.itemId];
         const title = document.getElementById('module-item-title');
         if (title) {
-            title.innerHTML = `${item.name}
+            title.innerHTML = `${window.escapeHtml(item.name)}
                 <span style="font-size:0.8rem; font-weight:400; color:var(--text-muted);">
-                    &nbsp;·&nbsp; ${item.group} / ${item.family}${item.note ? ' · ' + item.note : ''}
+                    &nbsp;·&nbsp; ${window.escapeHtml(item.group)} / ${window.escapeHtml(item.family)}${item.note ? ' · ' + window.escapeHtml(item.note) : ''}
                 </span>`;
         }
 
@@ -491,10 +491,10 @@ class ModuleManager {
             const qty = saved ? saved.qty : 0;
             html += `<div style="display:flex; align-items:center; gap:0.5rem; padding:4px 0; border-bottom:1px dashed var(--border);">
                 <div style="flex:1; font-size:0.78rem;">
-                    ${acc.name}
-                    <div style="color:var(--text-muted); font-size:0.7rem;">$${acc.pricePerUnit.toFixed(2)} / ${acc.unit}</div>
+                    ${window.escapeHtml(acc.name)}
+                    <div style="color:var(--text-muted); font-size:0.7rem;">$${acc.pricePerUnit.toFixed(2)} / ${window.escapeHtml(acc.unit)}</div>
                 </div>
-                <input type="number" step="0.01" min="0" class="mod-acc-input" data-name="${acc.name}" value="${qty}"
+                <input type="number" step="0.01" min="0" class="mod-acc-input" data-name="${window.escapeHtml(acc.name)}" value="${qty}"
                     style="width:64px; text-align:center; padding:3px; font-size:0.78rem;" ${editable ? '' : 'disabled'}>
             </div>`;
         });

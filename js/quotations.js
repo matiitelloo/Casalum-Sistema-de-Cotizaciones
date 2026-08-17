@@ -942,10 +942,10 @@ class QuotationManager {
         details.forEach(detail => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${detail.code}</td>
-                <td>${detail.desc}</td>
+                <td>${window.escapeHtml(detail.code)}</td>
+                <td>${window.escapeHtml(detail.desc)}</td>
                 <td>$${detail.unitPrice.toFixed(2)}</td>
-                <td>${detail.qtyString}</td>
+                <td>${window.escapeHtml(detail.qtyString)}</td>
                 <td>$${detail.total.toFixed(2)}</td>
             `;
             body.appendChild(tr);
@@ -1111,7 +1111,7 @@ class QuotationManager {
             brandSelect.innerHTML = '<option value="">Seleccione una marca...</option>';
             Object.keys(window.SEED_DATA.brands).forEach(key => {
                 const brand = window.SEED_DATA.brands[key];
-                brandSelect.innerHTML += `<option value="${key}">${brand.name}</option>`;
+                brandSelect.innerHTML += `<option value="${key}">${window.escapeHtml(brand.name)}</option>`;
             });
         }
 
@@ -1119,18 +1119,18 @@ class QuotationManager {
             // El vidrio es obligatorio: la opción vacía es solo un marcador de posición.
             glassSelect.innerHTML = '<option value="">Seleccione el vidrio...</option>';
             window.SEED_DATA.glass.forEach(g => {
-                glassSelect.innerHTML += `<option value="${g.type}">${g.type}</option>`;
+                glassSelect.innerHTML += `<option value="${window.escapeHtml(g.type)}">${window.escapeHtml(g.type)}</option>`;
             });
         }
-        
+
         const accContainer = document.getElementById('accessories-container');
         if (accContainer && window.SEED_DATA) {
             accContainer.innerHTML = '';
             window.SEED_DATA.accessories.forEach((acc) => {
                 accContainer.innerHTML += `
                     <div class="form-group">
-                        <label>${acc.name} ($${acc.pricePerUnit.toFixed(2)}/${acc.unit})</label>
-                        <input type="number" class="form-control acc-input" data-name="${acc.name}" data-price="${acc.pricePerUnit}" value="0" min="0">
+                        <label>${window.escapeHtml(acc.name)} ($${acc.pricePerUnit.toFixed(2)}/${window.escapeHtml(acc.unit)})</label>
+                        <input type="number" class="form-control acc-input" data-name="${window.escapeHtml(acc.name)}" data-price="${acc.pricePerUnit}" value="0" min="0">
                     </div>
                 `;
             });
@@ -1153,7 +1153,7 @@ class QuotationManager {
         if (!brand) return;
 
         brand.colors.forEach(color => {
-            colorSelect.innerHTML += `<option value="${color}">${color}</option>`;
+            colorSelect.innerHTML += `<option value="${window.escapeHtml(color)}">${window.escapeHtml(color)}</option>`;
         });
 
         // Si la marca nueva también tiene ese color, se conserva la elección.
@@ -1247,10 +1247,10 @@ class QuotationManager {
             const tr = document.createElement('tr');
             const unitPrice = detail.unitPrice !== undefined ? `$${detail.unitPrice.toFixed(2)}` : '-';
             tr.innerHTML = `
-                <td>${detail.code}</td>
-                <td>${detail.desc}</td>
+                <td>${window.escapeHtml(detail.code)}</td>
+                <td>${window.escapeHtml(detail.desc)}</td>
                 <td>${unitPrice}</td>
-                <td>${detail.qtyString || detail.qty}</td>
+                <td>${window.escapeHtml(detail.qtyString || detail.qty)}</td>
                 <td>$${detail.total.toFixed(2)}</td>
             `;
             body.appendChild(tr);
@@ -1417,8 +1417,8 @@ class QuotationManager {
             tbody.innerHTML += `
                 <tr>
                     <td>${item.quantity}</td>
-                    <td>${item.description}</td>
-                    <td>${item.dimensions}${this.moduleLeavesLabel(item)}</td>
+                    <td>${window.escapeHtml(item.description)}</td>
+                    <td>${window.escapeHtml(item.dimensions)}${this.moduleLeavesLabel(item)}</td>
                     <td>$${item.total.toFixed(2)}</td>
                     <td>
                         <div style="display:flex; gap:0.25rem;">
@@ -1520,9 +1520,9 @@ class QuotationManager {
         if(window.clientManager && window.clientManager.currentClient) {
             const c = window.clientManager.currentClient;
             summaryClient.innerHTML = `
-                <strong>Cliente:</strong> ${c.name} <br>
-                <strong>CI/RUC:</strong> ${c.id} <br>
-                <strong>Dirección:</strong> ${c.address || ''}
+                <strong>Cliente:</strong> ${window.escapeHtml(c.name)} <br>
+                <strong>CI/RUC:</strong> ${window.escapeHtml(c.id)} <br>
+                <strong>Dirección:</strong> ${window.escapeHtml(c.address || '')}
             `;
         }
 

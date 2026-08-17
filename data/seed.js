@@ -1,3 +1,14 @@
+/** Escapa HTML para insertar texto de usuario en innerHTML sin riesgo de XSS. */
+window.escapeHtml = function (value) {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 /**
  * Logos de proveedor por clave de marca. Va aparte de SEED_DATA porque
  * SEED_DATA.brands se sobrescribe entero al cargar el catálogo guardado

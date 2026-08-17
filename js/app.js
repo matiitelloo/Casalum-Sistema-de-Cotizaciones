@@ -299,7 +299,7 @@ class App {
         const glassData = window.SEED_DATA.glassSale || window.SEED_DATA.glass;
         sel.innerHTML = '<option value="">Seleccione el tipo de vidrio...</option>';
         glassData.forEach(g => {
-            sel.innerHTML += `<option value="${g.type}">${g.type}</option>`;
+            sel.innerHTML += `<option value="${window.escapeHtml(g.type)}">${window.escapeHtml(g.type)}</option>`;
         });
 
         // Wire up events only once
@@ -517,8 +517,8 @@ class App {
             <tr ${versionAttr} style="border-bottom: 1px solid var(--border-light); ${rowExtraStyle}">
                 <td style="padding: 10px;">${codeCellPrefix}${code}${quickBadge}${toggleBtn}</td>
                 <td style="padding: 10px;">${dateStr}</td>
-                <td style="padding: 10px;">${q.clientName || q.clientId}</td>
-                <td style="padding: 10px;"><span style="background: var(--bg-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">${authorName}</span></td>
+                <td style="padding: 10px;">${window.escapeHtml(q.clientName || q.clientId)}</td>
+                <td style="padding: 10px;"><span style="background: var(--bg-alt); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; color: var(--text-secondary);">${window.escapeHtml(authorName)}</span></td>
                 <td style="padding: 10px;"><span style="color: ${statusColor}; font-weight: 600; font-size: 0.8rem;">${statusLabel}</span></td>
                 <td style="padding: 10px; font-weight:600; color:var(--primary);">$${(q.totals?.total ?? 0).toFixed(2)}</td>
                 <td style="padding: 10px; white-space: nowrap;">

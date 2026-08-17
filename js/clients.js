@@ -129,21 +129,45 @@ class ClientManager {
             return;
         }
         
-        let html = '<table class="table"><thead><tr><th>Cédula/RUC</th><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr></thead><tbody>';
+        // Se arma con DOM/textContent (no innerHTML con template strings) para que un
+        // nombre/cédula/dirección de cliente con HTML o comillas no pueda inyectar
+        // código — ni como HTML ni rompiendo el atributo onclick de los botones.
+        container.innerHTML = '';
+        const table = document.createElement('table');
+        table.className = 'table';
+        table.innerHTML = '<thead><tr><th>Cédula/RUC</th><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr></thead>';
+        const tbody = document.createElement('tbody');
+
         clients.forEach(c => {
-            html += `<tr>
-                <td>${c.id}</td>
-                <td>${c.name}</td>
-                <td>${c.phone || '-'}</td>
-                <td>${c.address || '-'}</td>
-                <td>
-                    <button class="btn btn-sm btn-outline" onclick="window.clientManager.editClient('${c.id}')"><i class="fa-solid fa-edit"></i></button>
-                    <button class="btn btn-sm btn-danger" onclick="window.clientManager.deleteClient('${c.id}')"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>`;
+            const tr = document.createElement('tr');
+
+            const tdId = document.createElement('td');
+            tdId.textContent = c.id;
+            const tdName = document.createElement('td');
+            tdName.textContent = c.name;
+            const tdPhone = document.createElement('td');
+            tdPhone.textContent = c.phone || '-';
+            const tdAddress = document.createElement('td');
+            tdAddress.textContent = c.address || '-';
+
+            const tdActions = document.createElement('td');
+            const btnEdit = document.createElement('button');
+            btnEdit.className = 'btn btn-sm btn-outline';
+            btnEdit.innerHTML = '<i class="fa-solid fa-edit"></i>';
+            btnEdit.addEventListener('click', () => this.editClient(c.id));
+            const btnDelete = document.createElement('button');
+            btnDelete.className = 'btn btn-sm btn-danger';
+            btnDelete.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            btnDelete.addEventListener('click', () => this.deleteClient(c.id));
+            tdActions.appendChild(btnEdit);
+            tdActions.appendChild(btnDelete);
+
+            tr.append(tdId, tdName, tdPhone, tdAddress, tdActions);
+            tbody.appendChild(tr);
         });
-        html += '</tbody></table>';
-        container.innerHTML = html;
+
+        table.appendChild(tbody);
+        container.appendChild(table);
     }
 
     async editClient(id) {

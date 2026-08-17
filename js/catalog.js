@@ -223,8 +223,8 @@ class CatalogManager {
 
         cat.products.forEach((prod, idx) => {
             html += `<tr>
-                <td style="padding:6px 8px; font-weight:600; color: var(--primary);">${editable ? `<input type="text" value="${prod.code}" data-field="code" data-idx="${idx}" class="catalog-edit-input" style="width:75px;">` : prod.code}</td>
-                <td style="padding:6px 8px;">${editable ? `<input type="text" value="${prod.description}" data-field="desc" data-idx="${idx}" class="catalog-edit-input" style="width:200px;">` : prod.description}</td>`;
+                <td style="padding:6px 8px; font-weight:600; color: var(--primary);">${editable ? `<input type="text" value="${window.escapeHtml(prod.code)}" data-field="code" data-idx="${idx}" class="catalog-edit-input" style="width:75px;">` : window.escapeHtml(prod.code)}</td>
+                <td style="padding:6px 8px;">${editable ? `<input type="text" value="${window.escapeHtml(prod.description)}" data-field="desc" data-idx="${idx}" class="catalog-edit-input" style="width:200px;">` : window.escapeHtml(prod.description)}</td>`;
                 
             if (editable) {
                 // Fijo/Fórmula fue transferido a Módulos
@@ -340,7 +340,7 @@ class CatalogManager {
 
         window.SEED_DATA.glass.forEach((g, idx) => {
             html += `<tr>
-                <td style="padding:8px;">${editable ? `<input type="text" value="${g.type}" data-gfield="type" data-gidx="${idx}" class="catalog-glass-input" style="width:180px;">` : g.type}</td>
+                <td style="padding:8px;">${editable ? `<input type="text" value="${window.escapeHtml(g.type)}" data-gfield="type" data-gidx="${idx}" class="catalog-glass-input" style="width:180px;">` : window.escapeHtml(g.type)}</td>
                 <td style="padding:8px; text-align:center;">${editable ? `<input type="number" step="1" value="${g.weight}" data-gfield="weight" data-gidx="${idx}" class="catalog-glass-input" style="width:70px; text-align:center;">` : g.weight}</td>
                 <td style="padding:8px; text-align:center;">${editable ? `<input type="number" step="0.01" value="${g.pricePerM2.toFixed(2)}" data-gfield="pricePerM2" data-gidx="${idx}" class="catalog-glass-input" style="width:80px; text-align:center;">` : '$' + g.pricePerM2.toFixed(2)}</td>`;
             if (editable) {
@@ -416,7 +416,7 @@ class CatalogManager {
 
         window.SEED_DATA.glassSale.forEach((g, idx) => {
             html += `<tr>
-                <td style="padding:8px;">${editable ? `<input type="text" value="${g.type}" data-gsfield="type" data-gsidx="${idx}" class="catalog-glass-sale-input" style="width:180px;">` : g.type}</td>
+                <td style="padding:8px;">${editable ? `<input type="text" value="${window.escapeHtml(g.type)}" data-gsfield="type" data-gsidx="${idx}" class="catalog-glass-sale-input" style="width:180px;">` : window.escapeHtml(g.type)}</td>
                 <td style="padding:8px; text-align:center;">${editable ? `<input type="number" step="0.01" value="${g.pricePerM2.toFixed(2)}" data-gsfield="pricePerM2" data-gsidx="${idx}" class="catalog-glass-sale-input" style="width:80px; text-align:center;">` : '$' + g.pricePerM2.toFixed(2)}</td>`;
             if (editable) {
                 html += `<td style="padding:8px; text-align:center;">
@@ -489,7 +489,7 @@ class CatalogManager {
 
         window.SEED_DATA.accessories.forEach((acc, idx) => {
             html += `<tr>
-                <td style="padding:8px;">${editable ? `<input type="text" value="${acc.name}" data-afield="name" data-aidx="${idx}" class="catalog-acc-input" style="width:220px;">` : acc.name}</td>
+                <td style="padding:8px;">${editable ? `<input type="text" value="${window.escapeHtml(acc.name)}" data-afield="name" data-aidx="${idx}" class="catalog-acc-input" style="width:220px;">` : window.escapeHtml(acc.name)}</td>
                 <td style="padding:8px; text-align:center;">${editable ? `<input type="number" step="0.01" value="${acc.pricePerUnit.toFixed(2)}" data-afield="pricePerUnit" data-aidx="${idx}" class="catalog-acc-input" style="width:80px; text-align:center;">` : '$' + acc.pricePerUnit.toFixed(2)}</td>`;
             if (editable) {
                 html += `<td style="padding:8px; text-align:center;">
