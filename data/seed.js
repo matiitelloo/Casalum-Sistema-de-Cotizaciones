@@ -2453,8 +2453,95 @@ window.SEED_DATA = {
     { name: 'Anclas para tubo 7x4', pricePerUnit: 0.25, unit: 'und' },
     { name: 'Brazos de acero 12 pulgadas', pricePerUnit: 8.50, unit: 'und' }
   ],
-  /** Módulos preestablecidos por ítem del catálogo (ver js/modules.js). itemId -> receta. */
-  modules: {},
+  /**
+   * Módulos preestablecidos por ítem del catálogo (ver js/modules.js). itemId -> receta.
+   *
+   * "Ventana Fija 1100" viene armada de fábrica como ejemplo real, sacado de
+   * VENTANAS FIJAS.xlsx (hoja "V. FIJA 1100"), usando roles genéricos
+   * (multi-proveedor: sirve para Cedal, Fisa y Femec sin repetir la receta) y
+   * fórmula lineal (una sola receta para 1, 2, 3... módulos, sin duplicar
+   * ítems de catálogo). Solo se cargó la de "1 MODULO": como la fórmula ya
+   * depende de la cantidad de módulos que se escriba al cotizar, sirve igual
+   * para "2 MODULOS" (moduleManager.findModuleForSystem usa esta única
+   * receta para toda la familia mientras no haya otra guardada aparte).
+   *
+   * Nota: Femec no tiene un perfil de MULLON etiquetado en este catálogo, así
+   * que una Ventana Fija 1100 de Femec con 2+ módulos y mullón no va a poder
+   * cotizarse hasta que se cargue ese perfil (mismo límite que ya tenía el
+   * cotizador dedicado de js/ventanaFija1100.js).
+   */
+  modules: {
+    "ventana-fija-1100--ventana-fija-1-modulo": {
+      itemId: "ventana-fija-1100--ventana-fija-1-modulo",
+      itemName: "VENTANA FIJA 1 MODULO",
+      group: "VENTANAS",
+      family: "VENTANA FIJA 1100",
+      note: "",
+      brand: "cedal",
+      category: "",
+      profiles: [
+        {
+          code: "HOR1106", category: "Ventana Fija Estandar", description: "HORIZONTAL SIN VENA (ESTANDAR)",
+          role: "ventana-fija-1100-horizontal", formula: "lineal", coefBase: 2
+        },
+        {
+          code: "VER6808", category: "Ventana Fija Estandar", description: "VERTICAL CON VENA (ESTANDAR)",
+          role: "ventana-fija-1100-vertical", formula: "lineal", coefAlturaMod: 2
+        },
+        {
+          code: "JUN0861", category: "Ventana Fija Estandar", description: "JUNQUILLO C/FELPERO/PISAVIDRIO",
+          role: "ventana-fija-1100-junquillo", formula: "lineal", coefBase: 2, coefAlturaMod: 2
+        },
+        {
+          code: "MUL7498", category: "Junquillos", description: "MULLON",
+          role: "ventana-fija-1100-mullon", formula: "lineal", coefAltura: -1, coefAlturaMod: 1
+        }
+      ],
+      accessories: [
+        { name: "Tornillos y tacos", qty: 30, price: 0.05 },
+        { name: "Vinil", qty: 0, price: 0.85, qtyFormula: { coefBase: 2, coefAlturaMod: 2 } },
+        { name: "Silicon", qty: 1, price: 2.2 }
+      ],
+      labor: { workers: 1, hours: 4, transport: 0, viaticos: 0, hoursFormula: { coefModulos: 2, base: 2 } },
+      updatedAt: null,
+      updatedBy: "importado de VENTANAS FIJAS.xlsx"
+    },
+    "ventana-fija-1100--ventana-fija-2-modulos": {
+      itemId: "ventana-fija-1100--ventana-fija-2-modulos",
+      itemName: "VENTANA FIJA 2 MODULOS",
+      group: "VENTANAS",
+      family: "VENTANA FIJA 1100",
+      note: "",
+      brand: "cedal",
+      category: "",
+      profiles: [
+        {
+          code: "HOR1106", category: "Ventana Fija Estandar", description: "HORIZONTAL SIN VENA (ESTANDAR)",
+          role: "ventana-fija-1100-horizontal", formula: "lineal", coefBase: 2
+        },
+        {
+          code: "VER6808", category: "Ventana Fija Estandar", description: "VERTICAL CON VENA (ESTANDAR)",
+          role: "ventana-fija-1100-vertical", formula: "lineal", coefAlturaMod: 2
+        },
+        {
+          code: "JUN0861", category: "Ventana Fija Estandar", description: "JUNQUILLO C/FELPERO/PISAVIDRIO",
+          role: "ventana-fija-1100-junquillo", formula: "lineal", coefBase: 2, coefAlturaMod: 2
+        },
+        {
+          code: "MUL7498", category: "Junquillos", description: "MULLON",
+          role: "ventana-fija-1100-mullon", formula: "lineal", coefAltura: -1, coefAlturaMod: 1
+        }
+      ],
+      accessories: [
+        { name: "Tornillos y tacos", qty: 30, price: 0.05 },
+        { name: "Vinil", qty: 0, price: 0.85, qtyFormula: { coefBase: 2, coefAlturaMod: 2 } },
+        { name: "Silicon", qty: 1, price: 2.2 }
+      ],
+      labor: { workers: 1, hours: 6, transport: 0, viaticos: 0, hoursFormula: { coefModulos: 2, base: 2 } },
+      updatedAt: null,
+      updatedBy: "importado de VENTANAS FIJAS.xlsx"
+    }
+  },
   defaultSettings: {
     gastosGenerales: 0.14,
     utilidad: 0.30,

@@ -785,8 +785,22 @@ class QuotationManager {
         const modulesCount = parseInt(document.getElementById('p-modules').value, 10) || 0;
         const mod = this.findModuleForSystem(family, modulesCount);
 
-        // Si ya está aplicado ese mismo módulo no se repisan los ajustes manuales.
+        // Si ya está aplicado ese mismo módulo no se repisan los ajustes manuales,
+        // pero sí se recalculan las horas y los accesorios que usan fórmula
+        // (si no usan fórmula, esto no toca nada porque siguen devolviendo el
+        // mismo número fijo de siempre).
         if (mod && this.activeModule && this.activeModule.itemId === mod.itemId) {
+            if (mod.labor && mod.labor.hoursFormula) {
+                document.getElementById('p-labor-hours').value = this.resolveModuleLaborHours(mod);
+            }
+            if ((mod.accessories || []).some(a => a.qtyFormula)) {
+                const ctx = this.currentModuleCtx();
+                mod.accessories.forEach(acc => {
+                    if (!acc.qtyFormula) return;
+                    const input = document.querySelector(`.acc-input[data-name="${acc.name}"]`);
+                    if (input) input.value = window.calculator.resolveAccessoryQty(acc, ctx);
+                });
+            }
             this.renderModuleInfo();
             return;
         }
@@ -827,20 +841,40 @@ class QuotationManager {
         this.applyingModule = false;
     }
 
-    /** Vuelca accesorios y mano de obra del módulo en el formulario. Cantidades fijas, sin escalar por área. */
+    /**
+     * Vuelca accesorios y mano de obra del módulo en el formulario. Las
+     * cantidades que tienen fórmula (ej. Vinil = mismo perímetro que el
+     * junquillo que retiene) se calculan con las medidas y módulos actuales
+     * del formulario; el resto son fijas, como siempre.
+     */
     applyModuleAccessoriesAndLabor(mod) {
         document.querySelectorAll('.acc-input').forEach(input => { input.value = '0'; });
 
+        const ctx = this.currentModuleCtx();
         (mod.accessories || []).forEach(acc => {
             const input = document.querySelector(`.acc-input[data-name="${acc.name}"]`);
-            if (input) input.value = acc.qty;
+            if (input) input.value = window.calculator.resolveAccessoryQty(acc, ctx);
         });
 
         const labor = mod.labor || {};
         document.getElementById('p-labor-workers').value = labor.workers || 0;
-        document.getElementById('p-labor-hours').value = labor.hours || 0;
+        document.getElementById('p-labor-hours').value = this.resolveModuleLaborHours(mod);
         document.getElementById('p-transport').value = labor.transport || 0;
         document.getElementById('p-viaticos').value = labor.viaticos || 0;
+    }
+
+    /** Contexto (ancho/alto/perímetro/área/módulos) actual del formulario, para fórmulas de módulo. */
+    currentModuleCtx() {
+        const width = this.numOr(document.getElementById('p-width').value, 0);
+        const height = this.numOr(document.getElementById('p-height').value, 0);
+        const modules = parseInt(document.getElementById('p-modules').value, 10) || 1;
+        return { width, height, perimeter: (width + height) * 2, area: width * height, modules };
+    }
+
+    /** Horas de mano de obra del módulo activo, según los módulos actuales del formulario si usa fórmula. */
+    resolveModuleLaborHours(mod) {
+        const modulesCount = parseInt(document.getElementById('p-modules').value, 10) || 1;
+        return window.calculator.resolveLaborHours(mod.labor || {}, modulesCount);
     }
 
     clearActiveModule() {
@@ -1035,7 +1069,7 @@ class QuotationManager {
             const brandName = window.SEED_DATA.brands[mod.brand] ? window.SEED_DATA.brands[mod.brand].name : mod.brand;
             const nAcc = (mod.accessories || []).length;
             const labor = mod.labor || {};
-            const hasLabor = (labor.workers && labor.hours) || labor.transport || labor.viaticos;
+            const hasLabor = (labor.workers && (labor.hours || labor.hoursFormula)) || labor.transport || labor.viaticos;
             info.innerHTML = `<i class="fa-solid fa-circle-check"></i>
                 Módulo preestablecido aplicado: <strong>${mod.itemName}</strong> (${brandName}) &middot;
                 ${(mod.profiles || []).length} perfil(es), ${nAcc} accesorio(s)${hasLabor ? ', mano de obra incluida' : ', sin mano de obra'}.

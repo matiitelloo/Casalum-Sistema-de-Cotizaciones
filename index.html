@@ -914,6 +914,22 @@
                                                 <label style="font-size: 0.78rem;">Horas Totales</label>
                                                 <input type="number" min="0" step="0.5" id="module-labor-hours" class="form-control">
                                             </div>
+                                            <div class="form-group" style="grid-column: span 2;">
+                                                <label style="font-size: 0.78rem; display:flex; align-items:center; gap:0.4rem;">
+                                                    <input type="checkbox" id="module-labor-formula-toggle" style="width:auto;">
+                                                    Horas por fórmula según módulos (en vez de un número fijo)
+                                                </label>
+                                                <div id="module-labor-formula-wrap" style="display:none; gap:0.5rem; margin-top:0.35rem;">
+                                                    <div class="form-group" style="margin:0;">
+                                                        <label style="font-size: 0.72rem;">x Módulos</label>
+                                                        <input type="number" step="0.5" id="module-labor-formula-coefmod" class="form-control" style="padding:0.3rem;">
+                                                    </div>
+                                                    <div class="form-group" style="margin:0;">
+                                                        <label style="font-size: 0.72rem;">+ K (fijo)</label>
+                                                        <input type="number" step="0.5" id="module-labor-formula-k" class="form-control" style="padding:0.3rem;">
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div class="form-group">
                                                 <label style="font-size: 0.78rem;">Transporte ($)</label>
                                                 <input type="number" min="0" step="1" id="module-labor-transport" class="form-control">

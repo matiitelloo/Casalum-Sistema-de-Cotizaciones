@@ -359,18 +359,21 @@ class ModuleManager {
             return;
         }
 
-        const basesOptions = window.MODULE_FORMULA_BASES
-            .map(b => `<option value="${b.key}">${b.label}</option>`).join('');
-
         // El precio mostrado es solo referencial: el color real se elige al cotizar.
         const refColor = this.referenceColor();
+        const coefFields = [
+            ['coefBase', 'Base'], ['coefAltura', 'Alto'],
+            ['coefBaseMod', 'Base×Mód'], ['coefAlturaMod', 'Alto×Mód'],
+            ['coefArea', 'Área']
+        ];
 
-        let html = `<table class="table" style="font-size:0.78rem; min-width:640px;">
+        let html = `<table class="table" style="font-size:0.78rem; min-width:900px;">
             <thead><tr style="background: var(--primary); color:#fff;">
                 <th style="padding:6px 8px; text-align:center;">Usar</th>
                 <th style="padding:6px 8px;">Código</th>
                 <th style="padding:6px 8px;">Descripción</th>
                 <th style="padding:6px 8px; text-align:center;">Fijo / Fórmula</th>
+                <th style="padding:6px 8px; text-align:center;" title="Etiqueta compartida entre proveedores: si Cedal, Fisa y Femec tienen un perfil con el mismo rol, esta receta cotiza con cualquiera de los tres sin duplicarla.">Rol genérico (multi-proveedor)</th>
             </tr></thead><tbody>`;
 
         let lastCat = null;
@@ -384,6 +387,8 @@ class ModuleManager {
             const used = !!row;
             const formula = row ? row.formula : '';
             const fixedQty = row ? row.fixedQty : 1;
+            const isLineal = formula === 'lineal';
+            const roleVal = row ? (row.role || '') : '';
 
             html += `<tr style="${used ? 'background:#f2fbf3;' : ''}">
                 <td style="padding:4px 8px; text-align:center;">
@@ -392,7 +397,7 @@ class ModuleManager {
                 <td style="padding:4px 8px; font-weight:600; color:var(--primary);">${product.code}</td>
                 <td style="padding:4px 8px;">${product.description}</td>
                 <td style="padding:4px 8px;">
-                    <div style="display:flex; gap:4px; align-items:center; justify-content:center;">
+                    <div style="display:flex; gap:4px; align-items:center; justify-content:center; flex-wrap:wrap;">
                         <select class="mod-p-formula" data-code="${product.code}" data-cat="${category}" style="padding:2px; font-size:0.75rem;" ${used && editable ? '' : 'disabled'}>
                             <option value="" ${!formula?'selected':''}>Seleccione...</option>
                             <option value="width_1" ${formula==='width_1'?'selected':''}>Base x1</option>
@@ -402,11 +407,27 @@ class ModuleManager {
                             <option value="height_2" ${formula==='height_2'?'selected':''}>Alto x2</option>
                             <option value="height_4" ${formula==='height_4'?'selected':''}>Alto x4</option>
                             <option value="perimeter" ${formula==='perimeter'?'selected':''}>Perímetro (Base x2 + Alto x2)</option>
+                            <option value="lineal" ${isLineal?'selected':''}>Coeficientes (compuesta / módulos-1 / ×módulos)</option>
                             <option value="fijo" ${formula==='fijo'?'selected':''}>Fijo</option>
                         </select>
                         <input type="number" step="0.01" min="0" class="mod-p-val" data-code="${product.code}" data-cat="${category}"
-                            value="${fixedQty}" style="width:58px; padding:2px; font-size:0.75rem; text-align:center; ${formula === 'fijo' ? '' : 'display:none;'}" ${used && editable ? '' : 'disabled'}>
+                            value="${fixedQty}" title="Cantidad fija" style="width:58px; padding:2px; font-size:0.75rem; text-align:center; ${formula === 'fijo' ? '' : 'display:none;'}" ${used && editable ? '' : 'disabled'}>
+                        <span class="mod-p-lineal" data-code="${product.code}" data-cat="${category}" style="display:${isLineal ? 'inline-flex' : 'none'}; gap:3px; align-items:center; flex-wrap:wrap;">
+                            ${coefFields.map(([key, label]) => `
+                                <label style="display:flex; flex-direction:column; align-items:center; font-size:0.62rem; color:var(--text-muted);">${label}
+                                    <input type="number" step="0.01" class="mod-p-coef" data-coef="${key}" data-code="${product.code}" data-cat="${category}"
+                                        value="${row && row[key] ? row[key] : ''}" placeholder="0" style="width:44px; padding:2px; font-size:0.72rem; text-align:center;" ${used && editable ? '' : 'disabled'}>
+                                </label>`).join('')}
+                            <label style="display:flex; flex-direction:column; align-items:center; font-size:0.62rem; color:var(--text-muted);">+K
+                                <input type="number" step="0.01" class="mod-p-coef" data-coef="fixedQty" data-code="${product.code}" data-cat="${category}"
+                                    value="${row && row.fixedQty ? row.fixedQty : ''}" placeholder="0" style="width:44px; padding:2px; font-size:0.72rem; text-align:center;" ${used && editable ? '' : 'disabled'}>
+                            </label>
+                        </span>
                     </div>
+                </td>
+                <td style="padding:4px 8px; text-align:center;">
+                    <input type="text" class="mod-p-role" data-code="${product.code}" data-cat="${category}"
+                        value="${window.escapeHtml(roleVal)}" placeholder="ej: ventana-t45-marco" style="width:150px; padding:2px; font-size:0.72rem;" ${used && editable ? '' : 'disabled'}>
                 </td>
             </tr>`;
         });
@@ -419,6 +440,8 @@ class ModuleManager {
         container.querySelectorAll('.mod-p-use').forEach(cb => cb.addEventListener('change', e => this.toggleProfile(e)));
         container.querySelectorAll('.mod-p-formula').forEach(s => s.addEventListener('change', e => this.changeProfileFormula(e)));
         container.querySelectorAll('.mod-p-val').forEach(i => i.addEventListener('change', e => this.changeProfileValue(e)));
+        container.querySelectorAll('.mod-p-coef').forEach(i => i.addEventListener('change', e => this.changeProfileCoef(e)));
+        container.querySelectorAll('.mod-p-role').forEach(i => i.addEventListener('change', e => this.changeProfileRole(e)));
     }
 
     unitFor(row) {
@@ -441,12 +464,16 @@ class ModuleManager {
         if (e.target.checked) {
             const brand = window.SEED_DATA.brands[d.brand];
             const prod = brand.categories[cat].products.find(p => p.code === code);
+            // Si el producto ya trae un rol genérico etiquetado (ver data/seed.js),
+            // se precarga acá para no tener que volver a escribirlo a mano.
+            const role = (prod && Array.isArray(prod.genericRoles) && prod.genericRoles.length) ? prod.genericRoles[0] : '';
             d.profiles.push({
                 code: code,
                 category: cat,
                 description: prod ? prod.description : '',
                 formula: '',
-                fixedQty: 1
+                fixedQty: 1,
+                role: role
             });
         } else {
             d.profiles = d.profiles.filter(p => !(p.code === code && p.category === cat));
@@ -477,6 +504,27 @@ class ModuleManager {
         this.updateEstimate();
     }
 
+    /** Coeficientes de la fórmula lineal (coefBase, coefAltura, coefBaseMod, coefAlturaMod, coefArea, fixedQty=K). */
+    changeProfileCoef(e) {
+        const row = this.findProfileRow(e.target.getAttribute('data-code'), e.target.getAttribute('data-cat'));
+        if (!row) return;
+        const key = e.target.getAttribute('data-coef');
+        const val = parseFloat(e.target.value);
+        row[key] = Number.isNaN(val) ? 0 : val;
+        this.markDirty();
+        this.updateEstimate();
+        // No re-renderiza toda la tabla acá para no perder el foco mientras se
+        // escriben varios coeficientes seguidos.
+    }
+
+    /** Rol genérico (multi-proveedor) de la fila. Vacío = solo funciona con la marca guardada. */
+    changeProfileRole(e) {
+        const row = this.findProfileRow(e.target.getAttribute('data-code'), e.target.getAttribute('data-cat'));
+        if (!row) return;
+        row.role = e.target.value.trim();
+        this.markDirty();
+    }
+
     // ============================================================
     // COLUMNA 2: ACCESORIOS
     // ============================================================
@@ -484,18 +532,41 @@ class ModuleManager {
         const container = document.getElementById('module-accessories-list');
         if (!container || !this.draft) return;
         const editable = this.isAdmin;
+        const coefFields = [
+            ['coefBase', 'Base'], ['coefAltura', 'Alto'],
+            ['coefBaseMod', 'Base×Mód'], ['coefAlturaMod', 'Alto×Mód'], ['coefArea', 'Área']
+        ];
 
         let html = '';
         window.SEED_DATA.accessories.forEach(acc => {
             const saved = this.draft.accessories.find(a => a.name === acc.name);
             const qty = saved ? saved.qty : 0;
-            html += `<div style="display:flex; align-items:center; gap:0.5rem; padding:4px 0; border-bottom:1px dashed var(--border);">
-                <div style="flex:1; font-size:0.78rem;">
-                    ${window.escapeHtml(acc.name)}
-                    <div style="color:var(--text-muted); font-size:0.7rem;">$${acc.pricePerUnit.toFixed(2)} / ${window.escapeHtml(acc.unit)}</div>
+            const nameAttr = window.escapeHtml(acc.name);
+            const hasFormula = !!(saved && saved.qtyFormula);
+            html += `<div style="padding:4px 0; border-bottom:1px dashed var(--border);">
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <div style="flex:1; font-size:0.78rem;">
+                        ${nameAttr}
+                        <div style="color:var(--text-muted); font-size:0.7rem;">$${acc.pricePerUnit.toFixed(2)} / ${window.escapeHtml(acc.unit)}</div>
+                    </div>
+                    <input type="number" step="0.01" min="0" class="mod-acc-input" data-name="${nameAttr}" value="${qty}"
+                        title="Cantidad fija" style="width:64px; text-align:center; padding:3px; font-size:0.78rem; ${hasFormula ? 'display:none;' : ''}" ${editable ? '' : 'disabled'}>
                 </div>
-                <input type="number" step="0.01" min="0" class="mod-acc-input" data-name="${window.escapeHtml(acc.name)}" value="${qty}"
-                    style="width:64px; text-align:center; padding:3px; font-size:0.78rem;" ${editable ? '' : 'disabled'}>
+                <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.68rem; color:var(--text-muted); margin-top:2px;">
+                    <input type="checkbox" class="mod-acc-formula-toggle" data-name="${nameAttr}" ${hasFormula ? 'checked' : ''} ${editable ? '' : 'disabled'} style="width:auto;">
+                    Cantidad por fórmula (ej: escala igual que un perfil)
+                </label>
+                <div class="mod-acc-formula-wrap" data-name="${nameAttr}" style="display:${hasFormula ? 'flex' : 'none'}; gap:3px; margin-top:2px; flex-wrap:wrap;">
+                    ${coefFields.map(([key, label]) => `
+                        <label style="display:flex; flex-direction:column; align-items:center; font-size:0.62rem; color:var(--text-muted);">${label}
+                            <input type="number" step="0.01" class="mod-acc-coef" data-coef="${key}" data-name="${nameAttr}"
+                                value="${saved && saved.qtyFormula && saved.qtyFormula[key] ? saved.qtyFormula[key] : ''}" placeholder="0" style="width:40px; padding:2px; font-size:0.7rem; text-align:center;" ${editable ? '' : 'disabled'}>
+                        </label>`).join('')}
+                    <label style="display:flex; flex-direction:column; align-items:center; font-size:0.62rem; color:var(--text-muted);">+K
+                        <input type="number" step="0.01" class="mod-acc-coef" data-coef="fixedQty" data-name="${nameAttr}"
+                            value="${saved && saved.qtyFormula && saved.qtyFormula.fixedQty ? saved.qtyFormula.fixedQty : ''}" placeholder="0" style="width:40px; padding:2px; font-size:0.7rem; text-align:center;" ${editable ? '' : 'disabled'}>
+                    </label>
+                </div>
             </div>`;
         });
         container.innerHTML = html;
@@ -503,6 +574,12 @@ class ModuleManager {
         if (!editable) return;
         container.querySelectorAll('.mod-acc-input').forEach(i => {
             i.addEventListener('change', e => this.changeAccessory(e));
+        });
+        container.querySelectorAll('.mod-acc-formula-toggle').forEach(cb => {
+            cb.addEventListener('change', e => this.toggleAccessoryFormula(e));
+        });
+        container.querySelectorAll('.mod-acc-coef').forEach(i => {
+            i.addEventListener('change', e => this.changeAccessoryCoef(e));
         });
     }
 
@@ -513,7 +590,7 @@ class ModuleManager {
         const acc = window.SEED_DATA.accessories.find(a => a.name === name);
         const existing = this.draft.accessories.find(a => a.name === name);
 
-        if (qty <= 0) {
+        if (qty <= 0 && !(existing && existing.qtyFormula)) {
             this.draft.accessories = this.draft.accessories.filter(a => a.name !== name);
         } else if (existing) {
             existing.qty = qty;
@@ -522,6 +599,37 @@ class ModuleManager {
             this.draft.accessories.push({ name: name, qty: qty, price: acc ? acc.pricePerUnit : 0 });
         }
 
+        this.markDirty();
+        this.updateEstimate();
+    }
+
+    /** Activa/desactiva que la cantidad de un accesorio del módulo se calcule por fórmula en vez de a mano. */
+    toggleAccessoryFormula(e) {
+        const name = e.target.getAttribute('data-name');
+        const acc = window.SEED_DATA.accessories.find(a => a.name === name);
+        let row = this.draft.accessories.find(a => a.name === name);
+        if (e.target.checked) {
+            if (!row) {
+                row = { name: name, qty: 0, price: acc ? acc.pricePerUnit : 0 };
+                this.draft.accessories.push(row);
+            }
+            row.qtyFormula = { coefBase: 0, coefAltura: 0, coefBaseMod: 0, coefAlturaMod: 0, coefArea: 0, fixedQty: 0 };
+        } else if (row) {
+            delete row.qtyFormula;
+            if (!row.qty) this.draft.accessories = this.draft.accessories.filter(a => a.name !== name);
+        }
+        this.markDirty();
+        this.renderAccessories();
+        this.updateEstimate();
+    }
+
+    changeAccessoryCoef(e) {
+        const name = e.target.getAttribute('data-name');
+        const row = this.draft.accessories.find(a => a.name === name);
+        if (!row || !row.qtyFormula) return;
+        const key = e.target.getAttribute('data-coef');
+        const val = parseFloat(e.target.value);
+        row.qtyFormula[key] = Number.isNaN(val) ? 0 : val;
         this.markDirty();
         this.updateEstimate();
     }
@@ -548,6 +656,54 @@ class ModuleManager {
                 el.addEventListener('change', () => this.changeLabor());
             }
         });
+        this.renderLaborFormula();
+    }
+
+    /**
+     * Mano de obra por fórmula: "Horas" (en realidad, unidades de mano de obra
+     * a $/hora fijo de Ajustes) = coefModulos x Módulos + K. Cubre los
+     * patrones vistos en los Excel (4 fijo, 2xN+2, N+3, etc.) sin tener que
+     * volver a este editor cada vez que cambia la cantidad de módulos.
+     * Si no está activada, Horas se sigue llenando a mano como siempre.
+     */
+    renderLaborFormula() {
+        const d = this.draft;
+        const wrap = document.getElementById('module-labor-formula-wrap');
+        const toggle = document.getElementById('module-labor-formula-toggle');
+        const coefModEl = document.getElementById('module-labor-formula-coefmod');
+        const kEl = document.getElementById('module-labor-formula-k');
+        if (!wrap || !toggle || !d) return;
+
+        const hf = d.labor.hoursFormula || null;
+        toggle.checked = !!hf;
+        toggle.disabled = !this.isAdmin;
+        coefModEl.value = hf ? (hf.coefModulos || 0) : 0;
+        kEl.value = hf ? (hf.base || 0) : 0;
+        coefModEl.disabled = kEl.disabled = !this.isAdmin || !hf;
+        wrap.style.display = hf ? 'flex' : 'none';
+        document.getElementById('module-labor-hours').disabled = !this.isAdmin || !!hf;
+
+        if (!toggle.dataset.bound) {
+            toggle.dataset.bound = '1';
+            toggle.addEventListener('change', () => {
+                this.draft.labor.hoursFormula = toggle.checked ? { coefModulos: 0, base: this.draft.labor.hours || 0 } : null;
+                this.markDirty();
+                this.renderLaborFormula();
+                this.updateEstimate();
+            });
+        }
+        [coefModEl, kEl].forEach(el => {
+            if (!el.dataset.bound) {
+                el.dataset.bound = '1';
+                el.addEventListener('change', () => {
+                    if (!this.draft.labor.hoursFormula) return;
+                    this.draft.labor.hoursFormula.coefModulos = parseFloat(coefModEl.value) || 0;
+                    this.draft.labor.hoursFormula.base = parseFloat(kEl.value) || 0;
+                    this.markDirty();
+                    this.updateEstimate();
+                });
+            }
+        });
     }
 
     changeLabor() {
@@ -562,7 +718,8 @@ class ModuleManager {
             workers: num('module-labor-workers', true),
             hours: num('module-labor-hours'),
             transport: num('module-labor-transport'),
-            viaticos: num('module-labor-viaticos')
+            viaticos: num('module-labor-viaticos'),
+            hoursFormula: d.labor.hoursFormula || null
         };
         this.markDirty();
         this.updateEstimate();
@@ -581,13 +738,15 @@ class ModuleManager {
         if (!el || !this.draft) return;
         const d = this.draft;
 
+        const previewModules = 1;
+        const previewCtx = { width: 1, height: 1, perimeter: 4, area: 1, modules: previewModules };
         const result = window.calculator.calculateWindowCost({
             width: 1, height: 1,
             brand: d.brand, system: d.category, color: this.referenceColor(),
             glassType: '', glassArea: 0,
-            modules: 1,
-            accessories: d.accessories.map(a => ({ name: a.name, price: a.price, qty: a.qty })),
-            labor: d.labor,
+            modules: previewModules,
+            accessories: d.accessories.map(a => ({ name: a.name, price: a.price, qty: window.calculator.resolveAccessoryQty(a, previewCtx) })),
+            labor: { ...d.labor, hours: window.calculator.resolveLaborHours(d.labor, previewModules) },
             moduleProfiles: d.profiles
         });
 
