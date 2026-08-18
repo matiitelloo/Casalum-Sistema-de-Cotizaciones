@@ -148,7 +148,7 @@ class QuotationManager {
         // El área de vidrio es un campo calculado: se recompone de las medidas.
         const w = parseFloat(form.width) || 0;
         const h = parseFloat(form.height) || 0;
-        setVal('p-glass-area', w * h > 0 ? (w * h).toFixed(2) : '');
+        setVal('p-glass-area', w * h > 0 ? this.areaTexto(w * h) : '');
 
         if (form.labor) {
             setVal('p-labor-workers', form.labor.workers);
@@ -676,7 +676,7 @@ class QuotationManager {
             const w = parseFloat(document.getElementById('p-width').value) || 0;
             const h = parseFloat(document.getElementById('p-height').value) || 0;
             const area = w * h;
-            document.getElementById('p-glass-area').value = area > 0 ? area.toFixed(2) : '';
+            document.getElementById('p-glass-area').value = area > 0 ? this.areaTexto(area) : '';
         };
         const widthInput = document.getElementById('p-width');
         const heightInput = document.getElementById('p-height');
@@ -1569,6 +1569,16 @@ class QuotationManager {
         }
     }
 
+    /**
+     * Área de vidrio para el campo del formulario. Redondear a dos decimales
+     * costaba centavos: una ventana de 2.65 x 1.50 da 3.975 m² y se cobraba
+     * 3.97. Se guardan cuatro decimales (1 cm²) y se recortan los ceros para
+     * que el campo siga siendo legible.
+     */
+    areaTexto(area) {
+        return String(parseFloat(area.toFixed(4)));
+    }
+
     /** parseInt/parseFloat que solo usa el default para vacío/NaN — nunca enmascara un valor negativo real. */
     numOr(rawValue, fallback, isInt = false) {
         if (rawValue === '' || rawValue === null || rawValue === undefined) return fallback;
@@ -1927,7 +1937,7 @@ class QuotationManager {
             document.getElementById('p-glass').value = data.glassType || '';
             this.updateGlassPrice();
             
-            document.getElementById('p-glass-area').value = data.glassArea > 0 ? data.glassArea.toFixed(2) : '';
+            document.getElementById('p-glass-area').value = data.glassArea > 0 ? this.areaTexto(data.glassArea) : '';
 
             // Restore labor
             if (data.labor) {
