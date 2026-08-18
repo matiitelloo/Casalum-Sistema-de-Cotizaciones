@@ -321,6 +321,7 @@ class App {
             'clients': 'clientes',
             'catalog': 'catalogo',
             'glass-quote': 'cotizar-vidrio',
+            'quick-price': 'precio-rapido',
             'settings': 'ajustes',
             'profile': 'perfil'
         };
@@ -445,6 +446,7 @@ class App {
             'history': 'Historial de Cotizaciones',
             'catalog': 'Catálogo de Productos',
             'glass-quote': 'Cotizar Vidrio',
+            'quick-price': 'Precio Rápido',
             'settings': 'Ajustes de la Empresa'
         };
         document.getElementById('page-title').textContent = titles[pageId] || 'CASALUM';
@@ -474,6 +476,8 @@ class App {
             this.loadRecentQuotations();
         } else if (pageId === 'glass-quote') {
             this.initGlassQuote();
+        } else if (pageId === 'quick-price') {
+            this.initQuickPrice();
         }
     }
 
@@ -584,6 +588,110 @@ class App {
                 inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); calculate(); } });
             });
         }
+    }
+
+    /** Inicializa "Precio Rápido": lista de precio de referencia por m² de cada ítem preestablecido. */
+    initQuickPrice() {
+        const groupSel = document.getElementById('qp-group');
+        if (!groupSel || !window.CATALOG_GROUPS) return;
+
+        if (!this._quickPriceReady) {
+            this._quickPriceReady = true;
+            groupSel.innerHTML = '<option value="">Todos los grupos</option>' +
+                window.CATALOG_GROUPS.map(g => `<option value="${window.escapeHtml(g)}">${window.escapeHtml(g)}</option>`).join('');
+
+            const filterEl = document.getElementById('qp-filter');
+            const render = () => this.renderQuickPrice();
+            filterEl.addEventListener('input', render);
+            groupSel.addEventListener('change', render);
+        }
+
+        this.renderQuickPrice();
+    }
+
+    /** Pinta la lista de precios de referencia según los filtros actuales de "Precio Rápido". */
+    renderQuickPrice() {
+        const cont = document.getElementById('qp-results');
+        const empty = document.getElementById('qp-empty');
+        if (!cont || !window.SEED_DATA || !window.calculator) return;
+
+        const q = (document.getElementById('qp-filter').value || '').trim().toLowerCase();
+        const group = document.getElementById('qp-group').value;
+
+        // Solo ítems con receta cargada: sin módulo no hay nada que calcular.
+        const items = (window.CATALOG_ITEMS || []).filter(it => {
+            if (!window.SEED_DATA.modules[it.id]) return false;
+            if (group && it.group !== group) return false;
+            if (q && it.name.toLowerCase().indexOf(q) === -1) return false;
+            return true;
+        });
+
+        if (!items.length) {
+            cont.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+
+        // Agrupa por familia para que las variantes (2, 3, 4 módulos) queden juntas.
+        const porFamilia = {};
+        items.forEach(it => (porFamilia[it.family] = porFamilia[it.family] || []).push(it));
+
+        let html = '';
+        Object.keys(porFamilia).sort().forEach(fam => {
+            html += `<div style="font-weight:700; color:var(--primary); margin: 1rem 0 0.5rem;">${window.escapeHtml(fam)}</div>
+                <table class="table" style="font-size:0.85rem;"><tbody>`;
+            porFamilia[fam].forEach(it => {
+                const mod = window.SEED_DATA.modules[it.id];
+                this.quickPriceRowsForModule(mod).forEach(({ brandName, price, faltantes }) => {
+                    const celda = price === null
+                        ? `<span class="text-muted" title="Falta cargar en esta marca: ${window.escapeHtml(faltantes.join(', '))}">Incompleto</span>`
+                        : `$${price.toFixed(2)}/m²`;
+                    html += `<tr>
+                        <td style="padding:6px 8px;">${window.escapeHtml(it.name)}</td>
+                        <td style="padding:6px 8px; color:var(--text-muted);">${window.escapeHtml(brandName)}</td>
+                        <td style="padding:6px 8px; text-align:right; font-weight:700; color:var(--primary);">${celda}</td>
+                    </tr>`;
+                });
+            });
+            html += '</tbody></table>';
+        });
+        cont.innerHTML = html;
+    }
+
+    /**
+     * Precio de referencia (1.00 x 1.00 m, con gastos generales + utilidad ya
+     * aplicados) de un módulo preestablecido. En modo "Todos los proveedores"
+     * devuelve una fila por marca, porque el precio real depende de cuál se
+     * elija al cotizar (mismo cálculo que el "Costo de referencia" del editor
+     * de recetas, ver ModuleManager.updateEstimate en js/modules.js).
+     */
+    quickPriceRowsForModule(mod) {
+        const brandKeys = mod.brand === ModuleManager.ALL_BRANDS ? Object.keys(window.SEED_DATA.brands) : [mod.brand];
+
+        return brandKeys.map(brandKey => {
+            const brand = window.SEED_DATA.brands[brandKey];
+            const brandName = brand ? brand.name : brandKey;
+            if (!brand || !brand.colors.length) return { brandName, price: null, faltantes: ['sin color cargado'] };
+
+            const color = brand.colors[0];
+            const ctx = { width: 1, height: 1, perimeter: 4, area: 1, modules: 1 };
+            const result = window.calculator.calculateWindowCost({
+                width: 1, height: 1,
+                brand: brandKey, system: mod.category, color: color,
+                glassType: '', glassArea: 0,
+                modules: 1,
+                accessories: (mod.accessories || []).map(a => ({ name: a.name, price: a.price, qty: window.calculator.resolveAccessoryQty(a, ctx) })),
+                labor: { ...(mod.labor || {}), hours: window.calculator.resolveLaborHours(mod.labor || {}, 1) },
+                moduleProfiles: mod.profiles || []
+            });
+
+            if (result.perfilesFaltantes && result.perfilesFaltantes.length) {
+                return { brandName, price: null, faltantes: result.perfilesFaltantes };
+            }
+            const { finalPrice } = window.calculator.applyMargins(result.total);
+            return { brandName, price: finalPrice, faltantes: [] };
+        });
     }
 
     async updateDashboardStats() {

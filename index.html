@@ -191,6 +191,7 @@
                     <button class="nav-item" data-page="new-quotation" id="nav-new-quotation"><i class="fa-solid fa-plus-circle"></i> Nueva Cotización</button>
                     <button class="nav-item" data-page="new-quotation" id="nav-quick-quote"><i class="fa-solid fa-bolt"></i> Cotización Rápida</button>
                     <button class="nav-item" data-page="glass-quote"><i class="fa-solid fa-glass-water"></i> Cotizar Vidrio</button>
+                    <button class="nav-item" data-page="quick-price"><i class="fa-solid fa-tags"></i> Precio Rápido</button>
                     <button class="nav-item" data-page="history"><i class="fa-solid fa-magnifying-glass"></i> Buscar Cotización</button>
                 </div>
 
@@ -1207,6 +1208,37 @@
                     </div>
                 </div>
 
+                <!-- Page: Quick Price (precio de referencia por m² de ventanas/puertas, sin pasar por el asistente) -->
+                <div id="page-quick-price" class="page">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 style="margin: 0;"><i class="fa-solid fa-tags" style="color: var(--primary);"></i> Precio Rápido</h2>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.5rem 0 0;">
+                                Precio de referencia por m² (1.00 × 1.00 m, sin vidrio) de cada ítem preestablecido. Es una
+                                aproximación para responder rápido: la cotización real puede variar según medidas, color y accesorios.
+                            </p>
+                        </div>
+                        <div class="card-body">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                <div class="form-group" style="margin: 0;">
+                                    <label>Buscar</label>
+                                    <input type="text" id="qp-filter" class="form-control" placeholder="Ej: corrediza, T45...">
+                                </div>
+                                <div class="form-group" style="margin: 0;">
+                                    <label>Grupo</label>
+                                    <select id="qp-group" class="form-control">
+                                        <option value="">Todos los grupos</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="qp-empty" class="text-muted" style="display: none; padding: 1rem 0;">
+                                Todavía no hay ítems preestablecidos con receta cargada.
+                            </div>
+                            <div id="qp-results" style="overflow: auto; max-height: 65vh;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Page: Settings (admin only) -->
                 <div id="page-settings" class="page">
                     <div class="card" style="max-width: 600px; margin: 0 auto;">
@@ -1349,15 +1381,15 @@
     <script src="data/catalog-items.js?v=7"></script>
     <script src="js/auth.js?v=5"></script>
     <script src="js/db.js?v=3"></script>
-    <script src="js/calculator.js?v=12"></script>
+    <script src="js/calculator.js?v=13"></script>
     <script src="js/ventanaFija1100.js?v=9"></script>
     <script src="js/quotations.js?v=45"></script>
     <script src="js/clients.js?v=9"></script>
     <script src="js/pdf.js?v=3"></script>
     <script src="js/word.js?v=1"></script>
     <script src="js/catalog.js?v=15"></script>
-    <script src="js/modules.js?v=20"></script>
+    <script src="js/modules.js?v=21"></script>
     <script src="js/settings.js?v=3"></script>
-    <script src="js/app.js?v=22"></script>
+    <script src="js/app.js?v=23"></script>
 </body>
 </html>

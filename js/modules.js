@@ -710,7 +710,7 @@ class ModuleManager {
                 </label>`).join('')}
             <label style="grid-column: 1 / -1;" title="Etiqueta compartida: con un rol genérico este perfil se resuelve solo en Cedal, Fisa o Femec.">
                 <span>Rol genérico (sirve para los tres proveedores)</span>
-                <input type="text" class="rec-role" data-idx="${idx}" value="${window.escapeHtml(row.role || '')}" placeholder="ej: ventana-t45-marco">
+                <input type="text" class="rec-role" list="generic-roles-datalist" data-idx="${idx}" value="${window.escapeHtml(row.role || '')}" placeholder="ej: ventana-t45-marco">
             </label>
         </div>`;
     }
@@ -735,9 +735,22 @@ class ModuleManager {
         });
     }
 
+    /** Datalist con los roles genéricos ya existentes: sugiere al escribir y evita el typo que rompe la receta en silencio. */
+    renderRoleDatalist() {
+        let dl = document.getElementById('generic-roles-datalist');
+        if (!dl) {
+            dl = document.createElement('datalist');
+            dl.id = 'generic-roles-datalist';
+            document.body.appendChild(dl);
+        }
+        const roles = window.catalogManager ? window.catalogManager.allGenericRoles() : [];
+        dl.innerHTML = roles.map(r => `<option value="${window.escapeHtml(r)}"></option>`).join('');
+    }
+
     renderProfiles() {
         const container = document.getElementById('module-profiles-table');
         if (!container || !this.draft) return;
+        this.renderRoleDatalist();
 
         const d = this.draft;
         const editable = this.isAdmin;
@@ -850,7 +863,7 @@ class ModuleManager {
                     </div>
                 </td>
                 <td style="padding:4px 8px; text-align:center;">
-                    <input type="text" class="mod-p-role" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}"
+                    <input type="text" class="mod-p-role" list="generic-roles-datalist" data-code="${product.code}" data-cat="${category}" data-brand="${brandKey}"
                         value="${window.escapeHtml(roleVal)}" placeholder="ej: ventana-t45-marco" style="width:150px; padding:2px; font-size:0.72rem;" ${used && editable ? '' : 'disabled'}>
                 </td>
             </tr>`;
@@ -1293,7 +1306,8 @@ class ModuleManager {
         if (!this.isAdmin || !this.draft) return;
         const configured = Object.keys(window.SEED_DATA.modules)
             .filter(id => id !== this.currentItemId)
-            .map(id => window.SEED_DATA.modules[id]);
+            .map(id => window.SEED_DATA.modules[id])
+            .filter(m => window.CATALOG_ITEMS_BY_ID[m.itemId]);
 
         if (!configured.length) {
             notify.info('Todavía no hay ningún otro módulo preestablecido para copiar.');
@@ -1303,18 +1317,76 @@ class ModuleManager {
         const brandLabel = (b) => b === ModuleManager.ALL_BRANDS
             ? 'Todos los proveedores'
             : (window.SEED_DATA.brands[b] ? window.SEED_DATA.brands[b].name : b);
-        const list = configured.map((m, i) => `${i + 1}. ${m.itemName} (${brandLabel(m.brand)})`).join('\n');
-        const answer = prompt('Escriba el número del módulo que desea copiar:\n\n' + list);
-        if (answer === null) return;
-        const idx = parseInt(answer, 10) - 1;
-        if (Number.isNaN(idx) || idx < 0 || idx >= configured.length) {
-            notify.warning('Número no válido.');
-            return;
-        }
 
-        const src = JSON.parse(JSON.stringify(configured[idx]));
+        // Agrupa por familia, igual que el selector de ítems: así se ubica rápido
+        // entre variantes parecidas (2 módulos, 3 módulos, etc.).
+        const porFamilia = {};
+        configured.forEach(m => {
+            const item = window.CATALOG_ITEMS_BY_ID[m.itemId];
+            const fam = item.family || 'Otros';
+            (porFamilia[fam] = porFamilia[fam] || []).push(m);
+        });
+
+        this.openCopyPicker(porFamilia, brandLabel);
+    }
+
+    /** Modal con buscador para elegir qué módulo copiar — reemplaza el prompt() nativo, que no filtraba ni agrupaba. */
+    openCopyPicker(porFamilia, brandLabel) {
+        const overlay = document.createElement('div');
+        overlay.className = 'notify-confirm-overlay';
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(4px);';
+        overlay.innerHTML = `
+            <div role="dialog" aria-modal="true" aria-label="Copiar receta de otro módulo"
+                style="background:#fff; border-radius:var(--radius-lg); padding:1.5rem; max-width:480px; width:90%; max-height:80vh; display:flex; flex-direction:column; box-shadow:var(--shadow-lg);">
+                <h3 style="margin:0 0 0.75rem; color:var(--primary);">Copiar receta de...</h3>
+                <input type="text" id="copy-picker-filter" placeholder="Buscar ítem..." class="form-control" style="margin-bottom:0.75rem;">
+                <div id="copy-picker-list" style="overflow:auto; flex:1;"></div>
+                <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
+                    <button type="button" class="btn btn-outline" id="copy-picker-cancel">Cancelar</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        const listEl = overlay.querySelector('#copy-picker-list');
+        const filterEl = overlay.querySelector('#copy-picker-filter');
+
+        const cerrar = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
+        const onKey = e => { if (e.key === 'Escape') cerrar(); };
+        overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+        overlay.querySelector('#copy-picker-cancel').addEventListener('click', cerrar);
+        document.addEventListener('keydown', onKey);
+
+        const render = () => {
+            const q = (filterEl.value || '').trim().toLowerCase();
+            let html = '';
+            Object.keys(porFamilia).sort().forEach(fam => {
+                const items = porFamilia[fam].filter(m => !q || m.itemName.toLowerCase().indexOf(q) !== -1);
+                if (!items.length) return;
+                html += `<div style="font-weight:700; color:var(--primary); font-size:0.8rem; margin:0.5rem 0 0.25rem;">${window.escapeHtml(fam)}</div>`;
+                items.forEach(m => {
+                    html += `<button type="button" class="btn btn-outline btn-sm copy-picker-item" data-item="${window.escapeHtml(m.itemId)}" style="display:block; width:100%; text-align:left; margin-bottom:0.25rem;">
+                        ${window.escapeHtml(m.itemName)} <span style="color:var(--text-muted); font-size:0.75rem;">(${window.escapeHtml(brandLabel(m.brand))})</span>
+                    </button>`;
+                });
+            });
+            listEl.innerHTML = html || '<p class="text-muted">Sin resultados.</p>';
+            listEl.querySelectorAll('.copy-picker-item').forEach(b => {
+                b.addEventListener('click', () => {
+                    const itemId = b.getAttribute('data-item');
+                    cerrar();
+                    this.applyCopiedModule(window.SEED_DATA.modules[itemId]);
+                });
+            });
+        };
+        filterEl.addEventListener('input', render);
+        render();
+        filterEl.focus();
+    }
+
+    applyCopiedModule(src) {
         const item = window.CATALOG_ITEMS_BY_ID[this.currentItemId];
-        this.draft = Object.assign(src, {
+        const copy = JSON.parse(JSON.stringify(src));
+        this.draft = Object.assign(copy, {
             itemId: item.id,
             itemName: item.name,
             group: item.group,

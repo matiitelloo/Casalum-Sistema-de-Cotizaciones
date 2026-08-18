@@ -390,7 +390,10 @@ class Calculator {
         accessories.forEach(acc => {
             const cost = acc.price * acc.qty;
             totalCost += cost;
-            details.push({ code: 'ACC', desc: acc.name, unitPrice: acc.price, qty: acc.qty, qtyString: acc.qty + ' und', total: cost });
+            // Las cantidades con fórmula salen con muchos decimales (4.5199999);
+            // en el desglose se muestran con dos, pero el costo usa el valor exacto.
+            const qtyTexto = Number.isInteger(acc.qty) ? String(acc.qty) : Number(acc.qty).toFixed(2);
+            details.push({ code: 'ACC', desc: acc.name, unitPrice: acc.price, qty: acc.qty, qtyString: qtyTexto + ' und', total: cost });
         });
 
         // Add Labor — el costo por hora es único y viene de Ajustes de la Empresa,
