@@ -69,6 +69,12 @@
     add(V, 'VENTANA PROYECTABLE', 'VENTANAS PROYECTABLES 5 MODULOS');
     add(V, 'VENTANA PROYECTABLE', 'VENTANAS PROYECTABLES 6 MODULOS');
 
+    // La ventana T-45 es el producto que más se cotiza (en la 167-26 son 40 de
+    // 54 ítems) y no estaba en el catálogo: existía solo la PUERTA T45, que es
+    // otra receta. La ventana lleva perfil de malla y malla corrediza.
+    add(V, 'VENTANA CORREDIZA T-45', 'VENTANA CORREDIZA T-45 2 MODULOS', 'Una hoja fija y una corrediza, con malla');
+    add(V, 'VENTANA CORREDIZA T-45', 'VENTANA CORREDIZA T-45 3 MODULOS', 'Una hoja fija y dos corredizas, con malla');
+
     addRange(V, 'VENTANA EN TUBO', 'VENTANA EN TUBO 4X4', [2, 3, 4, 5, 6], 'MODULOS');
     addRange(V, 'VENTANA EN TUBO', 'VENTANA EN TUBO 5X4', [2, 3, 4, 5, 6], 'MODULOS');
     addRange(V, 'VENTANA EN TUBO', 'VENTANA EN TUBO 7X4', [2, 3, 4, 5, 6], 'MODULOS');
