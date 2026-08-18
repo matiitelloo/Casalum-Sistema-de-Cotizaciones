@@ -232,7 +232,7 @@ class App {
         const user = window.authManager && window.authManager.currentUser;
         const nombre = user && (user.name || user.username);
         return nombre
-            ? `Bienvenido ${nombre} al sistema de cotizaciones de Casalum`
+            ? `Bienvenido, ${nombre} al sistema de cotizaciones de Casalum`
             : 'Bienvenido al sistema de cotizaciones de Casalum';
     }
 
