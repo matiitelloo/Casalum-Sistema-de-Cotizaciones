@@ -189,15 +189,19 @@ class App {
         const user = window.authManager && window.authManager.currentUser;
         if (!user) return;
 
+        // Un enlace compartido manda: si la URL ya trae una sección, se abre esa
+        // y no la última que estuviera guardada de la sesión anterior.
+        const deLaUrl = this.seccionDe(location.hash ? location.hash.slice(1) : '');
+
         let saved = null;
         try {
             saved = JSON.parse(localStorage.getItem(LAST_PAGE_KEY) || 'null');
         } catch (e) {
             saved = null;
         }
-        if (!saved || saved.uid !== user.uid) return;
+        if (!deLaUrl && (!saved || saved.uid !== user.uid)) return;
 
-        const pageId = saved.page;
+        const pageId = deLaUrl || saved.page;
         if (!pageId || pageId === 'dashboard') return;                  // ya es la pantalla inicial
         if (!document.getElementById(`page-${pageId}`)) return;         // sección que ya no existe
         if (pageId === 'settings' && user.role !== 'admin') return;     // no la puede ver
@@ -220,13 +224,49 @@ class App {
     // ============================================================
 
     /**
+     * Traduce el identificador interno de cada sección al texto que se ve en la
+     * barra de direcciones. Adentro las secciones siguen llamándose igual
+     * (page-new-quotation y compañía, que aparecen por todo el HTML), pero la
+     * URL que ve y comparte el usuario va en español.
+     */
+    static get RUTAS() {
+        return {
+            'dashboard': 'inicio',
+            'history': 'historial',
+            'new-quotation': 'nueva-cotizacion',
+            'clients': 'clientes',
+            'catalog': 'catalogo',
+            'glass-quote': 'cotizar-vidrio',
+            'settings': 'ajustes',
+            'profile': 'perfil'
+        };
+    }
+
+    /** Sección interna -> texto de la URL. */
+    rutaDe(pageId) {
+        return App.RUTAS[pageId] || pageId;
+    }
+
+    /**
+     * Texto de la URL -> sección interna. Acepta también los nombres viejos en
+     * inglés, así los enlaces y favoritos que alguien ya haya guardado siguen
+     * funcionando.
+     */
+    seccionDe(ruta) {
+        if (!ruta) return '';
+        const enEspanol = Object.keys(App.RUTAS).find(k => App.RUTAS[k] === ruta);
+        if (enEspanol) return enEspanol;
+        return App.RUTAS[ruta] ? ruta : ruta;   // ya venía en inglés (enlace viejo)
+    }
+
+    /**
      * Deja la sección actual en el historial del navegador, para que las
      * flechas de atrás y adelante se muevan entre secciones en vez de sacar
      * al usuario de la aplicación entera.
      */
     pushHistory(pageId, replace) {
         const estado = { casalumPage: pageId };
-        const url = '#' + pageId;
+        const url = '#' + this.rutaDe(pageId);
         const actual = history.state && history.state.casalumPage;
 
         // Repetir la misma sección no genera una entrada nueva: si no, había
@@ -244,7 +284,7 @@ class App {
     bindHistoryNavigation() {
         window.addEventListener('popstate', e => {
             const pageId = (e.state && e.state.casalumPage)
-                || (location.hash ? location.hash.slice(1) : '')
+                || this.seccionDe(location.hash ? location.hash.slice(1) : '')
                 || 'dashboard';
 
             if (!document.getElementById(`page-${pageId}`)) return;
