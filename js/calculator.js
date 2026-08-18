@@ -104,7 +104,13 @@ class Calculator {
      *            + coefModulos     x Módulos            (sin medida: piezas sueltas)
      *            + coefBaseHoja    x AnchoHoja x Hojas  (medida de la hoja que abre)
      *            + coefAlturaHoja  x AltoHoja  x Hojas
+     *            + coefBaseDivMod  x (Base / Módulos)   (ancho de UNA hoja)
      *            + fixedQty                              (constante K)
+     *
+     * `coefBaseDivMod` es para las puertas colgantes y acordeón: el ángulo en
+     * T, el hierro y el felpero se miden sobre el ancho de una hoja sola, que
+     * es la base repartida entre los módulos. Con 1 módulo equivale a la base
+     * entera, así que la misma receta sirve para todas las cantidades.
      *
      * Los términos de "hoja" son para las ventanas proyectables: el perimetral
      * de hoja no se mide sobre la ventana entera sino sobre la hoja que abre,
@@ -147,6 +153,7 @@ class Calculator {
             + num('coefModulos') * modules
             + num('coefBaseHoja') * sashW * leaves
             + num('coefAlturaHoja') * sashH * leaves
+            + num('coefBaseDivMod') * (ctx.width / modules)
             + num('fixedQty');
         return qty < 0 ? 0 : qty;
     }
