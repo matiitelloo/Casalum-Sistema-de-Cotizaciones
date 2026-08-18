@@ -921,6 +921,24 @@ class QuotationManager {
         document.getElementById('p-viaticos').value = labor.viaticos || 0;
     }
 
+    /**
+     * Avisa si la receta tiene perfiles que el proveedor elegido no fabrica.
+     * Sin esto la cotización sale sin ese aluminio y más barata, en silencio:
+     * es el caso de la Puerta T45 (solo Cedal) o la Europea (solo Fisa)
+     * cotizadas con otra marca.
+     */
+    avisarPerfilesFaltantes(costResult, data) {
+        const faltan = (costResult && costResult.perfilesFaltantes) || [];
+        if (!faltan.length) return;
+        const marca = window.SEED_DATA.brands[data.brand]
+            ? window.SEED_DATA.brands[data.brand].name : data.brand;
+        notify.warning(
+            `${marca} no tiene: ${faltan.join(', ')}. ` +
+            `Esos perfiles NO se cobraron. Elija otro proveedor o cárguelos en Catálogo → Roles Genéricos.`,
+            { titulo: 'Faltan perfiles en este proveedor', ms: 15000 }
+        );
+    }
+
     /** Contexto (medidas, módulos, hojas) actual del formulario, para fórmulas de módulo. */
     currentModuleCtx() {
         const width = this.numOr(document.getElementById('p-width').value, 0);
@@ -1437,6 +1455,7 @@ class QuotationManager {
         }
 
         const costResult = window.calculator.calculateWindowCost(data);
+        this.avisarPerfilesFaltantes(costResult, data);
         
         const container = document.getElementById('preview-breakdown-container');
         const body = document.getElementById('preview-breakdown-body');
@@ -1508,6 +1527,7 @@ class QuotationManager {
         }
 
         const costResult = window.calculator.calculateWindowCost(data);
+        this.avisarPerfilesFaltantes(costResult, data);
 
         if (costResult.total === 0) {
             notify.error('No se pudo calcular el precio. Revise los colores y el sistema.');

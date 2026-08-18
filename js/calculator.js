@@ -290,6 +290,8 @@ class Calculator {
 
         let totalCost = 0;
         let details = [];
+        // Perfiles de la receta que este proveedor no puede cubrir (ver más abajo).
+        const perfilesFaltantes = [];
 
         if (usingModule) {
             const ctx = {
@@ -308,10 +310,11 @@ class Calculator {
 
                 const prod = this.resolveModuleProduct(row, brandData);
                 if (!prod) {
-                    const label = row.role
-                        ? `el rol "${row.role}"`
-                        : `el perfil ${row.code} (sin rol genérico, solo sirve para ${row.brand || 'su proveedor'})`;
-                    console.warn(`Módulo: ${label} no está disponible en la base de ${brand}`);
+                    // Antes esto solo iba a la consola: el perfil se salteaba en
+                    // silencio y la cotización salía sin ese aluminio, más barata,
+                    // sin que nadie se enterara. Ahora se devuelve en el resultado
+                    // para poder avisarlo en pantalla (ver quotations.js).
+                    perfilesFaltantes.push(row.description || row.role || row.code);
                     return;
                 }
 
@@ -403,6 +406,7 @@ class Calculator {
         return {
             total: totalCost,
             details: details,
+            perfilesFaltantes: perfilesFaltantes,
             dimensions: `${width}x${height}m`,
             description: `Ventana ${brand} ${system} (${color}) - Vidrio ${glassType}`
         };
