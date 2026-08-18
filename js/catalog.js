@@ -3,6 +3,25 @@
  * Editable only by admin users.
  * Persists changes to Firestore (primary) and localStorage (cache).
  */
+/**
+ * Guarda en localStorage sin poder tumbar al que llama.
+ *
+ * localStorage tira excepción si el navegador está en modo privado o si se pasó
+ * la cuota (el catálogo ya ronda los 40 KB). Antes eso cortaba persistData()
+ * ANTES de escribir en Firestore, así que un caché que no se puede escribir
+ * hacía perder el guardado de verdad. El caché es una comodidad; la nube es la
+ * fuente. Si falla, se sigue.
+ */
+function guardarCacheLocal(clave, valor) {
+    try {
+        localStorage.setItem(clave, valor);
+        return true;
+    } catch (e) {
+        console.warn('No se pudo escribir el caché local (se guarda igual en la nube):', e.message);
+        return false;
+    }
+}
+
 class CatalogManager {
     constructor() {
         this.isAdmin = false;
@@ -38,7 +57,7 @@ class CatalogManager {
                     if (parsed.accessories) window.SEED_DATA.accessories = parsed.accessories;
                     if (parsed.modules) window.SEED_DATA.modules = parsed.modules;
                     // Update local cache
-                    localStorage.setItem('casalum_catalog_data', JSON.stringify(parsed));
+                    guardarCacheLocal('casalum_catalog_data', JSON.stringify(parsed));
                     return;
                 }
             }
@@ -74,7 +93,7 @@ class CatalogManager {
             rolesCustomized: !!window.SEED_DATA.rolesCustomized
         };
         // Save to localStorage as cache
-        localStorage.setItem('casalum_catalog_data', JSON.stringify(toSave));
+        guardarCacheLocal('casalum_catalog_data', JSON.stringify(toSave));
         // Save to Firestore
         if (window.dbManager && window.dbManager.db) {
             await window.dbManager.db.collection('catalog').doc('data').set(toSave);
@@ -1109,7 +1128,7 @@ async function loadCatalogFromFirestore() {
             // exacto y sus claves ya vienen con prefijo desde data/seed.js.
             const prefixed = applyCodePrefixes();
             const patched = applyGenericRolePatches() || prefixed;
-            localStorage.setItem('casalum_catalog_data', JSON.stringify(parsed));
+            guardarCacheLocal('casalum_catalog_data', JSON.stringify(parsed));
 
             // Si el parche cambió algo y quien está logueado es admin, se guarda una
             // sola vez en Firestore para que quede fijo y no dependa de que alguien

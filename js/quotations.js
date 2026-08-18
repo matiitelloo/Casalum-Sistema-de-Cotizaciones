@@ -1826,10 +1826,14 @@ class QuotationManager {
             // or while rules are being updated. The browser keeps a monotonic
             // emergency sequence until Firestore becomes available again.
             console.warn('No se pudo reservar el consecutivo en Firestore; se usará respaldo local.', error);
+            // Este respaldo ya corre porque Firestore falló: si además localStorage
+            // no está disponible (modo privado), no puede tirar otra excepción y
+            // dejar sin número a la cotización.
             const storageKey = `casalum-quotation-counter-${year}-${initial}`;
-            const current = Number(localStorage.getItem(storageKey) || 0);
+            let current = 0;
+            try { current = Number(localStorage.getItem(storageKey) || 0); } catch (e) { /* sin caché */ }
             this.quoteNumber = current + 1;
-            localStorage.setItem(storageKey, String(this.quoteNumber));
+            try { localStorage.setItem(storageKey, String(this.quoteNumber)); } catch (e) { /* sin caché */ }
         }
         this.quoteYear = year;
         return { number: this.quoteNumber, year: this.quoteYear, initial };
@@ -1878,6 +1882,23 @@ class QuotationManager {
             notify.warning('Datos incompletos para guardar.');
             return;
         }
+
+        // Guardar es asincrónico (reserva el consecutivo y escribe en Firestore):
+        // sin este cerrojo, un doble clic dispara dos guardados en paralelo y
+        // deja la cotización duplicada.
+        if (this._guardando) return;
+        this._guardando = true;
+        const btnGuardar = document.getElementById('btn-save');
+        if (window.setButtonLoading) window.setButtonLoading(btnGuardar, true, 'Guardando...');
+        try {
+            await this._saveQuotationInterno();
+        } finally {
+            this._guardando = false;
+            if (window.setButtonLoading) window.setButtonLoading(btnGuardar, false);
+        }
+    }
+
+    async _saveQuotationInterno() {
 
         const reserved = await this.ensureQuotationNumber();
         const baseCode = this.baseCode || this.buildBaseCode(reserved.initial, reserved.number, reserved.year);
