@@ -1164,3 +1164,93 @@ h4 {
     outline: 2px solid var(--danger);
     outline-offset: -1px;
 }
+
+/* ============================================================
+   BOTÓN DEL OJO + TARJETA DE FRASE (Inicio)
+   ============================================================ */
+
+#btn-frase {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all var(--duration);
+}
+#btn-frase:hover {
+    color: var(--primary);
+    border-color: var(--primary);
+    transform: scale(1.08);
+}
+#btn-frase:active { transform: scale(0.96); }
+
+.frase-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(3px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: frase-entra-fondo 0.18s ease-out;
+}
+
+.frase-card {
+    position: relative;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 2.25rem 2rem 1.5rem;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    animation: frase-entra 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.3);
+}
+
+.frase-comilla {
+    font-size: 1.6rem;
+    color: var(--primary);
+    opacity: 0.25;
+}
+
+.frase-texto {
+    margin: 0.65rem 0 1.4rem;
+    font-size: 1.08rem;
+    line-height: 1.55;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.frase-cerrar {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.7rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    padding: 0.25rem;
+    line-height: 1;
+}
+.frase-cerrar:hover { color: var(--danger); }
+
+@keyframes frase-entra-fondo { from { opacity: 0; } to { opacity: 1; } }
+@keyframes frase-entra {
+    from { opacity: 0; transform: translateY(14px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .frase-overlay, .frase-card { animation: none; }
+    #btn-frase:hover { transform: none; }
+}

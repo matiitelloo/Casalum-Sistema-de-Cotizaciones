@@ -44,6 +44,14 @@ class App {
     setupNavigation() {
         this.bindHistoryNavigation();
 
+        const btnFrase = document.getElementById('btn-frase');
+        if (btnFrase) {
+            btnFrase.addEventListener('click', () => this.mostrarFrase());
+            // Inicio ya viene activo desde el HTML, sin pasar por navigate():
+            // sin esto el botón no aparece hasta cambiar de sección y volver.
+            btnFrase.style.display = this.currentPage === 'dashboard' ? 'inline-flex' : 'none';
+        }
+
         // Solo los nav-item que realmente navegan a una página (excluye el botón que
         // abre/cierra el submenú "Cotización", que no tiene data-page).
         const navButtons = document.querySelectorAll('.nav-item[data-page]');
@@ -223,6 +231,69 @@ class App {
     // HISTORIAL DEL NAVEGADOR (flechas atrás / adelante)
     // ============================================================
 
+    /** Frases del botón del ojo, al lado del saludo de Inicio. */
+    static get FRASES() {
+        return [
+            'Cada cotización bien hecha es un cliente que vuelve.',
+            'El aluminio se corta una sola vez: medí dos veces, cotizá tranquilo.',
+            'Un precio claro vende más que un precio bajo.',
+            'La obra grande empieza por la primera ventana.',
+            'Hoy es un buen día para cerrar ese presupuesto pendiente.',
+            'Lo que se mide bien, se fabrica bien y se cobra bien.',
+            'La prolijidad en el taller se nota en la fachada.',
+            'No hay competencia que gane contra un trabajo bien terminado.',
+            'Cotizar rápido también es dar buen servicio.',
+            'El cliente recuerda cómo lo atendieron mucho después del precio.',
+            'Cada obra terminada es publicidad que camina.',
+            'Un buen presupuesto se explica solo.',
+            'La constancia arma más ventanas que la suerte.',
+            'Revisá el detalle: ahí está la diferencia entre bueno y excelente.',
+            'El vidrio refleja el trabajo de quien lo instaló.',
+            'Paso a paso, módulo a módulo.',
+            'Un día ocupado es mejor que un día perdido.',
+            'La confianza se construye con cada entrega a tiempo.',
+            'Hacelo bien la primera vez y no lo hacés dos veces.',
+            'Detrás de cada cotización hay una casa que alguien está soñando.'
+        ];
+    }
+
+    /** Muestra una frase al azar en una tarjeta flotante. */
+    mostrarFrase() {
+        const frases = App.FRASES;
+        // No repetir la anterior: sacando dos veces seguidas la misma, el botón
+        // parece roto.
+        let i = Math.floor(Math.random() * frases.length);
+        if (frases.length > 1 && i === this._ultimaFrase) i = (i + 1) % frases.length;
+        this._ultimaFrase = i;
+
+        document.querySelectorAll('.frase-overlay').forEach(el => el.remove());
+
+        const overlay = document.createElement('div');
+        overlay.className = 'frase-overlay';
+        overlay.innerHTML = `
+            <div class="frase-card" role="dialog" aria-label="Mensaje del día">
+                <button type="button" class="frase-cerrar" aria-label="Cerrar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <i class="fa-solid fa-quote-left frase-comilla" aria-hidden="true"></i>
+                <p class="frase-texto">${window.escapeHtml(frases[i])}</p>
+                <button type="button" class="btn btn-outline btn-sm frase-otra">
+                    <i class="fa-solid fa-shuffle"></i> Otra frase
+                </button>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        const cerrar = () => {
+            document.removeEventListener('keydown', onKey);
+            overlay.remove();
+        };
+        const onKey = e => { if (e.key === 'Escape') cerrar(); };
+        document.addEventListener('keydown', onKey);
+        overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+        overlay.querySelector('.frase-cerrar').addEventListener('click', cerrar);
+        overlay.querySelector('.frase-otra').addEventListener('click', () => this.mostrarFrase());
+    }
+
     /**
      * Saludo del inicio, con el nombre de quien entró. La sesión la resuelve
      * Firebase en forma asincrónica, así que mientras no esté lista se muestra
@@ -377,6 +448,10 @@ class App {
             'settings': 'Ajustes de la Empresa'
         };
         document.getElementById('page-title').textContent = titles[pageId] || 'CASALUM';
+
+        // El ojo acompaña al saludo: fuera de Inicio no viene a cuento.
+        const btnFrase = document.getElementById('btn-frase');
+        if (btnFrase) btnFrase.style.display = pageId === 'dashboard' ? 'inline-flex' : 'none';
         
         // Mobile sidebar close on navigate
         const sidebar = document.getElementById('sidebar');
