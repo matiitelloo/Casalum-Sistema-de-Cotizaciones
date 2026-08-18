@@ -127,6 +127,26 @@
     /** Índice id -> ítem, para resolver módulos guardados rápido. */
     window.CATALOG_ITEMS_BY_ID = items.reduce((acc, it) => { acc[it.id] = it; return acc; }, {});
 
+    /**
+     * Cuantos modulos se hacen normalmente en cada familia, sacado de los propios
+     * nombres del catalogo ("VENTANA CORREDIZA 3 MODULOS" -> 3). Sirve para avisar
+     * al cotizar: si alguien pide mas modulos de los que el catalogo contempla, el
+     * campo se pinta de tomate (ver js/quotations.js). Las familias que no llevan
+     * modulos (cielo raso, biselado, mamparas fijas) no aparecen aca.
+     */
+    window.CATALOG_MODULE_RANGE = (function () {
+        const rango = {};
+        items.forEach(it => {
+            const m = /(\d+)\s*MODULO/i.exec(it.name);
+            if (!m) return;
+            const n = parseInt(m[1], 10);
+            const r = rango[it.family];
+            if (!r) rango[it.family] = { min: n, max: n };
+            else { r.min = Math.min(r.min, n); r.max = Math.max(r.max, n); }
+        });
+        return rango;
+    })();
+
     /** Grupos en orden de aparición del catálogo impreso. */
     window.CATALOG_GROUPS = ['VENTANAS', 'PUERTAS', 'CABINAS DE BAÑO', 'OTROS TRABAJOS'];
 

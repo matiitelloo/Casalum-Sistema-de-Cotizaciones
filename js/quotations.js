@@ -133,8 +133,8 @@ class QuotationManager {
 
         setVal('p-width', form.width);
         setVal('p-height', form.height);
-        setVal('p-modules', form.modules);
-        setVal('p-leaves', form.leaves);
+        this.asegurarOpcion(document.getElementById('p-modules'), form.modules);
+        this.asegurarOpcion(document.getElementById('p-leaves'), form.leaves);
         setVal('p-qty', form.qty);
         const mullonCb = document.getElementById('p-mullon');
         if (mullonCb) mullonCb.checked = !!form.mullon;
@@ -687,16 +687,18 @@ class QuotationManager {
         const modulesInput = document.getElementById('p-modules');
         const leavesInput = document.getElementById('p-leaves');
         if (modulesInput) {
-            modulesInput.addEventListener('input', () => {
-                if (!this.leavesManuallyEdited) {
-                    leavesInput.value = modulesInput.value;
+            ['input', 'change'].forEach(ev => modulesInput.addEventListener(ev, () => {
+                if (!this.leavesManuallyEdited && leavesInput) {
+                    this.asegurarOpcion(leavesInput, modulesInput.value);
                 }
-            });
+                this.marcarCantidadesFueraDeRango();
+            }));
         }
         if (leavesInput) {
-            leavesInput.addEventListener('input', () => {
+            ['input', 'change'].forEach(ev => leavesInput.addEventListener(ev, () => {
                 this.leavesManuallyEdited = true;
-            });
+                this.marcarCantidadesFueraDeRango();
+            }));
         }
 
         const nextBtn = document.getElementById('btn-next-step-3');
@@ -742,7 +744,10 @@ class QuotationManager {
 
         const systemSelect = document.getElementById('p-system');
         if (systemSelect) {
-            systemSelect.addEventListener('change', () => this.syncModuleFromSystem());
+            systemSelect.addEventListener('change', () => {
+                this.syncModuleFromSystem();
+                this.marcarCantidadesFueraDeRango();   // cada sistema tiene su rango normal
+            });
         }
 
         // Dentro de un mismo sistema puede haber un módulo por cantidad de módulos
@@ -784,6 +789,79 @@ class QuotationManager {
         sel.innerHTML += html;
 
         if (previous) sel.value = previous;
+
+        this.populateCantidadSelects();
+    }
+
+    /**
+     * Llena "Módulos" y "Hojas" con los números del 1 al 10. Antes eran campos
+     * libres: se podía escribir cualquier cosa (y hasta decimales), y no había
+     * forma de saber si esa cantidad es de las que se fabrican.
+     */
+    populateCantidadSelects() {
+        [['p-modules', 'Sin módulos'], ['p-leaves', 'Se autocompleta con Módulos']].forEach(([id, vacio]) => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const previo = sel.value;
+            let html = `<option value="">${vacio}</option>`;
+            for (let n = 1; n <= 10; n++) html += `<option value="${n}">${n}</option>`;
+            sel.innerHTML = html;
+            if (previo) this.asegurarOpcion(sel, previo);
+        });
+    }
+
+    /**
+     * Deja elegido un valor aunque no esté entre las 10 opciones (cotizaciones
+     * viejas cargadas a mano con 12 módulos, por ejemplo): antes de seleccionarlo
+     * se agrega la opción, si no el desplegable quedaría vacío y se perdería el dato.
+     */
+    asegurarOpcion(sel, valor) {
+        if (!sel) return;
+        const v = String(valor === null || valor === undefined ? '' : valor);
+        if (v !== '' && !Array.from(sel.options).some(o => o.value === v)) {
+            const op = document.createElement('option');
+            op.value = v;
+            op.textContent = v;
+            sel.appendChild(op);
+        }
+        sel.value = v;
+    }
+
+    /** Cuántos módulos hace normalmente esta familia, según el catálogo. */
+    rangoModulos(family) {
+        const rangos = window.CATALOG_MODULE_RANGE || {};
+        return rangos[family] || null;
+    }
+
+    /**
+     * Pinta de tomate Módulos u Hojas cuando se pide más de lo que el catálogo
+     * contempla para ese sistema. No bloquea nada: se puede cotizar igual, pero
+     * queda a la vista que es un trabajo fuera de lo habitual.
+     */
+    marcarCantidadesFueraDeRango() {
+        const family = (document.getElementById('p-system') || {}).value || '';
+        const rango = this.rangoModulos(family);
+        const modulos = parseInt((document.getElementById('p-modules') || {}).value, 10);
+        const hojas = parseInt((document.getElementById('p-leaves') || {}).value, 10);
+
+        const pintar = (id, fuera, texto) => {
+            const el = document.getElementById(id);
+            const aviso = document.getElementById(id + '-aviso');
+            if (el) el.classList.toggle('campo-fuera-de-rango', !!fuera);
+            if (aviso) {
+                aviso.style.display = fuera ? 'block' : 'none';
+                aviso.textContent = fuera ? texto : '';
+            }
+        };
+
+        const modulosFuera = !!(rango && modulos > rango.max);
+        pintar('p-modules', modulosFuera, rango
+            ? `El catálogo hace esta ventana de ${rango.min} a ${rango.max} módulos. Con ${modulos} es un trabajo especial: revise medidas y mano de obra.`
+            : '');
+
+        // Más hojas que módulos no existe: cada hoja va dentro de un módulo.
+        const hojasFuera = !!(modulos > 0 && hojas > modulos);
+        pintar('p-leaves', hojasFuera, `No puede haber más hojas (${hojas}) que módulos (${modulos}).`);
     }
 
     /**
@@ -1705,6 +1783,7 @@ class QuotationManager {
             const el = document.getElementById(id);
             if (el) el.classList.remove('campo-invalido');
         });
+        this.marcarCantidadesFueraDeRango();   // apaga el tomate y su aviso
 
         // Corre después de renderCart(): así el borrador guarda el formulario ya
         // vacío y no reaparece el producto que se acaba de pasar al carrito.
@@ -1792,8 +1871,10 @@ class QuotationManager {
             document.getElementById('p-width').value = data.width;
             document.getElementById('p-height').value = data.height;
             document.getElementById('p-qty').value = data.qty;
-            document.getElementById('p-modules').value = (data.modules === null || data.modules === undefined) ? '' : data.modules;
-            document.getElementById('p-leaves').value = (data.leaves === null || data.leaves === undefined) ? '' : data.leaves;
+            this.asegurarOpcion(document.getElementById('p-modules'),
+                (data.modules === null || data.modules === undefined) ? '' : data.modules);
+            this.asegurarOpcion(document.getElementById('p-leaves'),
+                (data.leaves === null || data.leaves === undefined) ? '' : data.leaves);
             const mullonCb = document.getElementById('p-mullon');
             if (mullonCb) mullonCb.checked = !!data.mullon;
             // Se marca como editado manualmente para no pisar una relación módulos/hojas

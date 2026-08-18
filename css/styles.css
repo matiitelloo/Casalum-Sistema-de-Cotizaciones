@@ -1165,6 +1165,26 @@ h4 {
     outline-offset: -1px;
 }
 
+/* Cantidad fuera de lo habitual (mas modulos de los que hace el catalogo, o mas
+   hojas que modulos). No es un error: se puede cotizar igual, pero se avisa. */
+.campo-fuera-de-rango {
+    border-color: #ff6347 !important;
+    background: #fff1ed;
+    color: #a33107;
+    font-weight: 600;
+}
+.campo-fuera-de-rango:focus {
+    outline: 2px solid #ff6347;
+    outline-offset: -1px;
+}
+.campo-aviso {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: #a33107;
+}
+
 /* ============================================================
    BOTÓN DEL OJO + TARJETA DE FRASE (Inicio)
    ============================================================ */
