@@ -2493,7 +2493,15 @@ window.SEED_DATA = {
     // Ventana fija en tubo: 2 anclas por módulo más 2 (VENTANAS FIJAS.xlsx,
     // hoja "V. FIJA TUBO"). Va aparte de "Anclas para tubo 7x4" ($0.25), que
     // es de otra medida.
-    { name: 'Ancla', pricePerUnit: 0.45, unit: 'und' }
+    { name: 'Ancla', pricePerUnit: 0.45, unit: 'und' },
+    // "Vidrio besado": paños de vidrio unidos entre sí con silicón estructural,
+    // sin perfil de aluminio divisor (el checkbox "Vidrio besado" del formulario
+    // de cotización agrega la frase al detalle; este accesorio cobra el silicón
+    // extra de esa unión, aparte del "Silicon" normal del perímetro). PRECIO
+    // PROVISIONAL sin verificar contra ningún Excel — no hay una hoja de cálculo
+    // de Casalum para esto todavía. Ajustar en Catálogo → Accesorios apenas se
+    // sepa el costo real del cartucho de silicón estructural usado.
+    { name: 'Silicón Vidrio Besado', pricePerUnit: 3.50, unit: 'ml' }
   ],
   /**
    * Módulos preestablecidos por ítem del catálogo (ver js/modules.js). itemId -> receta.
@@ -2699,7 +2707,11 @@ window.SEED_DATA = {
       group: "VENTANAS",
       family: "VENTANA FIJA EN TUBO",
       note: "",
-      brand: "cedal",
+      // "__all__": usa roles genéricos (multi-proveedor), igual que la Fija 1100.
+      // Estaba en "cedal" acá (desajustado con la nube, que ya tiene "__all__"
+      // desde antes): con eso fijado, elegir Fisa o Femec forzaba el formulario
+      // de vuelta a Cedal apenas se elegía el sistema.
+      brand: "__all__",
       category: "",
       profiles: [
         {

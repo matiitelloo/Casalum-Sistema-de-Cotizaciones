@@ -100,6 +100,7 @@ class QuotationManager {
             modules: val('p-modules'),
             leaves: val('p-leaves'),
             mullon: document.getElementById('p-mullon') ? document.getElementById('p-mullon').checked : false,
+            vidrioBesado: document.getElementById('p-vidrio-besado') ? document.getElementById('p-vidrio-besado').checked : false,
             glass: val('p-glass'),
             qty: val('p-qty'),
             labor: {
@@ -138,6 +139,8 @@ class QuotationManager {
         setVal('p-qty', form.qty);
         const mullonCb = document.getElementById('p-mullon');
         if (mullonCb) mullonCb.checked = !!form.mullon;
+        const besadoCb = document.getElementById('p-vidrio-besado');
+        if (besadoCb) besadoCb.checked = !!form.vidrioBesado;
 
         setVal('p-glass', form.glass);
         this.updateGlassPrice();
@@ -1315,7 +1318,8 @@ class QuotationManager {
             dimensions: `${data.width}x${data.height}m`,
             moduleId: null,
             moduleName: null,
-            description: `Ventana Fija 1100 ${window.SEED_DATA.brands[data.brand].name} (${data.color}) - ${data.modules} módulo(s) - Vidrio ${data.glassType}${data.mullon ? ' - Con mullón' : ''}`,
+            vidrioBesado: data.vidrioBesado,
+            description: `Ventana Fija 1100 ${window.SEED_DATA.brands[data.brand].name} (${data.color}) - ${data.modules} módulo(s) - Vidrio ${data.glassType}${data.mullon ? ' - Con mullón' : ''}${data.vidrioBesado ? ' - CON VIDRIO BESADO (sin división, pegado con silicón)' : ''}`,
             details: details,
             unitPrice: unitPrice,
             total: itemTotal,
@@ -1589,6 +1593,8 @@ class QuotationManager {
         const leaves = leavesRaw === '' ? null : parseInt(leavesRaw, 10);
         const mullonCb = document.getElementById('p-mullon');
         const mullon = mullonCb ? mullonCb.checked : false;
+        const besadoCb = document.getElementById('p-vidrio-besado');
+        const vidrioBesado = besadoCb ? besadoCb.checked : false;
 
         const workers = this.numOr(document.getElementById('p-labor-workers').value, 0, true);
         const hours = this.numOr(document.getElementById('p-labor-hours').value, 0);
@@ -1615,7 +1621,7 @@ class QuotationManager {
 
         return {
             brand, system, color, width, height, qty, glassType, glassArea,
-            modules, leaves, mullon,
+            modules, leaves, mullon, vidrioBesado,
             sashWidth: sashWidthRaw > 0 ? sashWidthRaw : width,
             sashHeight: sashHeightRaw > 0 ? sashHeightRaw : height,
             labor: { workers, hours, transport, viaticos },
@@ -1760,9 +1766,11 @@ class QuotationManager {
             dimensions: `${data.width}x${data.height}m`,
             moduleId: data.moduleId,
             moduleName: data.moduleName,
-            description: data.moduleName
+            vidrioBesado: data.vidrioBesado,
+            description: (data.moduleName
                 ? `${data.moduleName} - ${window.SEED_DATA.brands[data.brand].name} (${data.color}) - Vidrio ${data.glassType || 'N/A'}`
-                : `Ventana ${window.SEED_DATA.brands[data.brand].name} ${data.system} (${data.color}) - Vidrio ${data.glassType || 'N/A'}`,
+                : `Ventana ${window.SEED_DATA.brands[data.brand].name} ${data.system} (${data.color}) - Vidrio ${data.glassType || 'N/A'}`)
+                + (data.vidrioBesado ? ' - CON VIDRIO BESADO (sin división, pegado con silicón)' : ''),
             details: costResult.details,
             unitPrice: unitPrice,
             total: itemTotal,
@@ -1796,6 +1804,8 @@ class QuotationManager {
         this.leavesManuallyEdited = false;
         const mullonCb = document.getElementById('p-mullon');
         if (mullonCb) mullonCb.checked = false;
+        const besadoCb = document.getElementById('p-vidrio-besado');
+        if (besadoCb) besadoCb.checked = false;
 
         // Reset accessories & labor
         this.clearModuleValues();
@@ -1908,6 +1918,8 @@ class QuotationManager {
                 (data.leaves === null || data.leaves === undefined) ? '' : data.leaves);
             const mullonCb = document.getElementById('p-mullon');
             if (mullonCb) mullonCb.checked = !!data.mullon;
+            const besadoCb = document.getElementById('p-vidrio-besado');
+            if (besadoCb) besadoCb.checked = !!data.vidrioBesado;
             // Se marca como editado manualmente para no pisar una relación módulos/hojas
             // ya intencionalmente distinta (ej: 3 módulos, 2 hojas) si vuelve a tocar módulos.
             this.leavesManuallyEdited = true;
