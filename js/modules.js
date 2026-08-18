@@ -584,19 +584,33 @@ class ModuleManager {
         cont.innerHTML = d.profiles.map((row, i) => {
             const marca = this.rowBrand(row);
             const nombreMarca = window.SEED_DATA.brands[marca] ? window.SEED_DATA.brands[marca].name : marca;
-            const rol = row.role
-                ? `<span class="chip-rol" title="Sirve para los tres proveedores">${window.escapeHtml(row.role)}</span>`
-                : `<span class="chip-rol chip-rol-falta" title="Sin rol: solo cotiza con ${window.escapeHtml(nombreMarca)}">sin rol genérico</span>`;
+
+            // Con rol genérico el perfil no es "el de Cedal": cada proveedor
+            // aporta el suyo y al cotizar se resuelve según la marca elegida.
+            // Se muestran los tres para que eso se vea, en vez de un solo código
+            // que hacía parecer que la receta servía para una marca sola.
+            let titulo, meta;
+            if (row.role) {
+                const equivalentes = Object.keys(window.SEED_DATA.brands).map(bk => {
+                    const p = window.calculator.findProductByRole(window.SEED_DATA.brands[bk], row.role);
+                    const nom = window.SEED_DATA.brands[bk].name;
+                    return p
+                        ? `<span class="chip-equiv" title="${window.escapeHtml(p.description)}"><b>${window.escapeHtml(nom)}</b> ${window.escapeHtml(p.code)}</span>`
+                        : `<span class="chip-equiv chip-equiv-falta" title="Este proveedor no tiene ningún perfil con el rol ${window.escapeHtml(row.role)}"><b>${window.escapeHtml(nom)}</b> —</span>`;
+                }).join('');
+                titulo = `<span class="receta-desc">${window.escapeHtml(row.description || row.code)}</span>`;
+                meta = `<span class="chip-rol" title="Rol genérico: la receta se resuelve sola según el proveedor que se elija al cotizar">${window.escapeHtml(row.role)}</span>${equivalentes}`;
+            } else {
+                titulo = `<span class="receta-cod">${window.escapeHtml(row.code)}</span>
+                    <span class="receta-desc">${window.escapeHtml(row.description || '')}</span>`;
+                meta = `<span class="chip-marca">${window.escapeHtml(nombreMarca)}</span>
+                    <span class="chip-rol chip-rol-falta" title="Sin rol: esta línea solo cotiza con ${window.escapeHtml(nombreMarca)}">sin rol genérico</span>`;
+            }
+
             return `<div class="receta-fila">
                 <div class="receta-fila-main">
-                    <div>
-                        <span class="receta-cod">${window.escapeHtml(row.code)}</span>
-                        <span class="receta-desc">${window.escapeHtml(row.description || '')}</span>
-                    </div>
-                    <div class="receta-meta">
-                        <span class="chip-marca">${window.escapeHtml(nombreMarca)}</span>
-                        ${rol}
-                    </div>
+                    <div>${titulo}</div>
+                    <div class="receta-meta">${meta}</div>
                 </div>
                 <div class="receta-formula">
                     <i class="fa-solid fa-calculator" aria-hidden="true"></i>

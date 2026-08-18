@@ -1139,3 +1139,18 @@ h4 {
     font-size: 0.8rem;
 }
 .receta-editor-grid input:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+
+/* Equivalencias por proveedor en una fila con rol genérico */
+.chip-equiv {
+    display: inline-block;
+    font-size: 0.66rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    background: #f4f7f5;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.chip-equiv b { font-family: inherit; color: var(--primary); font-weight: 600; margin-right: 0.2rem; }
+.chip-equiv-falta { background: #fff4e0; border-color: #f0d9a8; }
+.chip-equiv-falta b { color: #a2701a; }
