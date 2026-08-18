@@ -750,6 +750,16 @@ class QuotationManager {
             });
         }
 
+        // Las medidas alimentan las fórmulas de la receta: al cambiarlas hay que
+        // rehacer los accesorios y las horas que dependen de ellas.
+        ['p-width', 'p-height', 'p-leaves', 'p-sash-width', 'p-sash-height'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            ['input', 'change'].forEach(ev => el.addEventListener(ev, () => {
+                this.recalcularFormulasDelModulo();
+            }));
+        });
+
         // Dentro de un mismo sistema puede haber un módulo por cantidad de módulos
         // (VENTANA FIJA 1 MODULO, 2 MODULOS, ...): al cambiarlo se reevalúa cuál toca.
         const modulesCountInput = document.getElementById('p-modules');
@@ -888,6 +898,37 @@ class QuotationManager {
     }
 
     /**
+     * Vuelve a calcular lo que en la receta depende de las medidas: los accesorios
+     * con fórmula (vinil = perímetro, biselado = perímetro, anclas por módulo...) y
+     * las horas de mano de obra con fórmula.
+     *
+     * Hace falta porque el módulo se aplica al elegir el sistema, con las medidas
+     * que hubiera en ese momento — normalmente ninguna. Antes esto solo se
+     * recalculaba al tocar "Módulos", así que en los sistemas que no llevan módulos
+     * (cielo raso, biselado, cubierta, puertas batientes) las cantidades quedaban
+     * en cero y el ítem salía barato sin que nadie se enterara.
+     *
+     * Los accesorios sin fórmula no se tocan: esos son los que el usuario ajusta
+     * a mano y tienen que sobrevivir a un cambio de medidas.
+     */
+    recalcularFormulasDelModulo() {
+        const mod = this.activeModule;
+        if (!mod || this.applyingModule) return;
+
+        if (mod.labor && mod.labor.hoursFormula) {
+            document.getElementById('p-labor-hours').value = this.resolveModuleLaborHours(mod);
+        }
+
+        if (!(mod.accessories || []).some(a => a.qtyFormula)) return;
+        const ctx = this.currentModuleCtx();
+        mod.accessories.forEach(acc => {
+            if (!acc.qtyFormula) return;
+            const input = document.querySelector(`.acc-input[data-name="${acc.name}"]`);
+            if (input) input.value = window.calculator.resolveAccessoryQty(acc, ctx);
+        });
+    }
+
+    /**
      * Se dispara al elegir el sistema: si esa ventana/puerta tiene módulo
      * preestablecido se completa todo solo; si no, se avisa que va a mano.
      */
@@ -910,17 +951,7 @@ class QuotationManager {
         // (si no usan fórmula, esto no toca nada porque siguen devolviendo el
         // mismo número fijo de siempre).
         if (mod && this.activeModule && this.activeModule.itemId === mod.itemId) {
-            if (mod.labor && mod.labor.hoursFormula) {
-                document.getElementById('p-labor-hours').value = this.resolveModuleLaborHours(mod);
-            }
-            if ((mod.accessories || []).some(a => a.qtyFormula)) {
-                const ctx = this.currentModuleCtx();
-                mod.accessories.forEach(acc => {
-                    if (!acc.qtyFormula) return;
-                    const input = document.querySelector(`.acc-input[data-name="${acc.name}"]`);
-                    if (input) input.value = window.calculator.resolveAccessoryQty(acc, ctx);
-                });
-            }
+            this.recalcularFormulasDelModulo();
             this.renderModuleInfo();
             return;
         }
