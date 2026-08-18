@@ -211,6 +211,7 @@ class ModuleManager {
         const saved = window.SEED_DATA.modules[itemId];
         this.draft = saved ? JSON.parse(JSON.stringify(saved)) : this.blankDraft(item);
         this.dirty = false;
+        this.dirtyReason = '';
 
         if (editor) editor.style.display = 'block';
         if (empty) empty.style.display = 'none';
@@ -385,13 +386,24 @@ class ModuleManager {
         const perdidos = [];
 
         d.profiles.forEach(row => {
-            const equivalente = row.role ? this.findProductByRole(destino, row.role) : null;
+            // Una fila con rol genérico NO se reescribe: el rol ya resuelve al
+            // producto correcto de cada proveedor en el momento de cotizar, así
+            // que cambiar el código guardado no aporta nada y ensucia la receta.
+            // Solo se avisa si al proveedor destino le falta ese rol.
+            if (row.role) {
+                if (!this.findProductByRole(destino, row.role)) {
+                    perdidos.push(row.description || row.code);
+                } else {
+                    conservados.push(row);
+                }
+                return;
+            }
+            // Sin rol, la fila está atada a su proveedor: hay que reapuntarla.
+            const equivalente = this.findProductByRole(destino, row.role);
             if (!equivalente) {
                 perdidos.push(row.description || row.code);
                 return;
             }
-            // Se mantiene la fórmula y los coeficientes; cambia solo a qué
-            // producto apuntan.
             conservados.push(Object.assign({}, row, {
                 code: equivalente.product.code,
                 category: equivalente.category,
@@ -435,9 +447,10 @@ class ModuleManager {
             d.category = el.value === '__all__' ? '' : el.value;
         }
 
-        this.markDirty();
+        this.markDirty(id === 'module-brand-select' ? 'cambió el proveedor' : 'cambió la categoría');
         this.renderProfiles();
         this.renderRecipeList();
+        this.renderBrandChips();
         this.updateEstimate();
     }
 
@@ -591,12 +604,19 @@ class ModuleManager {
             // que hacía parecer que la receta servía para una marca sola.
             let titulo, meta;
             if (row.role) {
-                const equivalentes = Object.keys(window.SEED_DATA.brands).map(bk => {
-                    const p = window.calculator.findProductByRole(window.SEED_DATA.brands[bk], row.role);
-                    const nom = window.SEED_DATA.brands[bk].name;
+                // Con un proveedor elegido se muestra solo el perfil de ESE
+                // proveedor; los tres juntos solo tienen sentido en modo "Todos".
+                const marcasAMostrar = this.isAllBrands()
+                    ? Object.keys(window.SEED_DATA.brands)
+                    : [this.draft.brand];
+                const equivalentes = marcasAMostrar.map(bk => {
+                    const marcaData = window.SEED_DATA.brands[bk];
+                    if (!marcaData) return '';
+                    const p = window.calculator.findProductByRole(marcaData, row.role);
+                    const nom = marcaData.name;
                     return p
                         ? `<span class="chip-equiv" title="${window.escapeHtml(p.description)}"><b>${window.escapeHtml(nom)}</b> ${window.escapeHtml(p.code)}</span>`
-                        : `<span class="chip-equiv chip-equiv-falta" title="Este proveedor no tiene ningún perfil con el rol ${window.escapeHtml(row.role)}"><b>${window.escapeHtml(nom)}</b> —</span>`;
+                        : `<span class="chip-equiv chip-equiv-falta" title="Este proveedor no tiene ningún perfil con el rol ${window.escapeHtml(row.role)}"><b>${window.escapeHtml(nom)}</b> no lo fabrica</span>`;
                 }).join('');
                 titulo = `<span class="receta-desc">${window.escapeHtml(row.description || row.code)}</span>`;
                 meta = `<span class="chip-rol" title="Rol genérico: la receta se resuelve sola según el proveedor que se elija al cotizar">${window.escapeHtml(row.role)}</span>${equivalentes}`;
@@ -1183,7 +1203,11 @@ class ModuleManager {
         if (!badge) return;
         const saved = window.SEED_DATA.modules[this.currentItemId];
         if (this.dirty) {
-            badge.textContent = 'Cambios sin guardar';
+            // Decir QUÉ cambió: un "Cambios sin guardar" pelado, después de solo
+            // haber tocado el proveedor, parece un error del sistema.
+            badge.textContent = this.dirtyReason
+                ? `Sin guardar: ${this.dirtyReason}`
+                : 'Cambios sin guardar';
             badge.style.background = '#fff4e0';
             badge.style.color = '#b45309';
         } else if (saved) {
@@ -1201,8 +1225,9 @@ class ModuleManager {
         if (delBtn) delBtn.style.display = saved && this.isAdmin ? 'inline-flex' : 'none';
     }
 
-    markDirty() {
+    markDirty(motivo) {
         this.dirty = true;
+        if (motivo) this.dirtyReason = motivo;
         this.updateStatusBadge();
         const saveBtn = document.getElementById('btn-module-save');
         if (saveBtn) saveBtn.classList.add('btn-pulse');
@@ -1233,6 +1258,7 @@ class ModuleManager {
         try {
             await window.catalogManager.persistData();
             this.dirty = false;
+            this.dirtyReason = '';
             if (btn) { btn.disabled = false; btn.innerHTML = original; btn.classList.remove('btn-pulse'); }
             this.refreshAfterSave();
             notify.success('Módulo preestablecido guardado. Ya está disponible al cotizar.');
