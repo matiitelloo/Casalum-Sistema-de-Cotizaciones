@@ -222,6 +222,15 @@ class AuthManager {
     updateWelcomeMessage() {
         const headerNameEl = document.getElementById('header-user-name');
         if (this.currentUser && headerNameEl) headerNameEl.textContent = this.currentUser.name;
+
+        // El título del inicio saluda por nombre, y la sesión llega después de
+        // que la pantalla ya se dibujó: hay que reescribirlo cuando se conoce
+        // quién entró, o queda el saludo genérico hasta cambiar de sección.
+        const titulo = document.getElementById('page-title');
+        const inicioVisible = document.getElementById('page-dashboard');
+        if (titulo && window.app && inicioVisible && inicioVisible.classList.contains('active')) {
+            titulo.textContent = window.app.tituloInicio();
+        }
     }
 
     loadProfileData() {

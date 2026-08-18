@@ -224,6 +224,19 @@ class App {
     // ============================================================
 
     /**
+     * Saludo del inicio, con el nombre de quien entró. La sesión la resuelve
+     * Firebase en forma asincrónica, así que mientras no esté lista se muestra
+     * el saludo sin nombre en lugar de un "Bienvenido undefined".
+     */
+    tituloInicio() {
+        const user = window.authManager && window.authManager.currentUser;
+        const nombre = user && (user.name || user.username);
+        return nombre
+            ? `Bienvenido ${nombre} al sistema de cotizaciones de Casalum`
+            : 'Bienvenido al sistema de cotizaciones de Casalum';
+    }
+
+    /**
      * Traduce el identificador interno de cada sección al texto que se ve en la
      * barra de direcciones. Adentro las secciones siguen llamándose igual
      * (page-new-quotation y compañía, que aparecen por todo el HTML), pero la
@@ -355,7 +368,7 @@ class App {
 
         // Update title
         const titles = {
-            'dashboard': 'Panel de Control',
+            'dashboard': this.tituloInicio(),
             'new-quotation': 'Nueva Cotización',
             'clients': 'Directorio de Clientes',
             'history': 'Historial de Cotizaciones',
