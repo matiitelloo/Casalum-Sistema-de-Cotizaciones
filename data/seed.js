@@ -1089,6 +1089,7 @@ window.SEED_DATA = {
             "code": "CED-MAR0928",
             "description": "MARCO DOBLE",
             "unit": "ml",
+            "genericRoles": ["ventana-fija-proyectable-marco-doble"],
             "prices": {
               "natural": 5.97,
               "negro": 6.03,
@@ -1101,6 +1102,7 @@ window.SEED_DATA = {
             "code": "CED-JUN0876",
             "description": "JUNQUILLO REDONDO",
             "unit": "ml",
+            "genericRoles": ["ventana-fija-proyectable-junquillo"],
             "prices": {
               "natural": 1.89,
               "negro": 1.89,
@@ -1125,6 +1127,7 @@ window.SEED_DATA = {
             "code": "CED-PER8653",
             "description": "PERIMETRAL HOJA",
             "unit": "ml",
+            "genericRoles": ["ventana-fija-proyectable-perimetral-hoja"],
             "prices": {
               "natural": 4.68,
               "negro": 4.61,
@@ -1137,6 +1140,7 @@ window.SEED_DATA = {
             "code": "CED-PER1794",
             "description": "PERIMETRAL MARCO",
             "unit": "ml",
+            "genericRoles": ["ventana-fija-proyectable-marco"],
             "prices": {
               "natural": 3.12,
               "negro": 3.17,
@@ -2715,6 +2719,59 @@ window.SEED_DATA = {
         { name: "Tornillos y tacos", qty: 40, price: 0.05 }
       ],
       labor: { workers: 1, hours: 4, transport: 0, viaticos: 0 },
+      updatedAt: null,
+      updatedBy: "importado de VENTANAS FIJAS.xlsx"
+    },
+    /**
+     * VENTANA FIJA CON PERFIL PROYECTABLE — sacada de VENTANAS FIJAS.xlsx,
+     * hoja "V. FIJA PROYECTABLE", el bloque de abajo (filas 88-91), que es el
+     * único que trae los códigos escritos: MAR0928, PER1794, JUN0876 y PER8653.
+     *
+     * Cantidades tal cual el Excel (Base = E85, Altura = E86):
+     *   MARCO DOBLE      = Altura x 1
+     *   MARCO PROYECTABLE (PERIMETRAL MARCO) = Base x2 + Altura x2  (perímetro)
+     *   JUNQUILLO REDONDO = Base x2 + Altura x4
+     *   PERIMETRAL DE HOJA = 0 — en el Excel esta ventana no lleva hoja que abra,
+     *     así que el perfil está listado pero no se cobra. Si alguna variante sí
+     *     lleva hoja, hay que cargarle coefBaseHoja/coefAlturaHoja y las medidas
+     *     de hoja al cotizar.
+     *
+     * El Excel solo resuelve 1 módulo, así que ninguna cantidad crece con la
+     * cantidad de módulos todavía (a diferencia de la Fija 1100). Hasta tener las
+     * fórmulas de 2, 3 y 4 módulos, esta receta cotiza igual para toda la familia.
+     */
+    "ventana-fija-con-perfil-proyectable--ventana-fija-con-perfil-proyectable-1-modulo": {
+      itemId: "ventana-fija-con-perfil-proyectable--ventana-fija-con-perfil-proyectable-1-modulo",
+      itemName: "VENTANA FIJA CON PERFIL PROYECTABLE 1 MODULO",
+      group: "VENTANAS",
+      family: "VENTANA FIJA CON PERFIL PROYECTABLE",
+      note: "",
+      brand: "cedal",
+      category: "",
+      profiles: [
+        {
+          code: "CED-MAR0928", category: "Ventana Proyectable", description: "MARCO DOBLE",
+          role: "ventana-fija-proyectable-marco-doble", formula: "lineal", coefAltura: 1
+        },
+        {
+          code: "CED-PER1794", category: "Ventana Proyectable", description: "PERIMETRAL MARCO (MARCO PROYECTABLE)",
+          role: "ventana-fija-proyectable-marco", formula: "lineal", coefBase: 2, coefAltura: 2
+        },
+        {
+          code: "CED-JUN0876", category: "Ventana Proyectable", description: "JUNQUILLO REDONDO",
+          role: "ventana-fija-proyectable-junquillo", formula: "lineal", coefBase: 2, coefAltura: 4
+        },
+        {
+          code: "CED-PER8653", category: "Ventana Proyectable", description: "PERIMETRAL HOJA",
+          role: "ventana-fija-proyectable-perimetral-hoja", formula: "lineal"
+        }
+      ],
+      accessories: [
+        { name: "Tornillos y tacos", qty: 30, price: 0.05 },
+        { name: "Vinil", qty: 0, price: 0.85, qtyFormula: { coefBase: 4, coefAltura: 8 } },
+        { name: "Silicon", qty: 1, price: 2.2 }
+      ],
+      labor: { workers: 1, hours: 5, transport: 0, viaticos: 0 },
       updatedAt: null,
       updatedBy: "importado de VENTANAS FIJAS.xlsx"
     }

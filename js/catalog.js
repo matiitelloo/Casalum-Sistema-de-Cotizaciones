@@ -51,6 +51,9 @@ class CatalogManager {
             glassSale: window.SEED_DATA.glassSale || [],
             accessories: window.SEED_DATA.accessories,
             modules: window.SEED_DATA.modules || {},
+            // Recetas de data/seed.js que se borraron a mano: sin esta lista, el
+            // merge de mergeModules() las volveria a traer en la proxima carga.
+            modulesDeleted: window.SEED_DATA.modulesDeleted || [],
             // Marca que los roles genéricos se editan a mano: apaga el parche de
             // data/seed.js para que no pise lo guardado (ver applyGenericRolePatches).
             rolesCustomized: !!window.SEED_DATA.rolesCustomized
@@ -1048,6 +1051,32 @@ function applyGenericRolePatches() {
 }
 window.applyGenericRolePatches = applyGenericRolePatches;
 
+/**
+ * Recetas que trae data/seed.js, copiadas antes de que la version guardada
+ * (nube o localStorage) pise window.SEED_DATA.modules.
+ */
+const SEED_MODULES = JSON.parse(JSON.stringify((window.SEED_DATA && window.SEED_DATA.modules) || {}));
+
+/**
+ * Une las recetas guardadas con las de data/seed.js. Manda lo guardado: una
+ * receta editada en Preestablecer Items siempre gana. Las del repo entran solo
+ * donde la copia guardada no tiene nada — que es como llega una receta nueva
+ * del catalogo a una nube que ya estaba guardada de antes, sin esto se perdian.
+ * Las que se borraron a mano no vuelven: quedan anotadas en modulesDeleted.
+ */
+function mergeModules(saved, deletedIds) {
+    const borradas = Array.isArray(deletedIds) ? deletedIds : [];
+    const merged = {};
+    Object.keys(SEED_MODULES).forEach(id => {
+        if (borradas.indexOf(id) === -1) {
+            merged[id] = JSON.parse(JSON.stringify(SEED_MODULES[id]));
+        }
+    });
+    Object.keys(saved || {}).forEach(id => { merged[id] = saved[id]; });
+    return merged;
+}
+window.mergeModules = mergeModules;
+
 // Load persisted data from localStorage immediately (sync) so other managers
 // see updated SEED_DATA before async Firestore load completes.
 (function loadPersistedCatalogSync() {
@@ -1059,7 +1088,8 @@ window.applyGenericRolePatches = applyGenericRolePatches;
             if (parsed.glass) window.SEED_DATA.glass = parsed.glass;
             if (parsed.glassSale) window.SEED_DATA.glassSale = parsed.glassSale;
             if (parsed.accessories) window.SEED_DATA.accessories = parsed.accessories;
-            if (parsed.modules) window.SEED_DATA.modules = parsed.modules;
+            window.SEED_DATA.modulesDeleted = Array.isArray(parsed.modulesDeleted) ? parsed.modulesDeleted : [];
+            window.SEED_DATA.modules = mergeModules(parsed.modules, parsed.modulesDeleted);
             window.SEED_DATA.rolesCustomized = !!parsed.rolesCustomized;
             applyCodePrefixes();
             applyGenericRolePatches();
@@ -1081,7 +1111,8 @@ async function loadCatalogFromFirestore() {
             if (parsed.glass) window.SEED_DATA.glass = parsed.glass;
             if (parsed.glassSale) window.SEED_DATA.glassSale = parsed.glassSale;
             if (parsed.accessories) window.SEED_DATA.accessories = parsed.accessories;
-            if (parsed.modules) window.SEED_DATA.modules = parsed.modules;
+            window.SEED_DATA.modulesDeleted = Array.isArray(parsed.modulesDeleted) ? parsed.modulesDeleted : [];
+            window.SEED_DATA.modules = mergeModules(parsed.modules, parsed.modulesDeleted);
             window.SEED_DATA.rolesCustomized = !!parsed.rolesCustomized;
             // Familias renombradas: reapunta los módulos guardados a sus ids nuevos.
             if (window.migrateModuleIds) window.migrateModuleIds(window.SEED_DATA.modules);

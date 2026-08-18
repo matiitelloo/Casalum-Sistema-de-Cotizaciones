@@ -1241,6 +1241,9 @@ class ModuleManager {
             : '';
 
         window.SEED_DATA.modules[this.draft.itemId] = JSON.parse(JSON.stringify(this.draft));
+        // Si esta receta se habia borrado antes, deja de estar en la lista de borradas.
+        window.SEED_DATA.modulesDeleted = (window.SEED_DATA.modulesDeleted || [])
+            .filter(id => id !== this.draft.itemId);
 
         try {
             await window.catalogManager.persistData();
@@ -1271,6 +1274,11 @@ class ModuleManager {
         if (!(await notify.confirm('¿Eliminar el módulo preestablecido de este ítem? Se podrá volver a crear cuando quiera.', { danger: true, confirmText: 'Eliminar' }))) return;
 
         delete window.SEED_DATA.modules[this.currentItemId];
+        // Queda anotada: si la receta venia de data/seed.js, sin esto volveria a
+        // aparecer en la proxima carga (ver mergeModules en catalog.js).
+        const borradas = window.SEED_DATA.modulesDeleted || [];
+        if (borradas.indexOf(this.currentItemId) === -1) borradas.push(this.currentItemId);
+        window.SEED_DATA.modulesDeleted = borradas;
         this.dirty = false;
         try {
             await window.catalogManager.persistData();
