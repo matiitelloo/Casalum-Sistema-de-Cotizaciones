@@ -806,11 +806,11 @@ window.SEED_DATA = {
             "description": "VERTICAL CERRADO",
             "unit": "ml",
             "prices": {
-              "natural": 3.08,
-              "negro": 3.17,
-              "blanco": 3.17,
-              "maderado": 4.9,
-              "champagne": 3.88
+              "natural": 3.45,
+              "negro": 3.55,
+              "blanco": 3.54,
+              "maderado": 6.28,
+              "champagne": 4.36
             }
           },
           {
@@ -818,11 +818,11 @@ window.SEED_DATA = {
             "description": "RIE. SUPERIOR/INFERIOR",
             "unit": "ml",
             "prices": {
-              "natural": 3.01,
-              "negro": 3.36,
-              "blanco": 2.95,
-              "maderado": 4.34,
-              "champagne": 3.65
+              "natural": 3.45,
+              "negro": 3.77,
+              "blanco": 3.37,
+              "maderado": 5.55,
+              "champagne": 4.09
             }
           },
           {
@@ -830,11 +830,11 @@ window.SEED_DATA = {
             "description": "HORIZONTAL",
             "unit": "ml",
             "prices": {
-              "natural": 2.84,
-              "negro": 3.18,
-              "blanco": 2.8,
-              "maderado": 4.5,
-              "champagne": 3.39
+              "natural": 3.25,
+              "negro": 3.57,
+              "blanco": 3.18,
+              "maderado": 5.77,
+              "champagne": 3.81
             }
           },
           {
@@ -842,11 +842,11 @@ window.SEED_DATA = {
             "description": "JAMBA",
             "unit": "ml",
             "prices": {
-              "natural": 3.12,
-              "negro": 3.47,
-              "blanco": 3.06,
-              "maderado": 4.38,
-              "champagne": 3.66
+              "natural": 3.57,
+              "negro": 3.89,
+              "blanco": 3.45,
+              "maderado": 5.6,
+              "champagne": 4.11
             }
           },
           {
@@ -854,11 +854,11 @@ window.SEED_DATA = {
             "description": "RIE. INFERIOR",
             "unit": "ml",
             "prices": {
-              "natural": 2.99,
-              "negro": 3.52,
-              "blanco": 3.45,
-              "maderado": 5.86,
-              "champagne": 3.98
+              "natural": 3.35,
+              "negro": 3.95,
+              "blanco": 3.93,
+              "maderado": 5.55,
+              "champagne": 4.46
             }
           },
           {
@@ -866,11 +866,11 @@ window.SEED_DATA = {
             "description": "VERTICAL ABIERTO",
             "unit": "ml",
             "prices": {
-              "natural": 2.44,
-              "negro": 2.79,
-              "blanco": 2.41,
-              "maderado": 3.76,
-              "champagne": 3.14
+              "natural": 2.74,
+              "negro": 3.12,
+              "blanco": 2.74,
+              "maderado": 4.82,
+              "champagne": 3.52
             }
           },
           {
@@ -907,11 +907,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-mullon"],
             "prices": {
-              "natural": 1.91,
-              "negro": 1.99,
-              "blanco": 1.71,
-              "maderado": 2.81,
-              "champagne": 2.01
+              "natural": 2.1,
+              "negro": 2.19,
+              "blanco": 1.87,
+              "maderado": 3.11,
+              "champagne": 2.21
             }
           },
           {
@@ -919,11 +919,11 @@ window.SEED_DATA = {
             "description": "JUNQUILLO TRIANGULAR 1-1/2 ESPALDA",
             "unit": "ml",
             "prices": {
-              "natural": 1.76,
-              "negro": 1.93,
-              "blanco": 1.79,
-              "maderado": 2.37,
-              "champagne": 1.97
+              "natural": 1.94,
+              "negro": 2.12,
+              "blanco": 1.96,
+              "maderado": 2.97,
+              "champagne": 2.16
             }
           },
           {
@@ -931,11 +931,11 @@ window.SEED_DATA = {
             "description": "JUNQUILLO TRIANGULAR 1-1/2 TAPA",
             "unit": "ml",
             "prices": {
-              "natural": 0.97,
-              "negro": 1.05,
-              "blanco": 1.01,
-              "maderado": 2.06,
-              "champagne": 1.09
+              "natural": 1.07,
+              "negro": 1.16,
+              "blanco": 1.11,
+              "maderado": 1.91,
+              "champagne": 1.2
             }
           },
           {
@@ -1008,11 +1008,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-horizontal"],
             "prices": {
-              "natural": 3.22,
-              "negro": 3.34,
-              "blanco": 3.04,
-              "maderado": 4.69,
-              "champagne": 4.44
+              "natural": 3.54,
+              "negro": 3.67,
+              "blanco": 3.33,
+              "maderado": 5.88,
+              "champagne": 3.78
             }
           },
           {
@@ -1021,11 +1021,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-vertical"],
             "prices": {
-              "natural": 3.36,
-              "negro": 3.48,
-              "blanco": 3.41,
-              "maderado": 5.13,
-              "champagne": 3.57
+              "natural": 3.69,
+              "negro": 3.82,
+              "blanco": 3.74,
+              "maderado": 6.43,
+              "champagne": 3.92
             }
           },
           {
@@ -1034,11 +1034,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-1100-junquillo"],
             "prices": {
-              "natural": 1.36,
-              "negro": 1.45,
-              "blanco": 1.41,
-              "maderado": 2.08,
-              "champagne": 1.79
+              "natural": 1.5,
+              "negro": 1.6,
+              "blanco": 1.52,
+              "maderado": 2.61,
+              "champagne": 1.62
             }
           }
         ]
@@ -1091,11 +1091,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-proyectable-marco-doble"],
             "prices": {
-              "natural": 5.97,
-              "negro": 6.03,
-              "blanco": 6.07,
-              "maderado": 6.6,
-              "champagne": 6.29
+              "natural": 7.05,
+              "negro": 7.11,
+              "blanco": 7.13,
+              "maderado": 9.35,
+              "champagne": 7.2
             }
           },
           {
@@ -1104,11 +1104,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-proyectable-junquillo"],
             "prices": {
-              "natural": 1.89,
-              "negro": 1.89,
-              "blanco": 1.89,
-              "maderado": 2.79,
-              "champagne": 2.02
+              "natural": 2.23,
+              "negro": 2.23,
+              "blanco": 2.22,
+              "maderado": 3.95,
+              "champagne": 2.38
             }
           },
           {
@@ -1129,11 +1129,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-proyectable-perimetral-hoja"],
             "prices": {
-              "natural": 4.68,
-              "negro": 4.61,
-              "blanco": 4.59,
-              "maderado": 5.85,
-              "champagne": 4.71
+              "natural": 5.52,
+              "negro": 5.44,
+              "blanco": 5.39,
+              "maderado": 8.3,
+              "champagne": 5.55
             }
           },
           {
@@ -1142,11 +1142,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["ventana-fija-proyectable-marco"],
             "prices": {
-              "natural": 3.12,
-              "negro": 3.17,
-              "blanco": 3.11,
-              "maderado": 3.96,
-              "champagne": 3.33
+              "natural": 3.69,
+              "negro": 3.74,
+              "blanco": 3.77,
+              "maderado": 5.61,
+              "champagne": 3.92
             }
           }
         ]
@@ -1157,12 +1157,13 @@ window.SEED_DATA = {
             "code": "CED-TUB7316",
             "description": "TUBO RECTANGULAR 3X1-1/2",
             "unit": "ml",
+            "genericRoles": ["batiente-tubo-7x4"],
             "prices": {
-              "natural": 6.08,
-              "negro": 6.53,
-              "blanco": 5.97,
-              "maderado": 8.86,
-              "champagne": 6.79
+              "natural": 7.4,
+              "negro": 7.55,
+              "blanco": 7.24,
+              "maderado": 11.92,
+              "champagne": 7.85
             }
           },
           {
@@ -1170,35 +1171,37 @@ window.SEED_DATA = {
             "description": "CANAL CON ALETA 3X1",
             "unit": "ml",
             "prices": {
-              "natural": 4.43,
-              "negro": 4.69,
-              "blanco": 4.57,
-              "maderado": 5.17,
-              "champagne": 4.88
+              "natural": 4.86,
+              "negro": 5.15,
+              "blanco": 5.0,
+              "maderado": 8.4,
+              "champagne": 5.36
             }
           },
           {
             "code": "CED-TUB4245",
             "description": "TUBO DE 1-1/2 X 1-1/2",
             "unit": "ml",
+            "genericRoles": ["batiente-tubo-4x4"],
             "prices": {
-              "natural": 3.44,
-              "negro": 3.58,
-              "blanco": 3.5,
-              "maderado": 3.55,
-              "champagne": 3.72
+              "natural": 4.11,
+              "negro": 4.27,
+              "blanco": 4.16,
+              "maderado": 7.27,
+              "champagne": 4.45
             }
           },
           {
             "code": "CED-TUB4210",
             "description": "TUBO RECTANGULAR 2 X 1-1/2",
             "unit": "ml",
+            "genericRoles": ["batiente-tubo-5x4"],
             "prices": {
-              "natural": 4.69,
-              "negro": 4.81,
-              "blanco": 4.53,
-              "maderado": 6.05,
-              "champagne": 5.02
+              "natural": 5.43,
+              "negro": 5.56,
+              "blanco": 5.21,
+              "maderado": 8.87,
+              "champagne": 5.92
             }
           }
         ]
@@ -1222,11 +1225,11 @@ window.SEED_DATA = {
             "description": "HORIZONTAL INFERIOR",
             "unit": "ml",
             "prices": {
-              "natural": 5.26,
-              "negro": 5.36,
-              "blanco": 5.23,
-              "maderado": 7.26,
-              "champagne": 4.7
+              "natural": 5.96,
+              "negro": 6.07,
+              "blanco": 5.9,
+              "maderado": 9.64,
+              "champagne": 6.07
             }
           },
           {
@@ -1234,11 +1237,11 @@ window.SEED_DATA = {
             "description": "PERIMETRAL MOVIL",
             "unit": "ml",
             "prices": {
-              "natural": 4.31,
-              "negro": 4.43,
-              "blanco": 4.43,
-              "maderado": 5.29,
-              "champagne": 4.7
+              "natural": 4.89,
+              "negro": 5.02,
+              "blanco": 5.0,
+              "maderado": 7.05,
+              "champagne": 5.32
             }
           },
           {
@@ -1246,11 +1249,11 @@ window.SEED_DATA = {
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
-              "natural": 4.9,
-              "negro": 5.03,
-              "blanco": 4.97,
-              "maderado": null,
-              "champagne": null
+              "natural": 5.55,
+              "negro": 5.7,
+              "blanco": 5.61,
+              "maderado": 9.98,
+              "champagne": 5.92
             }
           },
           {
@@ -1258,11 +1261,11 @@ window.SEED_DATA = {
             "description": "JAMBA",
             "unit": "ml",
             "prices": {
-              "natural": 6.24,
-              "negro": 6.38,
-              "blanco": 6.24,
-              "maderado": 7.9,
-              "champagne": 6.6
+              "natural": 7.07,
+              "negro": 7.23,
+              "blanco": 7.04,
+              "maderado": 7.71,
+              "champagne": 7.48
             }
           },
           {
@@ -1270,11 +1273,11 @@ window.SEED_DATA = {
             "description": "CABEZAL",
             "unit": "ml",
             "prices": {
-              "natural": 5.33,
-              "negro": 5.26,
-              "blanco": 5.38,
-              "maderado": 7.08,
-              "champagne": 5.28
+              "natural": 5.81,
+              "negro": 5.96,
+              "blanco": 5.84,
+              "maderado": 7.98,
+              "champagne": 6.3
             }
           },
           {
@@ -1282,11 +1285,11 @@ window.SEED_DATA = {
             "description": "BASE",
             "unit": "ml",
             "prices": {
-              "natural": 5.07,
-              "negro": 5.19,
-              "blanco": 5.16,
-              "maderado": 6.68,
-              "champagne": 5.28
+              "natural": 5.75,
+              "negro": 5.88,
+              "blanco": 5.83,
+              "maderado": 7.18,
+              "champagne": 5.99
             }
           },
           {
@@ -1294,11 +1297,11 @@ window.SEED_DATA = {
             "description": "VERTICAL",
             "unit": "ml",
             "prices": {
-              "natural": 3.33,
-              "negro": 3.48,
-              "blanco": 3.52,
-              "maderado": 4.74,
-              "champagne": null
+              "natural": 3.78,
+              "negro": 3.94,
+              "blanco": 3.97,
+              "maderado": 9.02,
+              "champagne": 4.01
             }
           },
           {
@@ -1306,11 +1309,11 @@ window.SEED_DATA = {
             "description": "VERTICAL CHAPA",
             "unit": "ml",
             "prices": {
-              "natural": 6.07,
-              "negro": 6.18,
-              "blanco": 6.38,
-              "maderado": 7.93,
-              "champagne": 6.29
+              "natural": 7.02,
+              "negro": 7.27,
+              "blanco": 7.27,
+              "maderado": 9.02,
+              "champagne": 7.27
             }
           }
         ]
@@ -1410,11 +1413,11 @@ window.SEED_DATA = {
             "description": "MARCO CEDAL",
             "unit": "ml",
             "prices": {
-              "natural": 7.45,
-              "negro": 7.56,
-              "blanco": 7.45,
-              "maderado": 9.04,
-              "champagne": 7.75
+              "natural": 8.36,
+              "negro": 8.47,
+              "blanco": 8.31,
+              "maderado": 12.56,
+              "champagne": 8.7
             }
           },
           {
@@ -1434,11 +1437,11 @@ window.SEED_DATA = {
             "description": "HOJA CEDAL",
             "unit": "ml",
             "prices": {
-              "natural": 6.31,
-              "negro": 6.46,
-              "blanco": 6.34,
-              "maderado": 8.48,
-              "champagne": 6.6
+              "natural": 7.11,
+              "negro": 7.25,
+              "blanco": 7.08,
+              "maderado": 10.85,
+              "champagne": 7.41
             }
           },
           {
@@ -1446,11 +1449,11 @@ window.SEED_DATA = {
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
-              "natural": 2.34,
-              "negro": 2.44,
-              "blanco": 2.24,
-              "maderado": 3.68,
-              "champagne": 2.51
+              "natural": 2.62,
+              "negro": 2.74,
+              "blanco": 2.54,
+              "maderado": 4.7,
+              "champagne": 2.81
             }
           }
         ]
@@ -1463,11 +1466,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["cabina-cabezal"],
             "prices": {
-              "natural": 16.22,
-              "negro": 16.22,
-              "blanco": 16.22,
-              "maderado": null,
-              "champagne": null
+              "natural": 14.44,
+              "negro": 14.44,
+              "blanco": 14.44,
+              "maderado": 14.44,
+              "champagne": 14.44
             }
           },
           {
@@ -1479,8 +1482,8 @@ window.SEED_DATA = {
               "natural": 4.34,
               "negro": 4.34,
               "blanco": 4.34,
-              "maderado": null,
-              "champagne": null
+              "maderado": 4.34,
+              "champagne": 4.34
             }
           },
           {
@@ -1489,11 +1492,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["cabina-jamba"],
             "prices": {
-              "natural": 3.19,
-              "negro": 3.19,
-              "blanco": 3.19,
-              "maderado": null,
-              "champagne": null
+              "natural": 2.65,
+              "negro": 2.65,
+              "blanco": 2.65,
+              "maderado": 2.65,
+              "champagne": 2.65
             }
           },
           {
@@ -1502,11 +1505,11 @@ window.SEED_DATA = {
             "unit": "ml",
             "genericRoles": ["cabina-horizontal-superior"],
             "prices": {
-              "natural": 5.18,
-              "negro": 5.18,
-              "blanco": 5.18,
-              "maderado": null,
-              "champagne": null
+              "natural": 5.35,
+              "negro": 5.35,
+              "blanco": 5.35,
+              "maderado": 5.35,
+              "champagne": 5.35
             }
           }
         ]
@@ -2250,11 +2253,11 @@ window.SEED_DATA = {
             "description": "ADAPTADOR DE RIEL",
             "unit": "ml",
             "prices": {
-              "natural": 5.87,
-              "negro": 5.38,
-              "blanco": 5.36,
-              "maderado": 7.87,
-              "champagne": 6.72
+              "natural": 6.66,
+              "negro": 6.66,
+              "blanco": 6.66,
+              "maderado": 9.79,
+              "champagne": 6.98
             }
           },
           {
@@ -2262,11 +2265,11 @@ window.SEED_DATA = {
             "description": "RIEL INFERIOR/SUPERIOR",
             "unit": "ml",
             "prices": {
-              "natural": 11.11,
-              "negro": 10.27,
-              "blanco": 10.27,
-              "maderado": 15.04,
-              "champagne": 12.71
+              "natural": 12.24,
+              "negro": 12.24,
+              "blanco": 12.24,
+              "maderado": 17.0,
+              "champagne": 12.55
             }
           },
           {
@@ -2274,11 +2277,11 @@ window.SEED_DATA = {
             "description": "HOJA VERTICAL/HORIZONTAL",
             "unit": "ml",
             "prices": {
-              "natural": 8.7,
-              "negro": 7.97,
-              "blanco": 7.97,
-              "maderado": 11.67,
-              "champagne": null
+              "natural": 9.6,
+              "negro": 9.6,
+              "blanco": 9.6,
+              "maderado": 13.42,
+              "champagne": 9.93
             }
           },
           {
@@ -2298,11 +2301,11 @@ window.SEED_DATA = {
             "description": "ENTRECIERRE",
             "unit": "ml",
             "prices": {
-              "natural": 3.08,
-              "negro": 2.83,
-              "blanco": 2.83,
-              "maderado": 4.14,
-              "champagne": null
+              "natural": 3.88,
+              "negro": 3.88,
+              "blanco": 3.88,
+              "maderado": 6.4,
+              "champagne": 4.2
             }
           },
           {
@@ -2322,11 +2325,11 @@ window.SEED_DATA = {
             "description": "ADAPTADOR DE HOJA",
             "unit": "ml",
             "prices": {
-              "natural": 2.48,
-              "negro": 2.27,
-              "blanco": 2.27,
-              "maderado": 3.98,
-              "champagne": null
+              "natural": 3.1,
+              "negro": 3.1,
+              "blanco": 3.1,
+              "maderado": 5.71,
+              "champagne": 3.42
             }
           },
           {
@@ -2334,11 +2337,11 @@ window.SEED_DATA = {
             "description": "ALMA TIRADERA",
             "unit": "ml",
             "prices": {
-              "natural": 7.75,
-              "negro": null,
-              "blanco": null,
-              "maderado": null,
-              "champagne": null
+              "natural": 8.03,
+              "negro": 8.03,
+              "blanco": 8.03,
+              "maderado": 8.03,
+              "champagne": 8.03
             }
           },
           {
@@ -2346,11 +2349,11 @@ window.SEED_DATA = {
             "description": "TIRADERA ALETA DE PUERTA",
             "unit": "ml",
             "prices": {
-              "natural": 4.66,
-              "negro": 4.26,
-              "blanco": 4.26,
-              "maderado": 6.24,
-              "champagne": 5.33
+              "natural": 5.6,
+              "negro": 5.6,
+              "blanco": 5.6,
+              "maderado": 10.42,
+              "champagne": 5.92
             }
           }
         ]
