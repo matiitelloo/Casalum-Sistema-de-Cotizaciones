@@ -39,6 +39,7 @@ class ModuleManager {
         this.dirty = false;
         this.profileFilter = '';
         this.onlySelected = false;
+        this.brandFilter = '';   // chip de proveedor en el catálogo (modo "Todos")
     }
 
     init() {
@@ -219,6 +220,8 @@ class ModuleManager {
 
         this.renderHeader();
         this.renderProfiles();
+        this.renderRecipeList();
+        this.renderBrandChips();
         this.renderAccessories();
         this.renderLabor();
         this.updateStatusBadge();
@@ -434,6 +437,7 @@ class ModuleManager {
 
         this.markDirty();
         this.renderProfiles();
+        this.renderRecipeList();
         this.updateEstimate();
     }
 
@@ -496,6 +500,218 @@ class ModuleManager {
         );
     }
 
+    /**
+     * Traduce los coeficientes de una fila a algo que se pueda leer:
+     * { coefBase:2, coefAlturaMod:2 } -> "Base x2 + Alto x2 por módulo".
+     * Es lo que se muestra en la lista de la receta, para no obligar a nadie a
+     * interpretar nueve casilleros numéricos para saber qué hace un perfil.
+     */
+    describirFormula(row) {
+        if (!row) return '';
+        if (row.formula === 'fijo') return `${row.fixedQty || 0} fijo`;
+        if (row.formula && row.formula !== 'lineal') {
+            const simples = {
+                width_1: 'Base', width_2: 'Base x2', width_4: 'Base x4',
+                height_1: 'Alto', height_2: 'Alto x2', height_4: 'Alto x4',
+                perimeter: 'Perímetro (Base x2 + Alto x2)'
+            };
+            return simples[row.formula] || row.formula;
+        }
+        const n = k => { const v = parseFloat(row[k]); return Number.isNaN(v) ? 0 : v; };
+
+        // Caso muy frecuente (mullón, entrecierre, divisor): la pieza va una vez
+        // por cada unión, o sea módulos-1. Se guarda como -X en Alto y +X en
+        // Alto por módulo; escrito así no se entiende, se traduce a algo legible.
+        const sonPar = (a, b) => n(a) < 0 && n(b) > 0 && Math.abs(n(a)) === n(b);
+        const soloEstos = (...claves) => ['coefBase','coefAltura','coefBaseMod','coefAlturaMod',
+            'coefArea','coefModulos','coefBaseHoja','coefAlturaHoja','coefBaseDivMod','fixedQty']
+            .every(k => claves.includes(k) || !n(k));
+        if (sonPar('coefAltura', 'coefAlturaMod') && soloEstos('coefAltura', 'coefAlturaMod')) {
+            const f = n('coefAlturaMod');
+            return `Alto${f === 1 ? '' : ' x' + f} por cada módulo menos uno`;
+        }
+        if (sonPar('coefBase', 'coefBaseMod') && soloEstos('coefBase', 'coefBaseMod')) {
+            const f = n('coefBaseMod');
+            return `Base${f === 1 ? '' : ' x' + f} por cada módulo menos uno`;
+        }
+
+        const partes = [];
+        const push = (v, txt) => {
+            if (!v) return;
+            const signo = v < 0 ? '−' : (partes.length ? '+' : '');
+            const abs = Math.abs(v);
+            const factor = abs === 1 ? '' : ' x' + abs;
+            partes.push(`${signo} ${txt}${factor}`.trim());
+        };
+        push(n('coefBase'), 'Base');
+        push(n('coefAltura'), 'Alto');
+        push(n('coefBaseMod'), 'Base por módulo');
+        push(n('coefAlturaMod'), 'Alto por módulo');
+        push(n('coefArea'), 'Área');
+        push(n('coefModulos'), 'Módulos');
+        push(n('coefBaseHoja'), 'Ancho de hoja x hojas');
+        push(n('coefAlturaHoja'), 'Alto de hoja x hojas');
+        push(n('coefBaseDivMod'), 'Base ÷ módulos');
+        push(n('fixedQty'), 'fijo');
+        return partes.length ? partes.join(' ') : 'sin fórmula';
+    }
+
+    /**
+     * Lista de los perfiles que la receta usa de verdad. Antes esto no existía:
+     * había que buscarlos tildados entre los ~200 del catálogo, y como la lista
+     * arranca por el primer proveedor, los de los otros dos ni se veían.
+     */
+    renderRecipeList() {
+        const cont = document.getElementById('module-recipe-list');
+        const badge = document.getElementById('module-recipe-count');
+        if (!cont || !this.draft) return;
+        const d = this.draft;
+        const editable = this.isAdmin;
+
+        if (badge) {
+            badge.textContent = d.profiles.length
+                ? `${d.profiles.length} perfil${d.profiles.length === 1 ? '' : 'es'}`
+                : 'vacía';
+        }
+
+        if (!d.profiles.length) {
+            cont.innerHTML = `<p class="text-muted" style="padding:1.25rem; margin:0; text-align:center;">
+                Esta receta todavía no tiene perfiles.<br>
+                Abra <strong>Agregar un perfil del catálogo</strong> acá abajo para elegirlos.</p>`;
+            return;
+        }
+
+        cont.innerHTML = d.profiles.map((row, i) => {
+            const marca = this.rowBrand(row);
+            const nombreMarca = window.SEED_DATA.brands[marca] ? window.SEED_DATA.brands[marca].name : marca;
+            const rol = row.role
+                ? `<span class="chip-rol" title="Sirve para los tres proveedores">${window.escapeHtml(row.role)}</span>`
+                : `<span class="chip-rol chip-rol-falta" title="Sin rol: solo cotiza con ${window.escapeHtml(nombreMarca)}">sin rol genérico</span>`;
+            return `<div class="receta-fila">
+                <div class="receta-fila-main">
+                    <div>
+                        <span class="receta-cod">${window.escapeHtml(row.code)}</span>
+                        <span class="receta-desc">${window.escapeHtml(row.description || '')}</span>
+                    </div>
+                    <div class="receta-meta">
+                        <span class="chip-marca">${window.escapeHtml(nombreMarca)}</span>
+                        ${rol}
+                    </div>
+                </div>
+                <div class="receta-formula">
+                    <i class="fa-solid fa-calculator" aria-hidden="true"></i>
+                    ${window.escapeHtml(this.describirFormula(row))}
+                </div>
+                ${editable ? `<div style="display:flex; gap:0.25rem;">
+                    <button type="button" class="btn btn-sm btn-outline receta-editar" data-idx="${i}" title="Editar la fórmula">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline receta-quitar" data-idx="${i}" title="Quitar de la receta">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>` : ''}
+            </div>
+            <div class="receta-editor" data-idx="${i}" style="display:none;">${editable ? this.editorFormulaHtml(row, i) : ''}</div>`;
+        }).join('');
+
+        if (!editable) return;
+        cont.querySelectorAll('.receta-quitar').forEach(b => {
+            b.addEventListener('click', e => {
+                const idx = parseInt(e.currentTarget.getAttribute('data-idx'), 10);
+                this.draft.profiles.splice(idx, 1);
+                this.markDirty();
+                this.renderRecipeList();
+                this.renderProfiles();
+                this.updateEstimate();
+            });
+        });
+        cont.querySelectorAll('.receta-editar').forEach(b => {
+            b.addEventListener('click', e => {
+                const idx = e.currentTarget.getAttribute('data-idx');
+                const ed = cont.querySelector(`.receta-editor[data-idx="${idx}"]`);
+                if (ed) ed.style.display = ed.style.display === 'none' ? 'block' : 'none';
+            });
+        });
+        // Cambios dentro del editor de una fila de la receta
+        cont.querySelectorAll('.rec-coef').forEach(inp => {
+            inp.addEventListener('change', e => {
+                const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+                const key = e.target.getAttribute('data-coef');
+                const v = parseFloat(e.target.value);
+                this.draft.profiles[idx][key] = Number.isNaN(v) ? 0 : v;
+                this.markDirty();
+                this.updateEstimate();
+                this.actualizarTextoFormula(idx);
+            });
+        });
+        cont.querySelectorAll('.rec-role').forEach(inp => {
+            inp.addEventListener('change', e => {
+                const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+                this.draft.profiles[idx].role = e.target.value.trim();
+                this.markDirty();
+                this.renderRecipeList();
+            });
+        });
+    }
+
+    /** Refresca solo el texto de la fórmula de una fila, sin redibujar (no roba el foco). */
+    actualizarTextoFormula(idx) {
+        const cont = document.getElementById('module-recipe-list');
+        if (!cont) return;
+        const fila = cont.querySelectorAll('.receta-fila')[idx];
+        if (!fila) return;
+        const el = fila.querySelector('.receta-formula');
+        if (el) el.innerHTML = `<i class="fa-solid fa-calculator" aria-hidden="true"></i> ${window.escapeHtml(this.describirFormula(this.draft.profiles[idx]))}`;
+    }
+
+    /** Editor de coeficientes de una fila de la receta, con los nombres en claro. */
+    editorFormulaHtml(row, idx) {
+        const campos = [
+            ['coefBase', 'Base', 'Metros de base, una vez'],
+            ['coefAltura', 'Alto', 'Metros de alto, una vez'],
+            ['coefBaseMod', 'Base por módulo', 'Base multiplicada por la cantidad de módulos'],
+            ['coefAlturaMod', 'Alto por módulo', 'Alto multiplicado por la cantidad de módulos'],
+            ['coefArea', 'Área', 'Base x Alto (m²)'],
+            ['coefModulos', 'Módulos', 'Piezas sueltas: una cantidad por cada módulo'],
+            ['coefBaseHoja', 'Ancho de hoja', 'Ancho de la hoja que abre, por cada hoja'],
+            ['coefAlturaHoja', 'Alto de hoja', 'Alto de la hoja que abre, por cada hoja'],
+            ['coefBaseDivMod', 'Base ÷ módulos', 'Ancho de una sola hoja'],
+            ['fixedQty', '+ Fijo', 'Cantidad fija que se suma siempre']
+        ];
+        return `<div class="receta-editor-grid">
+            ${campos.map(([k, lbl, ayuda]) => `
+                <label title="${window.escapeHtml(ayuda)}">
+                    <span>${lbl}</span>
+                    <input type="number" step="0.01" class="rec-coef" data-idx="${idx}" data-coef="${k}"
+                        value="${row[k] !== undefined && row[k] !== 0 ? row[k] : ''}" placeholder="0">
+                </label>`).join('')}
+            <label style="grid-column: 1 / -1;" title="Etiqueta compartida: con un rol genérico este perfil se resuelve solo en Cedal, Fisa o Femec.">
+                <span>Rol genérico (sirve para los tres proveedores)</span>
+                <input type="text" class="rec-role" data-idx="${idx}" value="${window.escapeHtml(row.role || '')}" placeholder="ej: ventana-t45-marco">
+            </label>
+        </div>`;
+    }
+
+    /** Chips para filtrar el catálogo por proveedor cuando la receta es multi-marca. */
+    renderBrandChips() {
+        const cont = document.getElementById('module-brand-chips');
+        if (!cont || !this.draft) return;
+        if (!this.isAllBrands()) { cont.innerHTML = ''; return; }
+        const marcas = Object.keys(window.SEED_DATA.brands);
+        cont.innerHTML = [['', 'Todos']].concat(marcas.map(m => [m, window.SEED_DATA.brands[m].name]))
+            .map(([val, txt]) => {
+                const activo = (this.brandFilter || '') === val;
+                return `<button type="button" class="chip-marca-filtro${activo ? ' activo' : ''}" data-brand="${val}">${window.escapeHtml(txt)}</button>`;
+            }).join('');
+        cont.querySelectorAll('.chip-marca-filtro').forEach(b => {
+            b.addEventListener('click', e => {
+                this.brandFilter = e.currentTarget.getAttribute('data-brand');
+                this.renderBrandChips();
+                this.renderProfiles();
+            });
+        });
+    }
+
     renderProfiles() {
         const container = document.getElementById('module-profiles-table');
         if (!container || !this.draft) return;
@@ -504,6 +720,7 @@ class ModuleManager {
         const editable = this.isAdmin;
         const rows = this.visibleProducts().filter(({ brandKey, category, product }) => {
             if (this.onlySelected && !this.findProfileRow(product.code, category, brandKey)) return false;
+            if (this.brandFilter && brandKey !== this.brandFilter) return false;
             if (!this.profileFilter) return true;
             const brandName = window.SEED_DATA.brands[brandKey] ? window.SEED_DATA.brands[brandKey].name : brandKey;
             const hay = `${product.code} ${product.description} ${category} ${brandName}`.toLowerCase();
@@ -663,6 +880,7 @@ class ModuleManager {
 
         this.markDirty();
         this.renderProfiles();
+        this.renderRecipeList();
         this.updateEstimate();
     }
 
@@ -672,6 +890,7 @@ class ModuleManager {
         row.formula = e.target.value;
         this.markDirty();
         this.renderProfiles();
+        this.renderRecipeList();
         this.updateEstimate();
     }
 
@@ -683,6 +902,7 @@ class ModuleManager {
         row.fixedQty = safe;
         this.markDirty();
         this.renderProfiles();
+        this.renderRecipeList();
         this.updateEstimate();
     }
 
@@ -1071,6 +1291,8 @@ class ModuleManager {
 
         this.renderHeader();
         this.renderProfiles();
+        this.renderRecipeList();
+        this.renderBrandChips();
         this.renderAccessories();
         this.renderLabor();
         this.markDirty();

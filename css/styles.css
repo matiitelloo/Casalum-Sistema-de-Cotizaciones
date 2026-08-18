@@ -1019,3 +1019,123 @@ h4 {
 @media print {
     #notify-container { display: none !important; }
 }
+
+/* ============================================================
+   PREESTABLECER ÍTEMS — lista de la receta
+   Antes los perfiles usados había que encontrarlos tildados entre los ~200
+   del catálogo; ahora la receta se ve primero y el catálogo va aparte.
+   ============================================================ */
+
+.receta-fila {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+}
+.receta-fila:last-child { border-bottom: none; }
+.receta-fila:nth-child(odd) { background: rgba(0, 0, 0, 0.015); }
+
+.receta-fila-main { flex: 1; min-width: 0; }
+
+.receta-cod {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 0.82rem;
+    margin-right: 0.4rem;
+}
+.receta-desc { font-size: 0.82rem; color: var(--text-main); }
+
+.receta-meta {
+    display: flex;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
+}
+
+.receta-formula {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    background: var(--bg-main);
+    border-radius: 6px;
+    padding: 0.3rem 0.6rem;
+    white-space: nowrap;
+    max-width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.receta-formula i { opacity: 0.55; margin-right: 0.3rem; }
+
+.receta-quitar { padding: 0.2rem 0.5rem; border-color: var(--border); color: var(--text-muted); }
+.receta-quitar:hover { border-color: var(--danger); color: var(--danger); }
+
+.chip-marca, .chip-rol {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+}
+.chip-rol { background: #eef4ef; border-color: #cfe3d4; color: #2f6b45; }
+.chip-rol-falta { background: #fff4e0; border-color: #f0d9a8; color: #a2701a; }
+
+.badge-suave {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    background: var(--bg-main);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.12rem 0.6rem;
+}
+
+.chip-marca-filtro {
+    font-size: 0.74rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+.chip-marca-filtro:hover { border-color: var(--primary); color: var(--primary); }
+.chip-marca-filtro.activo {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+#module-catalog-details summary::-webkit-details-marker { display: none; }
+#module-catalog-details[open] summary { border-bottom: 1px solid var(--border); }
+
+@media (max-width: 768px) {
+    .receta-fila { flex-wrap: wrap; }
+    .receta-formula { max-width: 100%; white-space: normal; }
+}
+
+.receta-editor {
+    padding: 0.75rem 0.9rem 0.9rem;
+    background: var(--bg-main);
+    border-bottom: 1px solid var(--border);
+}
+.receta-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.5rem 0.75rem;
+}
+.receta-editor-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+.receta-editor-grid input {
+    padding: 0.3rem 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    font-size: 0.8rem;
+}
+.receta-editor-grid input:focus { outline: 2px solid var(--primary); outline-offset: -1px; }

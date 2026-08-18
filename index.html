@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css?v=2">
+    <link rel="stylesheet" href="css/styles.css?v=3">
     <link rel="stylesheet" href="css/print.css">
     <style>
         /* Extra styles for tables and stepper */
@@ -903,21 +903,34 @@
                             <!-- Apilados: base de datos del proveedor, luego accesorios, luego mano de obra -->
                             <div id="module-columns" style="display: grid; grid-template-columns: 1fr; gap: 1rem; align-items: start;">
 
-                                <!-- Columna 1: base de datos del proveedor -->
+                                <!-- Perfiles de la receta (lo que de verdad importa) -->
                                 <div class="card" style="margin: 0;">
                                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                        <h4 style="margin: 0; font-size: 0.92rem;"><i class="fa-solid fa-window-frame"></i> Base de Datos del Proveedor</h4>
-                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                            <input type="text" id="module-profile-filter" class="form-control" placeholder="Buscar código o descripción..." style="max-width: 210px; font-size: 0.8rem; padding: 4px 8px;">
-                                            <label style="font-size: 0.75rem; display: flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer;">
-                                                <input type="checkbox" id="module-only-selected"> Solo usados
-                                            </label>
-                                        </div>
+                                        <h4 style="margin: 0; font-size: 0.92rem;"><i class="fa-solid fa-list-check"></i> Perfiles de esta receta</h4>
+                                        <span id="module-recipe-count" class="badge-suave"></span>
                                     </div>
                                     <div class="card-body" style="padding: 0;">
-                                        <div id="module-profiles-table" style="overflow: auto; max-height: 560px;"></div>
+                                        <div id="module-recipe-list"></div>
                                     </div>
                                 </div>
+
+                                <!-- Catálogo para agregar perfiles: plegado, no estorba -->
+                                <details id="module-catalog-details" class="card" style="margin: 0;">
+                                    <summary style="padding: 0.75rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.92rem; color: var(--primary); list-style: none; display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="fa-solid fa-plus-circle"></i> Agregar un perfil del catálogo
+                                        <span id="module-catalog-count" style="font-weight: 400; font-size: 0.78rem; color: var(--text-muted);"></span>
+                                    </summary>
+                                    <div style="padding: 0 1rem 0.75rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                        <input type="text" id="module-profile-filter" class="form-control" placeholder="Buscar código o descripción..." style="max-width: 260px; font-size: 0.8rem; padding: 5px 9px;">
+                                        <div id="module-brand-chips" style="display: flex; gap: 0.35rem; flex-wrap: wrap;"></div>
+                                        <label style="font-size: 0.75rem; display: none; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer;">
+                                            <input type="checkbox" id="module-only-selected"> Solo usados
+                                        </label>
+                                    </div>
+                                    <div class="card-body" style="padding: 0;">
+                                        <div id="module-profiles-table" style="overflow: auto; max-height: 420px;"></div>
+                                    </div>
+                                </details>
 
                                 <!-- Columna 2: accesorios -->
                                 <div class="card" style="margin: 0;">
@@ -1319,7 +1332,7 @@
     <script src="js/pdf.js?v=3"></script>
     <script src="js/word.js?v=1"></script>
     <script src="js/catalog.js?v=11"></script>
-    <script src="js/modules.js?v=13"></script>
+    <script src="js/modules.js?v=14"></script>
     <script src="js/settings.js?v=3"></script>
     <script src="js/app.js?v=16"></script>
 </body>
