@@ -723,6 +723,12 @@ class QuotationManager {
             prevBtn.addEventListener('click', () => this.goToStep(2));
         }
 
+        // Desde el Resumen se vuelve a Productos, igual que en los otros pasos.
+        const prevBtn4 = document.getElementById('btn-prev-step-4');
+        if (prevBtn4) {
+            prevBtn4.addEventListener('click', () => this.goToStep(3));
+        }
+
         const brandSelect = document.getElementById('p-brand');
         if(brandSelect) {
             brandSelect.addEventListener('change', () => {

@@ -188,7 +188,7 @@ class CatalogManager {
         sel.innerHTML = '';
         const brands = Object.keys(window.SEED_DATA.brands);
         brands.forEach((key, i) => {
-            sel.innerHTML += `<option value="${key}">${window.SEED_DATA.brands[key].name}</option>`;
+            sel.innerHTML += `<option value="${window.escapeHtml(key)}">${window.escapeHtml(window.SEED_DATA.brands[key].name)}</option>`;
         });
         if (brands.length > 0) {
             this.currentBrand = brands[0];
@@ -207,7 +207,7 @@ class CatalogManager {
 
         const cats = Object.keys(brand.categories);
         cats.forEach((cat, i) => {
-            sel.innerHTML += `<option value="${cat}">${cat}</option>`;
+            sel.innerHTML += `<option value="${window.escapeHtml(cat)}">${window.escapeHtml(cat)}</option>`;
         });
         if (cats.length > 0) {
             this.currentCategory = cats[0];
@@ -817,7 +817,7 @@ class CatalogManager {
         const brandSel = document.getElementById('add-p-brand');
         brandSel.innerHTML = '';
         Object.keys(window.SEED_DATA.brands).forEach(key => {
-            brandSel.innerHTML += `<option value="${key}">${window.SEED_DATA.brands[key].name}</option>`;
+            brandSel.innerHTML += `<option value="${window.escapeHtml(key)}">${window.escapeHtml(window.SEED_DATA.brands[key].name)}</option>`;
         });
         brandSel.value = this.currentBrand || Object.keys(window.SEED_DATA.brands)[0];
         this.updateModalCategories();
@@ -830,7 +830,7 @@ class CatalogManager {
         catSel.innerHTML = '';
         if (brand) {
             Object.keys(brand.categories).forEach(cat => {
-                catSel.innerHTML += `<option value="${cat}">${cat}</option>`;
+                catSel.innerHTML += `<option value="${window.escapeHtml(cat)}">${window.escapeHtml(cat)}</option>`;
             });
         }
 

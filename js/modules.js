@@ -134,7 +134,7 @@ class ModuleManager {
         if (!sel || !window.CATALOG_GROUPS) return;
         sel.innerHTML = '';
         window.CATALOG_GROUPS.forEach(g => {
-            sel.innerHTML += `<option value="${g}">${g}</option>`;
+            sel.innerHTML += `<option value="${window.escapeHtml(g)}">${window.escapeHtml(g)}</option>`;
         });
         this.currentGroup = window.CATALOG_GROUPS[0];
         sel.value = this.currentGroup;
@@ -295,7 +295,7 @@ class ModuleManager {
         if (brandSel) {
             brandSel.innerHTML = `<option value="${ModuleManager.ALL_BRANDS}">— Todos los proveedores —</option>`;
             Object.keys(window.SEED_DATA.brands).forEach(k => {
-                brandSel.innerHTML += `<option value="${k}">${window.SEED_DATA.brands[k].name}</option>`;
+                brandSel.innerHTML += `<option value="${window.escapeHtml(k)}">${window.escapeHtml(window.SEED_DATA.brands[k].name)}</option>`;
             });
             if (d.brand !== ModuleManager.ALL_BRANDS && !window.SEED_DATA.brands[d.brand]) {
                 d.brand = Object.keys(window.SEED_DATA.brands)[0] || '';
@@ -322,7 +322,7 @@ class ModuleManager {
             } else if (brand) {
                 catSel.innerHTML = '<option value="__all__">— Toda la base de datos —</option>';
                 Object.keys(brand.categories).forEach(c => {
-                    catSel.innerHTML += `<option value="${c}">${c}</option>`;
+                    catSel.innerHTML += `<option value="${window.escapeHtml(c)}">${window.escapeHtml(c)}</option>`;
                 });
                 catSel.value = brand.categories[d.category] ? d.category : '__all__';
             }
