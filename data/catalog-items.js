@@ -108,13 +108,30 @@
 
     add(C, 'CABINA EN ALUMINIO', 'CABINA CORREDIZA 2 MODULOS');
 
+    // ============================================================
+    // OTROS TRABAJOS
+    // Tienen hoja de cálculo propia (CIELO RAZO ACTUALIZADO.xlsx y
+    // CUBIERTA ACTUALIZADO.xlsx) pero nunca estuvieron como ítem cotizable.
+    // No llevan módulos: se miden solo por Base y Altura.
+    // ============================================================
+    const O = 'OTROS TRABAJOS';
+
+    add(O, 'CIELO RASO', 'CIELO RASO EN ALUMINIO Y VIDRIO');
+    add(O, 'BISELADO', 'ESPEJO BISELADO');
+    add(O, 'CUBIERTA', 'CUBIERTA SOLO VIDRIO');
+
+    // ============================================================
+    // VENTANA CORREDIZA 1200 (va con las ventanas)
+    // ============================================================
+    add(V, 'VENTANA CORREDIZA 1200', 'VENTANA CORREDIZA 1200 2 MODULOS');
+
     window.CATALOG_ITEMS = items;
 
     /** Índice id -> ítem, para resolver módulos guardados rápido. */
     window.CATALOG_ITEMS_BY_ID = items.reduce((acc, it) => { acc[it.id] = it; return acc; }, {});
 
     /** Grupos en orden de aparición del catálogo impreso. */
-    window.CATALOG_GROUPS = ['VENTANAS', 'PUERTAS', 'CABINAS DE BAÑO'];
+    window.CATALOG_GROUPS = ['VENTANAS', 'PUERTAS', 'CABINAS DE BAÑO', 'OTROS TRABAJOS'];
 
     /**
      * Familias en orden de catálogo: son los "sistemas" que se eligen al cotizar

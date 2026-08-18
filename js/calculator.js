@@ -265,7 +265,15 @@ class Calculator {
         const brandData = window.SEED_DATA.brands[brand.toLowerCase()];
         if (!brandData) return { total: 0, details: [] };
 
-        const usingModule = Array.isArray(moduleProfiles) && moduleProfiles.length > 0;
+        // Basta con que venga la lista de perfiles del módulo, aunque esté vacía:
+        // hay recetas que legítimamente no llevan perfiles de aluminio (biselado,
+        // cubierta de vidrio, cabina de acero, donde el marco es el sistema M&B).
+        // Si acá se exigiera length > 0, esas recetas caerían en el camino viejo
+        // —el que cobra todos los productos marcados `isRequired` de la marca— y
+        // sumarían perfiles que no tienen nada que ver.
+        // quotations.js manda null cuando no hay módulo activo, así que null sigue
+        // siendo la señal de "cotización a mano".
+        const usingModule = Array.isArray(moduleProfiles);
 
         // Perimeter (ml)
         const perimeter = (width + height) * 2;
