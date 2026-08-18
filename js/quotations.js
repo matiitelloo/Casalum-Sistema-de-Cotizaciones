@@ -966,40 +966,54 @@ class QuotationManager {
      * corregir solo.
      */
     bindValidacionMedidas() {
+        // 'medida' admite decimales (1.20 m); 'cantidad' tiene que ser un entero,
+        // porque media hoja o 2.5 módulos no existen en fabricación.
         const campos = [
-            ['p-width', 'La Base'],
-            ['p-height', 'El Alto'],
-            ['p-sash-width', 'La Base de Hoja'],
-            ['p-sash-height', 'El Alto de Hoja']
+            ['p-width', 'La Base', 'medida'],
+            ['p-height', 'El Alto', 'medida'],
+            ['p-sash-width', 'La Base de Hoja', 'medida'],
+            ['p-sash-height', 'El Alto de Hoja', 'medida'],
+            ['p-modules', 'Los Módulos', 'cantidad'],
+            ['p-leaves', 'Las Hojas', 'cantidad'],
+            ['p-qty', 'La Cantidad de Elementos', 'cantidad']
         ];
-        campos.forEach(([id, nombre]) => {
+        campos.forEach(([id, nombre, tipo]) => {
             const el = document.getElementById(id);
             if (!el || el.dataset.validacionMedida) return;
             el.dataset.validacionMedida = '1';
 
-            const esInvalido = () => {
+            const motivo = () => {
                 const txt = el.value.trim();
-                if (txt === '') return false;          // vacío todavía no es un error
+                if (txt === '') return '';             // vacío todavía no es un error
                 const v = parseFloat(txt);
-                return Number.isNaN(v) || v <= 0;
+                if (Number.isNaN(v) || v <= 0) {
+                    return tipo === 'cantidad'
+                        ? `${nombre} debe ser un número entero mayor a 0.`
+                        : `${nombre} debe ser mayor a 0. Solo se aceptan medidas positivas.`;
+                }
+                if (tipo === 'cantidad' && !Number.isInteger(v)) {
+                    return `${nombre} debe ser un número entero: no se puede cotizar ${v}.`;
+                }
+                return '';
             };
-            const pintar = () => el.classList.toggle('campo-invalido', esInvalido());
+            const pintar = () => el.classList.toggle('campo-invalido', !!motivo());
 
             el.addEventListener('input', pintar);
             el.addEventListener('blur', () => {
                 pintar();
-                if (esInvalido()) {
-                    notify.warning(`${nombre} debe ser mayor a 0. Solo se aceptan medidas positivas.`,
-                        { titulo: 'Medida no válida' });
+                const problema = motivo();
+                if (problema) {
+                    notify.warning(problema, { titulo: 'Valor no válido' });
                     el.focus();
                 }
             });
         });
     }
 
-    /** ¿Hay alguna medida en rojo? Se usa antes de calcular o agregar al carrito. */
+    /** ¿Hay algún campo en rojo? Se usa antes de calcular o agregar al carrito. */
     hayMedidasInvalidas() {
-        return ['p-width', 'p-height', 'p-sash-width', 'p-sash-height'].some(id => {
+        return ['p-width', 'p-height', 'p-sash-width', 'p-sash-height',
+                'p-modules', 'p-leaves', 'p-qty'].some(id => {
             const el = document.getElementById(id);
             return el && el.classList.contains('campo-invalido');
         });
@@ -1516,8 +1530,8 @@ class QuotationManager {
     previewWindow() {
         // Con una medida en rojo no tiene sentido calcular: el precio saldría mal.
         if (this.hayMedidasInvalidas()) {
-            notify.warning('Corrija las medidas marcadas en rojo: solo se aceptan valores mayores a 0.',
-                { titulo: 'Medida no válida' });
+            notify.warning('Corrija los campos marcados en rojo antes de continuar.',
+                { titulo: 'Valor no válido' });
             return;
         }
 
@@ -1570,8 +1584,8 @@ class QuotationManager {
     addItemToCart() {
         // Con una medida en rojo no tiene sentido calcular: el precio saldría mal.
         if (this.hayMedidasInvalidas()) {
-            notify.warning('Corrija las medidas marcadas en rojo: solo se aceptan valores mayores a 0.',
-                { titulo: 'Medida no válida' });
+            notify.warning('Corrija los campos marcados en rojo antes de continuar.',
+                { titulo: 'Valor no válido' });
             return;
         }
 
