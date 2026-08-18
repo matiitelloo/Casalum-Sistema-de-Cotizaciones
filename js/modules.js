@@ -531,7 +531,7 @@ class ModuleManager {
         const coefFields = [
             ['coefBase', 'Base'], ['coefAltura', 'Alto'],
             ['coefBaseMod', 'Base×Mód'], ['coefAlturaMod', 'Alto×Mód'],
-            ['coefArea', 'Área'], ['coefModulos', 'Módulos']
+            ['coefArea', 'Área'], ['coefModulos', 'Módulos'], ['coefBaseHoja', 'AnchoHoja×Hojas'], ['coefAlturaHoja', 'AltoHoja×Hojas']
         ];
 
         let html = `<table class="table" style="font-size:0.78rem; min-width:900px;">

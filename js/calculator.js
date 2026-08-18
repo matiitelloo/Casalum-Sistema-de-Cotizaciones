@@ -102,7 +102,15 @@ class Calculator {
      *            + coefAlturaMod   x Altura x Módulos
      *            + coefArea        x (Base x Altura)
      *            + coefModulos     x Módulos            (sin medida: piezas sueltas)
+     *            + coefBaseHoja    x AnchoHoja x Hojas  (medida de la hoja que abre)
+     *            + coefAlturaHoja  x AltoHoja  x Hojas
      *            + fixedQty                              (constante K)
+     *
+     * Los términos de "hoja" son para las ventanas proyectables: el perimetral
+     * de hoja no se mide sobre la ventana entera sino sobre la hoja que abre,
+     * que tiene su propio tamaño (en el Excel, la columna F aparte de la E), y
+     * se cobra una vez por cada hoja. Si no se cargan medidas de hoja, se usan
+     * las de la ventana.
      *
      * Con esto, sin casos especiales, salen todos los patrones vistos:
      *   - Fijo (tornillos, silicón):        fixedQty=K, resto 0
@@ -123,6 +131,10 @@ class Calculator {
     resolveLinear(row, ctx) {
         if (!row) return 0;
         const modules = ctx.modules && ctx.modules > 0 ? ctx.modules : 1;
+        const leaves = ctx.leaves && ctx.leaves > 0 ? ctx.leaves : 1;
+        // Sin medidas de hoja cargadas, la hoja se asume del tamaño de la ventana.
+        const sashW = ctx.sashWidth && ctx.sashWidth > 0 ? ctx.sashWidth : ctx.width;
+        const sashH = ctx.sashHeight && ctx.sashHeight > 0 ? ctx.sashHeight : ctx.height;
         const num = (key) => {
             const v = parseFloat(row[key]);
             return Number.isNaN(v) ? 0 : v;
@@ -133,6 +145,8 @@ class Calculator {
             + num('coefAlturaMod') * ctx.height * modules
             + num('coefArea') * ctx.area
             + num('coefModulos') * modules
+            + num('coefBaseHoja') * sashW * leaves
+            + num('coefAlturaHoja') * sashH * leaves
             + num('fixedQty');
         return qty < 0 ? 0 : qty;
     }
@@ -263,7 +277,13 @@ class Calculator {
         let details = [];
 
         if (usingModule) {
-            const ctx = { width, height, perimeter, area, modules: params.modules };
+            const ctx = {
+                width, height, perimeter, area,
+                modules: params.modules,
+                leaves: params.leaves,
+                sashWidth: params.sashWidth,
+                sashHeight: params.sashHeight
+            };
             moduleProfiles.forEach(row => {
                 // Cantidad primero: una fila con cantidad 0 a estas medidas/módulos
                 // (ej. el mullón con 1 solo módulo) no necesita resolver producto ni

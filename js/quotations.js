@@ -851,6 +851,26 @@ class QuotationManager {
         this.queueSaveDraft();
     }
 
+    /**
+     * Muestra los campos de medida de hoja solo si la receta activa los usa
+     * (alguna fila con coefBaseHoja/coefAlturaHoja). En el resto de los
+     * sistemas no aportan nada y solo ensucian el formulario.
+     */
+    toggleSashFields(mod) {
+        const usa = !!(mod && (mod.profiles || []).some(p =>
+            parseFloat(p.coefBaseHoja) || parseFloat(p.coefAlturaHoja)));
+        ['p-sash-width-group', 'p-sash-height-group'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = usa ? '' : 'none';
+        });
+        if (!usa) {
+            ['p-sash-width', 'p-sash-height'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+        }
+    }
+
     /** Vacía accesorios y mano de obra que había cargado un módulo. */
     clearModuleValues() {
         document.querySelectorAll('.acc-input').forEach(input => input.value = '0');
@@ -901,12 +921,21 @@ class QuotationManager {
         document.getElementById('p-viaticos').value = labor.viaticos || 0;
     }
 
-    /** Contexto (ancho/alto/perímetro/área/módulos) actual del formulario, para fórmulas de módulo. */
+    /** Contexto (medidas, módulos, hojas) actual del formulario, para fórmulas de módulo. */
     currentModuleCtx() {
         const width = this.numOr(document.getElementById('p-width').value, 0);
         const height = this.numOr(document.getElementById('p-height').value, 0);
         const modules = parseInt(document.getElementById('p-modules').value, 10) || 1;
-        return { width, height, perimeter: (width + height) * 2, area: width * height, modules };
+        const leaves = parseInt(document.getElementById('p-leaves').value, 10) || 1;
+        // Medidas de la hoja que abre (proyectables). Vacías = del tamaño de la ventana.
+        const sashW = this.numOr((document.getElementById('p-sash-width') || {}).value, 0);
+        const sashH = this.numOr((document.getElementById('p-sash-height') || {}).value, 0);
+        return {
+            width, height, perimeter: (width + height) * 2, area: width * height,
+            modules, leaves,
+            sashWidth: sashW > 0 ? sashW : width,
+            sashHeight: sashH > 0 ? sashH : height
+        };
     }
 
     /** Horas de mano de obra del módulo activo, según los módulos actuales del formulario si usa fórmula. */
@@ -1113,6 +1142,7 @@ class QuotationManager {
         const family = systemSelect ? systemSelect.value : '';
 
         this.toggleMullonField(family);
+        this.toggleSashFields(this.activeModule);
 
         if (this.isVentanaFija1100System(family)) {
             info.innerHTML = `<i class="fa-solid fa-circle-check"></i>
@@ -1370,9 +1400,15 @@ class QuotationManager {
 
         const mod = this.activeModule;
 
+        // Medidas de la hoja que abre (proyectables); vacías = las de la ventana.
+        const sashWidthRaw = this.numOr((document.getElementById('p-sash-width') || {}).value, 0);
+        const sashHeightRaw = this.numOr((document.getElementById('p-sash-height') || {}).value, 0);
+
         return {
             brand, system, color, width, height, qty, glassType, glassArea,
             modules, leaves, mullon,
+            sashWidth: sashWidthRaw > 0 ? sashWidthRaw : width,
+            sashHeight: sashHeightRaw > 0 ? sashHeightRaw : height,
             labor: { workers, hours, transport, viaticos },
             accessories,
             moduleId: mod ? mod.itemId : null,
