@@ -373,17 +373,7 @@ class QuotationManager {
         if (btnSaveAs) btnSaveAs.style.display = 'none';
 
         this.renderCart();
-        this.resetItemForm();
-
-        // resetItemForm conserva marca/sistema/color/vidrio a propósito (para cargar
-        // varias ventanas parecidas); al descartar sí queremos todo en blanco.
-        ['p-brand', 'p-system', 'p-color', 'p-glass', 'p-glass-price', 'p-glass-area'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = '';
-        });
-        this.updateSystemDropdown();
-        this.renderModuleInfo();
-        this.switchProductTab('productos');
+        this.resetItemForm();   // deja el formulario del ítem entero en blanco
 
         this.goToStep(1);
     }
@@ -1680,29 +1670,41 @@ class QuotationManager {
         this.resetItemForm();
     }
 
+    /**
+     * Deja el formulario del ítem completamente en blanco para cargar el
+     * siguiente: medidas, módulos, accesorios, mano de obra y también marca,
+     * sistema, color y vidrio. Se suelta el módulo preestablecido activo y se
+     * borran las marcas de campo en rojo que hubieran quedado.
+     */
     resetItemForm() {
-        document.getElementById('p-width').value = '';
-        document.getElementById('p-height').value = '';
-        document.getElementById('p-glass-area').value = '';
+        ['p-brand', 'p-system', 'p-color', 'p-glass', 'p-glass-price', 'p-glass-area',
+         'p-width', 'p-height', 'p-modules', 'p-leaves',
+         'p-sash-width', 'p-sash-height'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
         document.getElementById('p-qty').value = '1';
-        document.getElementById('p-modules').value = '';
-        document.getElementById('p-leaves').value = '';
         this.leavesManuallyEdited = false;
         const mullonCb = document.getElementById('p-mullon');
         if (mullonCb) mullonCb.checked = false;
 
         // Reset accessories & labor
-        document.querySelectorAll('.acc-input').forEach(input => input.value = '0');
-        document.getElementById('p-labor-workers').value = '0';
-        document.getElementById('p-labor-hours').value = '0';
-        document.getElementById('p-transport').value = '0';
-        document.getElementById('p-viaticos').value = '0';
+        this.clearModuleValues();
 
-        // Si hay un módulo preestablecido activo se recarga, para poder agregar varias
-        // unidades del mismo ítem sin volver a llenar accesorios ni mano de obra.
-        if (this.activeModule) {
-            this.applyModuleAccessoriesAndLabor(this.activeModule);
-        }
+        // Sin sistema elegido no hay receta activa: se sueltan también los campos
+        // que solo aparecen con ella (medidas de hoja) y el aviso de módulo.
+        this.activeModule = null;
+        this.toggleSashFields(null);
+        this.updateSystemDropdown();   // deja "Color" sin marca elegida
+        this.renderModuleInfo();       // también oculta el mullón
+        this.switchProductTab('productos');
+
+        // Las medidas en rojo son del ítem anterior: ya no aplican.
+        ['p-width', 'p-height', 'p-sash-width', 'p-sash-height',
+         'p-modules', 'p-leaves', 'p-qty'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('campo-invalido');
+        });
 
         // Corre después de renderCart(): así el borrador guarda el formulario ya
         // vacío y no reaparece el producto que se acaba de pasar al carrito.
