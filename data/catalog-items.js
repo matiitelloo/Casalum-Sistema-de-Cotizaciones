@@ -61,6 +61,8 @@
     add(V, 'VENTANA CORREDIZA 1300', 'VENTANA CORREDIZA 3 MODULOS');
     add(V, 'VENTANA CORREDIZA 1300', 'VENTANA CORREDIZA 4 MODULOS');
 
+    add(V, 'VENTANA CORREDIZA 1200', 'VENTANA CORREDIZA 1200 2 MODULOS');
+
     add(V, 'VENTANA PROYECTABLE', 'VENTANAS PROYECTABLES 2 MODULOS');
     add(V, 'VENTANA PROYECTABLE', 'VENTANAS PROYECTABLES 3 MODULOS');
     add(V, 'VENTANA PROYECTABLE', 'VENTANAS PROYECTABLES 4 MODULOS');
@@ -119,11 +121,6 @@
     add(O, 'CIELO RASO', 'CIELO RASO EN ALUMINIO Y VIDRIO');
     add(O, 'BISELADO', 'ESPEJO BISELADO');
     add(O, 'CUBIERTA', 'CUBIERTA SOLO VIDRIO');
-
-    // ============================================================
-    // VENTANA CORREDIZA 1200 (va con las ventanas)
-    // ============================================================
-    add(V, 'VENTANA CORREDIZA 1200', 'VENTANA CORREDIZA 1200 2 MODULOS');
 
     window.CATALOG_ITEMS = items;
 
