@@ -1154,3 +1154,13 @@ h4 {
 .chip-equiv b { font-family: inherit; color: var(--primary); font-weight: 600; margin-right: 0.2rem; }
 .chip-equiv-falta { background: #fff4e0; border-color: #f0d9a8; }
 .chip-equiv-falta b { color: #a2701a; }
+
+/* Medida fuera de rango (0 o negativa) en el cotizador */
+.campo-invalido {
+    border-color: var(--danger) !important;
+    background: #fff6f6;
+}
+.campo-invalido:focus {
+    outline: 2px solid var(--danger);
+    outline-offset: -1px;
+}

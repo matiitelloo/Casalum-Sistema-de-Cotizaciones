@@ -690,6 +690,8 @@ class QuotationManager {
         if (widthInput) widthInput.addEventListener('input', calcGlassArea);
         if (heightInput) heightInput.addEventListener('input', calcGlassArea);
 
+        this.bindValidacionMedidas();
+
         // Hojas se autocompleta con Módulos, salvo que el usuario ya haya editado Hojas
         // a mano para este ítem (caso especial: distinta cantidad de hojas que de módulos).
         const modulesInput = document.getElementById('p-modules');
@@ -952,6 +954,55 @@ class QuotationManager {
             `Esos perfiles NO se cobraron. Elija otro proveedor o cárguelos en Catálogo → Roles Genéricos.`,
             { titulo: 'Faltan perfiles en este proveedor', ms: 15000 }
         );
+    }
+
+    /**
+     * Base y Alto solo aceptan medidas positivas: un 0 o un negativo daría una
+     * ventana sin material y un precio que no significa nada.
+     *
+     * El borde rojo aparece mientras se escribe (respuesta inmediata) pero el
+     * aviso sale recién al salir del campo: escribiendo "0.80" se pasa por "0",
+     * y avisar en ese momento sería molestar por algo que el usuario está por
+     * corregir solo.
+     */
+    bindValidacionMedidas() {
+        const campos = [
+            ['p-width', 'La Base'],
+            ['p-height', 'El Alto'],
+            ['p-sash-width', 'La Base de Hoja'],
+            ['p-sash-height', 'El Alto de Hoja']
+        ];
+        campos.forEach(([id, nombre]) => {
+            const el = document.getElementById(id);
+            if (!el || el.dataset.validacionMedida) return;
+            el.dataset.validacionMedida = '1';
+
+            const esInvalido = () => {
+                const txt = el.value.trim();
+                if (txt === '') return false;          // vacío todavía no es un error
+                const v = parseFloat(txt);
+                return Number.isNaN(v) || v <= 0;
+            };
+            const pintar = () => el.classList.toggle('campo-invalido', esInvalido());
+
+            el.addEventListener('input', pintar);
+            el.addEventListener('blur', () => {
+                pintar();
+                if (esInvalido()) {
+                    notify.warning(`${nombre} debe ser mayor a 0. Solo se aceptan medidas positivas.`,
+                        { titulo: 'Medida no válida' });
+                    el.focus();
+                }
+            });
+        });
+    }
+
+    /** ¿Hay alguna medida en rojo? Se usa antes de calcular o agregar al carrito. */
+    hayMedidasInvalidas() {
+        return ['p-width', 'p-height', 'p-sash-width', 'p-sash-height'].some(id => {
+            const el = document.getElementById(id);
+            return el && el.classList.contains('campo-invalido');
+        });
     }
 
     /** Contexto (medidas, módulos, hojas) actual del formulario, para fórmulas de módulo. */
@@ -1463,6 +1514,13 @@ class QuotationManager {
     }
 
     previewWindow() {
+        // Con una medida en rojo no tiene sentido calcular: el precio saldría mal.
+        if (this.hayMedidasInvalidas()) {
+            notify.warning('Corrija las medidas marcadas en rojo: solo se aceptan valores mayores a 0.',
+                { titulo: 'Medida no válida' });
+            return;
+        }
+
         const data = this.getFormData();
 
         if (this.isVentanaFija1100System(data.system)) {
@@ -1510,6 +1568,13 @@ class QuotationManager {
     }
 
     addItemToCart() {
+        // Con una medida en rojo no tiene sentido calcular: el precio saldría mal.
+        if (this.hayMedidasInvalidas()) {
+            notify.warning('Corrija las medidas marcadas en rojo: solo se aceptan valores mayores a 0.',
+                { titulo: 'Medida no válida' });
+            return;
+        }
+
         const data = this.getFormData();
 
         if (this.isVentanaFija1100System(data.system)) {
