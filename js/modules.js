@@ -12,17 +12,6 @@
  * sin que el usuario tenga que ingresar nada a mano.
  */
 
-/** Bases de fórmula disponibles. `unit` es la opción "por unidad". */
-window.MODULE_FORMULA_BASES = [
-    { key: 'width',          label: 'Ancho',            unit: 'm'  },
-    { key: 'height',         label: 'Alto',             unit: 'm'  },
-    { key: 'perimeter',      label: 'Perímetro',        unit: 'm'  },
-    { key: 'area',           label: 'Área (An x Al)',   unit: 'm²' },
-    { key: 'width_modules',  label: 'Ancho x Módulos',  unit: 'm'  },
-    { key: 'height_modules', label: 'Alto x Módulos',   unit: 'm'  },
-    { key: 'unit',           label: 'Unidad',           unit: 'und' }
-];
-
 class ModuleManager {
     /**
      * Valor de "proveedor" que indica que la receta no está atada a una marca:
@@ -761,6 +750,16 @@ class ModuleManager {
             return hay.indexOf(this.profileFilter) !== -1;
         });
 
+        // Cuántos perfiles hay para elegir, visible en el título plegado: así se
+        // sabe si el filtro dejó algo antes de abrir la sección.
+        const contador = document.getElementById('module-catalog-count');
+        if (contador) {
+            const filtrando = this.profileFilter || this.brandFilter;
+            contador.textContent = rows.length
+                ? `(${rows.length} perfil${rows.length === 1 ? '' : 'es'}${filtrando ? ' con el filtro actual' : ''})`
+                : '(ninguno con el filtro actual)';
+        }
+
         if (!rows.length) {
             // El mensaje dice cuál de los dos filtros está vaciando la lista: con
             // "Solo usados" tildado y ningún perfil marcado, "no coincide con el
@@ -867,18 +866,6 @@ class ModuleManager {
         container.querySelectorAll('.mod-p-val').forEach(i => i.addEventListener('change', e => this.changeProfileValue(e)));
         container.querySelectorAll('.mod-p-coef').forEach(i => i.addEventListener('change', e => this.changeProfileCoef(e)));
         container.querySelectorAll('.mod-p-role').forEach(i => i.addEventListener('change', e => this.changeProfileRole(e)));
-    }
-
-    unitFor(row) {
-        if (!row || row.formula === 'fijo') return 'und';
-        return 'm';
-    }
-
-    /** Cantidad de muestra con 1.00 x 1.00 m y 1 módulo, para ver el efecto de la fórmula. */
-    resolvePreviewQty(row) {
-        return window.calculator.resolveModuleQty(row, {
-            width: 1, height: 1, perimeter: 4, area: 1, modules: 1
-        });
     }
 
     toggleProfile(e) {

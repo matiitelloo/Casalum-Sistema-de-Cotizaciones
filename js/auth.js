@@ -102,14 +102,6 @@ class AuthManager {
             });
         }
 
-        const logoutBtn = document.getElementById('btn-logout');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.logout();
-            });
-        }
-
         const togglePassBtn = document.getElementById('btn-toggle-pass');
         if (togglePassBtn) {
             togglePassBtn.addEventListener('click', () => {
@@ -228,13 +220,8 @@ class AuthManager {
     }
 
     updateWelcomeMessage() {
-        const welcomeEl = document.getElementById('current-user-name');
         const headerNameEl = document.getElementById('header-user-name');
-
-        if (this.currentUser) {
-            if (welcomeEl) welcomeEl.textContent = this.currentUser.name;
-            if (headerNameEl) headerNameEl.textContent = this.currentUser.name;
-        }
+        if (this.currentUser && headerNameEl) headerNameEl.textContent = this.currentUser.name;
     }
 
     loadProfileData() {

@@ -43,43 +43,6 @@ class CatalogManager {
         this.showAdminControls();
     }
 
-    /** Load catalog from Firestore (primary) or localStorage (cache) */
-    async loadPersistedData() {
-        // Try Firestore first
-        try {
-            if (window.dbManager && window.dbManager.db) {
-                const doc = await window.dbManager.db.collection('catalog').doc('data').get();
-                if (doc.exists) {
-                    const parsed = doc.data();
-                    if (parsed.brands) window.SEED_DATA.brands = parsed.brands;
-                    if (parsed.glass) window.SEED_DATA.glass = parsed.glass;
-                    if (parsed.glassSale) window.SEED_DATA.glassSale = parsed.glassSale;
-                    if (parsed.accessories) window.SEED_DATA.accessories = parsed.accessories;
-                    if (parsed.modules) window.SEED_DATA.modules = parsed.modules;
-                    // Update local cache
-                    guardarCacheLocal('casalum_catalog_data', JSON.stringify(parsed));
-                    return;
-                }
-            }
-        } catch (e) {
-            console.warn('Firestore catalog load failed, falling back to localStorage:', e);
-        }
-        // Fallback: localStorage
-        const saved = localStorage.getItem('casalum_catalog_data');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (parsed.brands) window.SEED_DATA.brands = parsed.brands;
-                if (parsed.glass) window.SEED_DATA.glass = parsed.glass;
-                if (parsed.glassSale) window.SEED_DATA.glassSale = parsed.glassSale;
-                if (parsed.accessories) window.SEED_DATA.accessories = parsed.accessories;
-                if (parsed.modules) window.SEED_DATA.modules = parsed.modules;
-            } catch (e) {
-                console.error('Error loading persisted catalog from localStorage:', e);
-            }
-        }
-    }
-
     /** Save current SEED_DATA to Firestore (primary) and localStorage (cache) */
     async persistData() {
         const toSave = {
