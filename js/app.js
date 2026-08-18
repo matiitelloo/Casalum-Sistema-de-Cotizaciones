@@ -643,20 +643,131 @@ class App {
                 <table class="table" style="font-size:0.85rem;"><tbody>`;
             porFamilia[fam].forEach(it => {
                 const mod = window.SEED_DATA.modules[it.id];
-                this.quickPriceRowsForModule(mod).forEach(({ brandName, price, faltantes }) => {
+                this.quickPriceRowsForModule(mod).forEach(({ brandKey, brandName, price, faltantes }) => {
                     const celda = price === null
                         ? `<span class="text-muted" title="Falta cargar en esta marca: ${window.escapeHtml(faltantes.join(', '))}">Incompleto</span>`
                         : `$${price.toFixed(2)}/m²`;
+                    // Sin precio no hay nada que agregar: ese proveedor todavía no fabrica algún perfil de la receta.
+                    const boton = price === null ? '' : `<button type="button" class="btn btn-sm btn-outline qp-add" data-item="${window.escapeHtml(it.id)}" data-brand="${window.escapeHtml(brandKey)}" title="Agregar a la cotización en curso, con Base y Alto reales">
+                        <i class="fa-solid fa-cart-plus"></i> Agregar</button>`;
                     html += `<tr>
                         <td style="padding:6px 8px;">${window.escapeHtml(it.name)}</td>
                         <td style="padding:6px 8px; color:var(--text-muted);">${window.escapeHtml(brandName)}</td>
                         <td style="padding:6px 8px; text-align:right; font-weight:700; color:var(--primary);">${celda}</td>
+                        <td style="padding:6px 8px; text-align:right;">${boton}</td>
                     </tr>`;
                 });
             });
             html += '</tbody></table>';
         });
         cont.innerHTML = html;
+
+        cont.querySelectorAll('.qp-add').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const itemId = btn.getAttribute('data-item');
+                const brandKey = btn.getAttribute('data-brand');
+                const it = window.CATALOG_ITEMS_BY_ID[itemId];
+                const mod = window.SEED_DATA.modules[itemId];
+                if (it && mod) this.openQuickAddModal(it, brandKey, mod);
+            });
+        });
+    }
+
+    /**
+     * Modal compacto para agregar un ítem de "Precio Rápido" directo a la
+     * cotización en curso, con Base/Alto reales — sin pasar por el asistente
+     * ni ver el desglose de perfiles. Solo pide lo que cambia el precio de
+     * verdad (medidas, color, vidrio); módulos, hojas, accesorios y mano de
+     * obra los pone la receta preestablecida, igual que en el formulario normal.
+     */
+    openQuickAddModal(it, brandKey, mod) {
+        const brand = window.SEED_DATA.brands[brandKey];
+        if (!brand || !window.quotationManager) return;
+        const isVentanaFija1100 = it.family === 'VENTANA FIJA 1100';
+
+        const overlay = document.createElement('div');
+        overlay.className = 'notify-confirm-overlay';
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(4px);';
+        overlay.innerHTML = `
+            <div role="dialog" aria-modal="true" aria-label="Agregar ${window.escapeHtml(it.name)}"
+                style="background:#fff; border-radius:var(--radius-lg); padding:1.5rem; max-width:420px; width:90%; box-shadow:var(--shadow-lg);">
+                <h3 style="margin:0 0 0.25rem; color:var(--primary);">${window.escapeHtml(it.name)}</h3>
+                <p style="margin:0 0 1rem; color:var(--text-muted); font-size:0.85rem;">${window.escapeHtml(brand.name)} · se agrega directo a la cotización en curso</p>
+                <div class="grid-form" style="grid-template-columns: 1fr 1fr; gap:0.75rem;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Base (m)</label>
+                        <input type="number" id="qa-width" class="form-control" step="0.01" min="0" placeholder="Ej: 1.20">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Alto (m)</label>
+                        <input type="number" id="qa-height" class="form-control" step="0.01" min="0" placeholder="Ej: 0.80">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Color</label>
+                        <select id="qa-color" class="form-control">
+                            ${brand.colors.map(c => `<option value="${window.escapeHtml(c)}">${window.escapeHtml(c)}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Cantidad</label>
+                        <input type="number" id="qa-qty" class="form-control" min="1" step="1" value="1">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1; margin:0;">
+                        <label>Vidrio</label>
+                        <select id="qa-glass" class="form-control">
+                            <option value="">Seleccione el vidrio...</option>
+                            ${(window.SEED_DATA.glass || []).map(g => `<option value="${window.escapeHtml(g.type)}">${window.escapeHtml(g.type)}</option>`).join('')}
+                        </select>
+                    </div>
+                    ${isVentanaFija1100 ? `
+                    <div class="form-group" style="grid-column: 1 / -1; margin:0;">
+                        <label style="display:flex; align-items:center; gap:0.4rem; font-weight:400;">
+                            <input type="checkbox" id="qa-mullon" style="width:auto;"> Con mullón
+                        </label>
+                    </div>` : ''}
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.25rem;">
+                    <button type="button" class="btn btn-outline" id="qa-cancel">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="qa-confirm"><i class="fa-solid fa-cart-plus"></i> Agregar</button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        const cerrar = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
+        const onKey = e => { if (e.key === 'Escape') cerrar(); };
+        overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+        overlay.querySelector('#qa-cancel').addEventListener('click', cerrar);
+        document.addEventListener('keydown', onKey);
+        document.getElementById('qa-width').focus();
+
+        overlay.querySelector('#qa-confirm').addEventListener('click', () => {
+            const width = parseFloat(document.getElementById('qa-width').value);
+            const height = parseFloat(document.getElementById('qa-height').value);
+            const color = document.getElementById('qa-color').value;
+            const qty = parseInt(document.getElementById('qa-qty').value, 10) || 1;
+            const glassType = document.getElementById('qa-glass').value;
+            const mullonCb = document.getElementById('qa-mullon');
+
+            if (!(width > 0) || !(height > 0)) {
+                notify.warning('Ingrese Base y Alto, mayores a 0.');
+                return;
+            }
+            if (!glassType) {
+                notify.warning('Seleccione el tipo de vidrio.');
+                return;
+            }
+
+            const added = window.quotationManager.quickAddToCart({
+                itemId: it.id, brandKey, color, width, height, qty, glassType,
+                mullon: mullonCb ? mullonCb.checked : false
+            });
+            if (added) {
+                notify.success(`${it.name} agregado a la cotización en curso.`);
+                cerrar();
+            }
+            // Si no se agregó, addItemToCart ya avisó el motivo (perfil faltante, etc.)
+            // y el modal queda abierto para corregir sin perder lo ya escrito.
+        });
     }
 
     /**
@@ -672,7 +783,7 @@ class App {
         return brandKeys.map(brandKey => {
             const brand = window.SEED_DATA.brands[brandKey];
             const brandName = brand ? brand.name : brandKey;
-            if (!brand || !brand.colors.length) return { brandName, price: null, faltantes: ['sin color cargado'] };
+            if (!brand || !brand.colors.length) return { brandKey, brandName, price: null, faltantes: ['sin color cargado'] };
 
             const color = brand.colors[0];
             const ctx = { width: 1, height: 1, perimeter: 4, area: 1, modules: 1 };
@@ -687,10 +798,10 @@ class App {
             });
 
             if (result.perfilesFaltantes && result.perfilesFaltantes.length) {
-                return { brandName, price: null, faltantes: result.perfilesFaltantes };
+                return { brandKey, brandName, price: null, faltantes: result.perfilesFaltantes };
             }
             const { finalPrice } = window.calculator.applyMargins(result.total);
-            return { brandName, price: finalPrice, faltantes: [] };
+            return { brandKey, brandName, price: finalPrice, faltantes: [] };
         });
     }
 
