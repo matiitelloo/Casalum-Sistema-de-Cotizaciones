@@ -551,7 +551,7 @@ class ModuleManager {
         push(n('coefAlturaMod'), 'Alto por módulo');
         push(n('coefArea'), 'Área');
         push(n('coefModulos'), 'Módulos');
-        push(n('coefBaseHoja'), 'Ancho de hoja x hojas');
+        push(n('coefBaseHoja'), 'Base de hoja x hojas');
         push(n('coefAlturaHoja'), 'Alto de hoja x hojas');
         push(n('coefBaseDivMod'), 'Base ÷ módulos');
         push(n('fixedQty'), 'fijo');
@@ -696,9 +696,9 @@ class ModuleManager {
             ['coefAlturaMod', 'Alto por módulo', 'Alto multiplicado por la cantidad de módulos'],
             ['coefArea', 'Área', 'Base x Alto (m²)'],
             ['coefModulos', 'Módulos', 'Piezas sueltas: una cantidad por cada módulo'],
-            ['coefBaseHoja', 'Ancho de hoja', 'Ancho de la hoja que abre, por cada hoja'],
+            ['coefBaseHoja', 'Base de hoja', 'Base de la hoja que abre, por cada hoja'],
             ['coefAlturaHoja', 'Alto de hoja', 'Alto de la hoja que abre, por cada hoja'],
-            ['coefBaseDivMod', 'Base ÷ módulos', 'Ancho de una sola hoja'],
+            ['coefBaseDivMod', 'Base ÷ módulos', 'Base de una sola hoja'],
             ['fixedQty', '+ Fijo', 'Cantidad fija que se suma siempre']
         ];
         return `<div class="receta-editor-grid">

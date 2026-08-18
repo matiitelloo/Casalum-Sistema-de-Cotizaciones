@@ -733,9 +733,18 @@ class QuotationManager {
         if(brandSelect) {
             brandSelect.addEventListener('change', () => {
                 this.updateSystemDropdown();
-                // El módulo trae perfiles de una marca concreta: si se cambia a mano,
-                // esa receta deja de servir y se pasa a configuración manual.
-                this.clearActiveModule();
+                // Una receta multi-proveedor resuelve sus perfiles por rol contra
+                // la marca elegida, así que cambiar de marca no la invalida: se
+                // vuelve a aplicar. Solo las recetas atadas a una marca concreta
+                // dejan de servir si se elige otra.
+                const mod = this.activeModule;
+                if (mod && mod.brand === '__all__') {
+                    this.applyModule(mod);
+                    this.renderModuleInfo();
+                } else {
+                    this.clearActiveModule();
+                }
+                this.syncModuleFromSystem();
             });
         }
 
@@ -1176,6 +1185,24 @@ class QuotationManager {
             return;
         }
 
+        if (!family) {
+            info.innerHTML = 'Elija el sistema: si tiene un módulo preestablecido se completa todo automáticamente.';
+            info.style.color = 'var(--text-muted)';
+            return;
+        }
+
+        // El paso siguiente natural es la marca: hasta elegirla no hay precios,
+        // así que se pide eso antes que cualquier otra cosa. Antes acá salía el
+        // aviso técnico de "no tiene módulo preestablecido", que aparecía apenas
+        // se elegía el sistema y asustaba sin que hubiera nada mal.
+        const marcaElegida = (document.getElementById('p-brand') || {}).value;
+        if (!marcaElegida) {
+            info.innerHTML = `<i class="fa-solid fa-arrow-right"></i>
+                Ahora elija la <strong>marca</strong> (el proveedor del aluminio) para continuar.`;
+            info.style.color = 'var(--primary)';
+            return;
+        }
+
         const mod = this.activeModule;
 
         if (mod) {
@@ -1190,12 +1217,6 @@ class QuotationManager {
                 ${(mod.profiles || []).length} perfil(es), ${nAcc} accesorio(s)${hasLabor ? ', mano de obra incluida' : ', sin mano de obra'}.
                 Solo complete color, vidrio y medidas.`;
             info.style.color = '#137333';
-            return;
-        }
-
-        if (!family) {
-            info.innerHTML = 'Elija el sistema: si tiene un módulo preestablecido se completa todo automáticamente.';
-            info.style.color = 'var(--text-muted)';
             return;
         }
 
@@ -1450,7 +1471,7 @@ class QuotationManager {
         }
 
         if (!data.brand || !data.system || !data.color || data.width <= 0 || data.height <= 0) {
-            notify.warning('Por favor complete los datos básicos de la ventana (Sistema, Marca, Color, Ancho y Alto).');
+            notify.warning('Por favor complete los datos básicos de la ventana (Sistema, Marca, Color, Base y Alto).');
             return;
         }
 
