@@ -1396,10 +1396,38 @@ class QuotationManager {
         }
 
         info.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>
-            <strong>${family}</strong> no tiene módulo preestablecido. Debe cargar a mano los accesorios y la
-            mano de obra, y se cobrarán solo los perfiles marcados como requeridos en la base de datos.
-            Para no repetirlo cada vez, créelo en <strong>Catálogo &rarr; Módulos</strong>.`;
-        info.style.color = '#b45309';
+            <strong>${family} no tiene receta cargada.</strong> El sistema no sabe qué perfiles lleva:
+            va a cobrar los marcados como requeridos del proveedor, que no son los correctos, y
+            <strong>el precio va a salir muy por debajo del real</strong>.
+            Cárguela en <strong>Catálogo &rarr; Preestablecer Ítems</strong>.`;
+        info.style.color = 'var(--danger)';
+    }
+
+    /**
+     * Frena el ítem si su familia no tiene receta preestablecida y pide
+     * confirmación expresa. Devuelve true si se puede seguir.
+     *
+     * No alcanzaba con el texto de aviso debajo del sistema: es chico, se pasa
+     * por alto, y el ítem se agregaba igual con un precio muy por debajo del
+     * real sin que nada lo frenara.
+     */
+    async confirmarSinReceta(data) {
+        if (this.activeModule) return true;   // tiene receta, todo normal
+
+        const familia = data.system || 'Esta familia';
+        return notify.confirm(
+            `"${familia}" no tiene receta de fabricación cargada.\n\n` +
+            `Sin receta el sistema NO sabe qué perfiles lleva este producto: cobra los ` +
+            `perfiles marcados como requeridos del proveedor, que no son los correctos, ` +
+            `y el precio sale MUY por debajo del real.\n\n` +
+            `Cárguela en Catálogo → Preestablecer Ítems, o revise el precio a mano antes de enviar.`,
+            {
+                titulo: 'Esta familia no tiene receta',
+                danger: true,
+                confirmText: 'Agregar igual',
+                cancelText: 'Cancelar'
+            }
+        );
     }
 
     /** Menú "Guardar como": PDF (plantilla corporativa) o Word (editable). */
@@ -1709,7 +1737,7 @@ class QuotationManager {
         container.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 
-    addItemToCart() {
+    async addItemToCart() {
         // Con una medida en rojo no tiene sentido calcular: el precio saldría mal.
         if (this.hayMedidasInvalidas()) {
             notify.warning('Corrija los campos marcados en rojo antes de continuar.',
@@ -1736,6 +1764,14 @@ class QuotationManager {
             document.getElementById('p-glass').focus();
             return;
         }
+
+        // Una familia SIN receta no da error: el motor cae en el camino viejo y
+        // cobra los perfiles marcados "requeridos" de la marca, que no son los
+        // que lleva ese producto. Sale barato y nada lo avisa. Probando la
+        // cotización real 167-26, las mamparas (las dos familias sin receta)
+        // salieron a $283 donde correspondían $2.279: 83% menos.
+        // Por eso acá se corta y se pide confirmación expresa.
+        if (!(await this.confirmarSinReceta(data))) return;
 
         if (!Number.isInteger(data.qty) || data.qty < 1) {
             notify.warning('La cantidad de elementos debe ser un número entero mayor o igual a 1.');
@@ -1789,6 +1825,9 @@ class QuotationManager {
             dimensions: `${data.width}x${data.height}m`,
             moduleId: data.moduleId,
             moduleName: data.moduleName,
+            // Queda anotado que se cotizó sin receta: en el carrito se marca en
+            // rojo, para que no se pierda de vista al revisar antes de enviar.
+            sinReceta: !data.moduleName,
             vidrioBesado: data.vidrioBesado,
             description: (data.moduleName
                 ? `${data.moduleName} - ${window.SEED_DATA.brands[data.brand].name} (${data.color}) - Vidrio ${data.glassType || 'N/A'}`
@@ -1893,7 +1932,11 @@ class QuotationManager {
                             onchange="window.quotationManager.updateItemQuantity(${index}, this.value)"
                             title="Editar cantidad: recalcula el total del ítem">
                     </td>
-                    <td>${window.escapeHtml(item.description)}</td>
+                    <td>${window.escapeHtml(item.description)}${item.sinReceta ? `
+                        <br><span style="font-size:0.75rem; color: var(--danger); font-weight:600;"
+                            title="Esta familia no tiene receta cargada: el precio se calculó con los perfiles requeridos del proveedor y puede estar muy por debajo del real.">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Sin receta &mdash; revise el precio
+                        </span>` : ''}</td>
                     <td>${window.escapeHtml(item.dimensions)}${this.moduleLeavesLabel(item)}</td>
                     <td>$${item.total.toFixed(2)}</td>
                     <td>
