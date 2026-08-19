@@ -641,6 +641,13 @@ class QuotationManager {
             btnPreview.addEventListener('click', () => this.previewWindow());
         }
 
+        // Agrega directo, sin pasar por "Ver Desglose": addItemToCart() valida y
+        // calcula por su cuenta, no depende de que el desglose se haya mostrado antes.
+        const btnAddDirect = document.getElementById('btn-add-item-direct');
+        if (btnAddDirect) {
+            btnAddDirect.addEventListener('click', () => this.addItemToCart());
+        }
+
         // Sub-tabs del Paso 3: Productos / Mano de Obra y Extras (solo cambia qué se
         // ve; el cálculo y el guardado usan los mismos campos sin importar la pestaña activa)
         document.querySelectorAll('.product-form-tab').forEach(tab => {
@@ -1795,66 +1802,6 @@ class QuotationManager {
 
         this.renderCart();
         this.resetItemForm();
-    }
-
-    /**
-     * Agrega directo al carrito un ítem preestablecido desde "Precio Rápido",
-     * sin pasar por el asistente ni mostrar el desglose. Llena el formulario de
-     * Productos por dentro (igual que editItem al restaurar un ítem del carrito)
-     * y reutiliza addItemToCart(), así que respeta los casos especiales sin
-     * reescribirlos acá: Ventana Fija 1100, hojas = módulos por defecto,
-     * accesorios y mano de obra con fórmula, avisos de perfiles faltantes.
-     *
-     * Devuelve true si quedó agregado; false si addItemToCart() lo frenó (el
-     * motivo ya se avisó con notify adentro, así que acá no hay que repetirlo).
-     */
-    quickAddToCart({ itemId, brandKey, color, width, height, qty, glassType, mullon }) {
-        const item = window.CATALOG_ITEMS_BY_ID[itemId];
-        const mod = window.SEED_DATA.modules[itemId];
-        if (!item || !mod) return false;
-
-        // El ítem ya trae la cantidad de módulos en el nombre (ej. "3 MODULOS"):
-        // se usa para elegir bien la variante, igual que findModuleForSystem.
-        const match = /(\d+)\s*MODULO/i.exec(item.name || '');
-        const modulesCount = match ? parseInt(match[1], 10) : null;
-
-        // Un campo marcado en rojo de una sesión anterior (medida vieja sin corregir)
-        // no debería frenar un ítem que en este modal sí es válido.
-        ['p-width', 'p-height', 'p-modules', 'p-leaves', 'p-qty', 'p-sash-width', 'p-sash-height']
-            .forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('campo-invalido'); });
-
-        this.applyingModule = true;
-        document.getElementById('p-brand').value = brandKey;
-        this.updateSystemDropdown();
-        document.getElementById('p-system').value = item.family;
-        document.getElementById('p-color').value = color;
-        document.getElementById('p-width').value = width;
-        document.getElementById('p-height').value = height;
-        document.getElementById('p-qty').value = qty;
-        this.asegurarOpcion(document.getElementById('p-modules'), modulesCount === null ? '' : modulesCount);
-        this.asegurarOpcion(document.getElementById('p-leaves'), modulesCount === null ? '' : modulesCount);
-        this.leavesManuallyEdited = false;
-
-        this.toggleMullonField(item.family);
-        const mullonCb = document.getElementById('p-mullon');
-        if (mullonCb) mullonCb.checked = !!mullon;
-        const besadoCb = document.getElementById('p-vidrio-besado');
-        if (besadoCb) besadoCb.checked = false;
-
-        this.activeModule = mod;
-        this.toggleSashFields(mod);
-        this.applyModuleAccessoriesAndLabor(mod);
-        this.renderModuleInfo();
-
-        document.getElementById('p-glass').value = glassType;
-        this.updateGlassPrice();
-        document.getElementById('p-glass-area').value = '';
-
-        this.applyingModule = false;
-
-        const before = this.cart.length;
-        this.addItemToCart();
-        return this.cart.length > before;
     }
 
     /**
