@@ -5,7 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CASALUM - Sistema de Cotizaciones</title>
     <link rel="icon" type="image/png" href="assets/favicon.png">
-    <link rel="apple-touch-icon" href="assets/favicon.png">
+
+    <!-- App instalable (PWA): se agrega desde el navegador, sin tienda de apps.
+         Android/Chrome ofrece "Instalar aplicación"; en iPhone es Compartir →
+         "Agregar a inicio". Ver manifest.json y sw.js. -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1B3A6B">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- iOS no lee el manifest: necesita sus propias etiquetas. -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!-- "default" y no "black-translucent": con translucent el contenido se
+         mete abajo de la barra de estado y el encabezado queda tapado por el
+         notch. Así la barra es propia y la app arranca debajo. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Casalum">
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -1361,5 +1376,19 @@
     <script src="js/modules.js?v=21"></script>
     <script src="js/settings.js?v=3"></script>
     <script src="js/app.js?v=23"></script>
+
+    <!-- Registro del service worker: es lo que hace que Android ofrezca
+         instalarla y que abra sin señal. Va al final y sin bloquear nada: si
+         falla, la app sigue funcionando como página web de siempre.
+         Solo corre sobre https (o localhost); en file:// no está disponible. -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => {
+                    console.warn('No se pudo registrar el service worker:', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
