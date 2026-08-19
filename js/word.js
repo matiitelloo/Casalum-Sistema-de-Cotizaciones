@@ -10,27 +10,33 @@
  *   · Word -> el mismo HTML con marcas de Office, descargado como .doc
  *   · PDF  -> el mismo HTML impreso desde un iframe aislado (Guardar como PDF)
  *
- * El formato copia la cotización real de Casalum (ver 167-26 A.1): mismas
- * columnas (VIDRIO, BASE y ALTURA separadas), mismo encabezado de carta y
- * mismo bloque de condiciones y firmas.
+ * El diseño reproduce el formulario que armó el usuario
+ * (assets/membrete-formulario.png): ficha del cliente, tabla de detalle,
+ * cuadro de totales, condiciones comerciales, formas de pago y firmas.
  *
- * MEMBRETE: va como imagen de fondo a hoja completa, repetida en todas las
- * páginas. El contenido no se dibuja encima porque la tabla exterior reserva
- * con thead/tfoot el alto del encabezado y del pie en CADA hoja — un
- * padding-top no serviría, se aplica una sola vez y las hojas siguientes
- * arrancarían pisando el logo.
+ * MARCO: `assets/membrete.png` es ese mismo diseño pero SIN el formulario —
+ * solo el logo, la franja azul, la barra lateral y el pie. Se le borró el
+ * cuerpo a propósito: si se dejara el formulario dibujado en la imagen, habría
+ * que escribir los datos en coordenadas fijas y volveríamos al problema viejo
+ * (descripciones cortadas y una cantidad tope de filas por hoja). Acá la
+ * imagen es solo el papel y el formulario se dibuja en HTML, así la tabla
+ * crece y pagina sola.
  *
- * Los márgenes salen de medir la cotización real: texto desde el 6,3% del
- * ancho, arriba al 12,8% y abajo hasta el 92,4% del alto.
+ * El marco va como imagen fija a hoja completa, repetida en todas las páginas.
+ * El contenido no lo pisa porque la tabla exterior reserva con thead/tfoot el
+ * alto del encabezado y del pie en CADA hoja — un padding-top se aplica una
+ * sola vez y las hojas siguientes arrancarían encima del logo.
  *
  * Todo el maquetado va con TABLAS y estilos en línea a propósito: Word no
  * entiende flexbox ni grid, y las hojas de estilo aparte las aplica a medias.
  */
 class QuotationDocument {
 
-    // Zona libre de la hoja, medida sobre la cotización real (mm sobre A4).
+    // Zona libre de la hoja, medida sobre assets/membrete.png (mm sobre A4):
+    // el logo y la franja azul llegan hasta 38,6 mm; la barra lateral ocupa los
+    // primeros 16,6 mm de ancho; el pie arranca a los 275,7 mm.
     static get MARGENES() {
-        return { arriba: 38, abajo: 25, izquierda: 13, derecha: 8 };
+        return { arriba: 39, abajo: 23, izquierda: 19, derecha: 10 };
     }
 
     // ── Datos ────────────────────────────────────────────────────
@@ -113,6 +119,8 @@ class QuotationDocument {
     safe(v) { return this.clean(v).replace(/[^a-z0-9áéíóúüñ]+/gi, '_') || 'Cliente'; }
     num(v) { return (Number(v) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     money(v) { return `$${this.num(v)}`; }
+    /** Porcentaje sin decimales de relleno: 15 -> "15", 12.5 -> "12.5". */
+    pct(v) { return String(Math.round((Number(v) || 0) * 100) / 100); }
     esc(v) { return window.escapeHtml ? window.escapeHtml(v == null ? '' : v) : String(v == null ? '' : v); }
 
     /**
@@ -169,123 +177,178 @@ class QuotationDocument {
         const { meta, cart, totals, ajustes } = data;
         const M = QuotationDocument.MARGENES;
 
-        const totalSinDescuento = Number(totals.subtotalFinal) ||
+        const AZUL = '#003E89';
+        const AZUL_OSC = '#003676';
+        const GRIS_BG = '#ECEFF2';
+        const BORDE = '#C9D2DE';
+        const GRIS_TX = '#6B7280';
+
+        const subtotal = Number(totals.subtotalFinal) ||
             cart.reduce((s, i) => s + (Number(i.total) || 0), 0);
         const pctDescuento = Number(totals.discountPct) || 0;
-        const totalFinal = Number(totals.total) || totalSinDescuento;
-        const unidades = cart.reduce((s, i) => s + (Number(i.quantity) || 0), 0);
+        const valorDescuento = Number(totals.discountValor) || 0;
+        const total = Number(totals.total) || subtotal;
         const formaPago = Array.isArray(ajustes.formaPago) ? ajustes.formaPago : [];
 
         const filas = cart.map((item, i) => {
             const md = this.medidas(item);
-            return `<tr>
-                <td style="${this.cel} text-align:center;">${i + 1}</td>
-                <td style="${this.cel} text-align:center;">${this.esc(item.quantity || 1)}</td>
-                <td style="${this.cel} font-weight:bold;">${this.esc(item.description || 'PRODUCTO DE ALUMINIO')}</td>
-                <td style="${this.cel} text-align:center;">${this.esc(this.vidrioCorto(item.glassType))}</td>
-                <td style="${this.cel} text-align:center;">${md.base}</td>
-                <td style="${this.cel} text-align:center;">${md.alto}</td>
-                <td style="${this.cel} text-align:center;">${this.num(item.unitPrice)}</td>
-                <td style="${this.cel} text-align:center;">${this.num(item.total)}</td>
+            const medida = (md.base && md.alto) ? `${md.base} x ${md.alto}` : '';
+            const fondo = i % 2 ? ' background:#F7F9FC;' : '';
+            return `<tr style="${fondo}">
+                <td style="${this.cel} text-align:center; color:${GRIS_TX};">${i + 1}</td>
+                <td style="${this.cel} text-align:center; font-weight:bold;">${this.esc(item.quantity || 1)}</td>
+                <td style="${this.cel}">${this.esc(item.description || 'PRODUCTO DE ALUMINIO')}</td>
+                <td style="${this.cel} text-align:center; white-space:nowrap;">${medida}</td>
+                <td style="${this.cel} text-align:right; white-space:nowrap;">${this.num(item.unitPrice)}</td>
+                <td style="${this.cel} text-align:right; white-space:nowrap; font-weight:bold;">${this.num(item.total)}</td>
             </tr>`;
         }).join('');
 
-        // Última fila del cuadro: cantidad total de unidades y el importe, igual
-        // que en las cotizaciones en papel.
-        const filaCierre = `<tr>
-            <td style="${this.cel}">&nbsp;</td>
-            <td style="${this.cel} text-align:center; font-weight:bold;">${unidades}</td>
-            <td style="${this.cel}">&nbsp;</td>
-            <td style="${this.cel}">&nbsp;</td>
-            <td style="${this.cel}">&nbsp;</td>
-            <td style="${this.cel}">&nbsp;</td>
-            <td style="${this.cel}">&nbsp;</td>
-            <td style="${this.cel} text-align:center; font-weight:bold; background:#FFFF00;">${this.num(totalSinDescuento)}</td>
+        // Rótulo azul + valor, como en el diseño del formulario.
+        const campo = (rot, val) =>
+            `<span style="color:${AZUL}; font-weight:bold;">${rot}</span> ${this.esc(val || '')}`;
+
+        const filaTotal = (rot, val, destacado) => `<tr${destacado ? ` style="background:${AZUL}; color:#FFF;"` : ''}>
+            <td style="padding:4pt 8pt; font-size:${destacado ? '11' : '9'}pt; font-weight:bold; text-align:right; ${destacado ? '' : `background:${GRIS_BG}; color:${AZUL};`} border:1px solid ${BORDE};">${rot}</td>
+            <td style="padding:4pt 8pt; font-size:${destacado ? '11' : '9'}pt; font-weight:bold; text-align:right; white-space:nowrap; border:1px solid ${BORDE};">${val}</td>
         </tr>`;
 
+        const cajaPago = (titulo, detalle) => `<td style="width:33.33%; padding:0 3pt;">
+            <div style="background:${GRIS_BG}; padding:6pt 4pt; text-align:center;">
+                <div style="color:${AZUL}; font-weight:bold; font-size:9pt;">${this.esc(titulo)}</div>
+                <div style="color:${GRIS_TX}; font-size:8pt;">${this.esc(detalle)}</div>
+            </div>
+        </td>`;
+
+        // "50% A LA FIRMA DEL CONTRATO" -> titulo "50%" + detalle. Si el ajuste
+        // no trae porcentaje adelante, va todo como titulo.
+        const partirPago = (txt) => {
+            const m = this.clean(txt).match(/^(\d+%)\s+(.*)$/);
+            return m ? { t: m[1], d: m[2] } : { t: this.clean(txt), d: '' };
+        };
+
         const cuerpo = `
-<!-- Encabezado de carta: solo en la primera hoja -->
-<table style="width:100%; border-collapse:collapse; margin-bottom:6pt;">
+<table style="width:100%; border-collapse:collapse; margin-bottom:7pt;">
     <tr>
-        <td style="${this.dato} width:62%;">FECHA:&nbsp; CUENCA ${this.esc(meta.date)}</td>
-        <td style="${this.dato} color:#1B6EC2; font-weight:bold;">COTIZACION ${this.esc(meta.codigo)}</td>
-    </tr>
-    <tr>
-        <td style="${this.dato}">CLIENTE: ${this.esc(meta.client)}</td>
-        <td style="${this.dato} color:#1B6EC2;">TELF : ${this.esc(meta.phone)}</td>
-    </tr>
-    <tr>
-        <td style="${this.dato}" colspan="2">DIRECCION: ${this.esc(meta.address)}</td>
+        <td style="text-align:right; font-size:11pt;">
+            <span style="color:${AZUL}; font-weight:bold;">COTIZACION:</span>
+            <span style="font-weight:bold;">${this.esc(meta.codigo)}</span>
+        </td>
     </tr>
 </table>
 
-<div style="font-size:8pt; font-weight:bold; margin-bottom:3pt;">De nuestras consideraciones:</div>
-<div style="font-size:8pt; font-weight:bold; margin-bottom:5pt;">Detallamos a continuación nuestra cotización para el suministro de aluminio según su solicitud:</div>
-<div style="font-size:9pt; font-weight:bold;">ALUMINIO : ${this.esc(meta.aluminum)}</div>
-<div style="font-size:9pt; font-weight:bold; margin-bottom:6pt;">VIDRIO: ${this.esc(meta.glass)}</div>
+<!-- Ficha del cliente -->
+<table style="width:100%; border-collapse:collapse; border:1px solid ${BORDE}; margin-bottom:9pt;">
+    <tr>
+        <td style="width:4pt; background:${AZUL}; padding:0;"></td>
+        <td style="padding:7pt 10pt;">
+            <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                    <td style="${this.ficha} width:52%;">${campo('FECHA:', 'CUENCA ' + meta.date)}</td>
+                    <td style="${this.ficha}">${campo('CLIENTE:', meta.client)}</td>
+                </tr>
+                <tr>
+                    <td style="${this.ficha}">${campo('DIRECCIÓN:', meta.address)}</td>
+                    <td style="${this.ficha}">${campo('TELÉFONO:', meta.phone)}</td>
+                </tr>
+            </table>
+            <div style="border-top:1px solid ${BORDE}; margin:6pt 0;"></div>
+            <div style="font-size:9pt; font-weight:bold; color:${AZUL};">De nuestras consideraciones:</div>
+            <div style="font-size:9pt; margin-bottom:6pt;">Detallamos a continuación nuestra cotización para el suministro de aluminio según su solicitud:</div>
+            <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                    <td style="${this.ficha} width:52%;">${campo('ALUMINIO:', meta.aluminum)}</td>
+                    <td style="${this.ficha}">${campo('VIDRIO:', meta.glass)}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
 
-<table style="width:100%; border-collapse:collapse;">
+<!-- Detalle -->
+<table style="width:100%; border-collapse:collapse; margin-bottom:9pt;">
     <thead>
-        <tr>
-            <th style="${this.enc} width:4%;">&nbsp;</th>
-            <th style="${this.enc} width:6%;">CANT</th>
-            <th style="${this.enc}">DESCRIPCION</th>
-            <th style="${this.enc} width:8%;">VIDRIO</th>
-            <th style="${this.enc} width:7%;">BASE</th>
-            <th style="${this.enc} width:8%;">ALTURA</th>
-            <th style="${this.enc} width:9%;">VALOR<br>UNIT</th>
-            <th style="${this.enc} width:9%;">TOTAL</th>
+        <tr style="background:${AZUL}; color:#FFFFFF;">
+            <th style="${this.enc} width:5%;">#</th>
+            <th style="${this.enc} width:7%;">CANT</th>
+            <th style="${this.enc} text-align:left;">DESCRIPCIÓN</th>
+            <th style="${this.enc} width:15%;">MEDIDAS</th>
+            <th style="${this.enc} width:13%; text-align:right;">V. UNIT</th>
+            <th style="${this.enc} width:14%; text-align:right;">SUBTOTAL</th>
         </tr>
     </thead>
-    <tbody>${filas}${filaCierre}</tbody>
+    <tbody>${filas}</tbody>
 </table>
 
-<table style="width:100%; border-collapse:collapse; margin-top:6pt;">
+<!-- Totales -->
+<table style="width:100%; border-collapse:collapse; margin-bottom:12pt; page-break-inside:avoid;">
     <tr>
-        <td style="font-size:11pt; font-weight:bold; padding:2pt 0; width:30%;">TOTAL</td>
-        <td style="font-size:11pt; font-weight:bold; padding:2pt 0;">${this.num(totalSinDescuento)}</td>
+        <td style="width:58%;"></td>
+        <td>
+            <table style="width:100%; border-collapse:collapse;">
+                ${filaTotal('SUBTOTAL:', this.money(subtotal), false)}
+                ${filaTotal('IVA 0%:', this.money(0), false)}
+                ${pctDescuento > 0 ? filaTotal(`DESCUENTO ${this.pct(pctDescuento)}%:`, '-' + this.money(valorDescuento), false) : ''}
+                ${filaTotal('TOTAL:', this.money(total), true)}
+            </table>
+        </td>
     </tr>
-    ${pctDescuento > 0 ? `<tr>
-        <td style="font-size:10.5pt; font-weight:bold; padding:2pt 0; text-align:right;">DESCUENTO ${this.num(pctDescuento).replace(/\.00$/, '')}% =&nbsp;&nbsp;</td>
-        <td style="font-size:10.5pt; font-weight:bold; padding:2pt 0;">${this.num(totalFinal)}</td>
-    </tr>` : ''}
 </table>
 
-<div style="margin-top:6pt; font-size:8pt; line-height:1.55;">
-    <div>ESTRUCTURAS EN ALUMINIO Y VIDRIO ESTAN SUJETAS A LIQUIDACION</div>
-    ${formaPago.length ? `<div>FORMA DE PAGO: ${this.esc(formaPago[0])}</div>` +
-        formaPago.slice(1).map(f => `<div style="padding-left:78pt;">${this.esc(f)}</div>`).join('') : ''}
-    <div style="font-weight:bold;">VALIDEZ DE LA OFERTA : ${this.esc(ajustes.validezOferta || '7 DIAS LABORABLES')}</div>
-    <div style="font-weight:bold;">PLAZO DE ENTREGA : ${this.esc(ajustes.plazoEntrega || 'A CONVENIR')}</div>
-    <div style="font-weight:bold;">GARANTIA Y MANTENIMIENTO DE ${this.esc(ajustes.garantia || 'UN AÑO POR DEFECTOS DE FABRICACION')}</div>
-    <div style="font-weight:bold;">NOSOTROS FACTURAMOS CON TARIFA 0 &nbsp; ${this.esc(ajustes.companyCalif || '')}</div>
-    <div style="margin-top:2pt;">ATENTAMENTE</div>
+<!-- Condiciones -->
+<div style="page-break-inside:avoid;">
+    <div style="color:${AZUL}; font-weight:bold; font-size:9.5pt; letter-spacing:0.6pt;">CONDICIONES COMERCIALES Y DE FABRICACIÓN</div>
+    <div style="border-top:1px solid ${BORDE}; margin:4pt 0 6pt;"></div>
+    <table style="width:100%; border-collapse:collapse; font-size:8.5pt;">
+        ${[
+            'Las estructuras en aluminio y vidrio están sujetas a liquidación.',
+            `<b>Validez de la Oferta:</b> ${this.esc(ajustes.validezOferta || '7 días laborables a partir de la presente fecha de emisión.')}`,
+            `<b>Plazo de Entrega:</b> ${this.esc(ajustes.plazoEntrega || 'A convenir.')}`,
+            `<b>Garantía:</b> ${this.esc(ajustes.garantia || '1 año de garantía y mantenimiento técnico por defectos de fabricación o ensamble.')}`,
+            `<b>Facturación:</b> Nosotros facturamos con tarifa 0% IVA por ${this.esc(ajustes.companyCalif || '')}.`
+        ].map(t => `<tr>
+            <td style="width:14pt; vertical-align:top; padding:1.5pt 0; color:${AZUL};">&bull;</td>
+            <td style="padding:1.5pt 0;">${t}</td>
+        </tr>`).join('')}
+    </table>
 </div>
 
-<table style="width:100%; border-collapse:collapse; margin-top:14pt; page-break-inside:avoid;">
+${formaPago.length ? `<div style="margin-top:10pt; page-break-inside:avoid;">
+    <div style="color:${AZUL}; font-weight:bold; font-size:9pt; margin-bottom:5pt;">FORMA DE PAGO:</div>
+    <table style="width:100%; border-collapse:collapse;">
+        <tr>${formaPago.slice(0, 3).map(p => { const s = partirPago(p); return cajaPago(s.t, s.d); }).join('')}</tr>
+    </table>
+</div>` : ''}
+
+<!-- Firmas -->
+<table style="width:100%; border-collapse:collapse; margin-top:16pt; page-break-inside:avoid;">
     <tr>
-        <!-- La firma se apoya sobre la línea, como en la cotización original.
-             El alto fijo reserva su espacio aunque la imagen no cargue. -->
-        <td style="width:48%; height:44pt; vertical-align:bottom; padding:0;">
-            ${firmaDataUri ? `<img src="${firmaDataUri}" alt="" style="height:42pt; margin-bottom:-6pt;">` : '&nbsp;'}
+        <td style="width:50%; font-size:8.5pt; font-style:italic; color:${GRIS_TX}; padding-left:26pt;">Atentamente,</td>
+        <td style="font-size:8.5pt; font-style:italic; color:${GRIS_TX}; padding-left:26pt;">Aceptado conforme,</td>
+    </tr>
+    <tr>
+        <!-- La firma se apoya sobre la línea; el alto fijo reserva su lugar
+             aunque la imagen no llegue a cargar. -->
+        <td style="height:46pt; vertical-align:bottom; padding:0 0 0 14pt;">
+            ${firmaDataUri ? `<img src="${firmaDataUri}" alt="" style="height:44pt; margin-bottom:-8pt;">` : '&nbsp;'}
         </td>
         <td style="padding:0;">&nbsp;</td>
     </tr>
     <tr>
-        <td style="font-size:8.5pt; vertical-align:top;">
-            <div style="border-top:1px solid #000; width:170pt;"></div>
+        <td style="font-size:8.5pt; text-align:center; padding-right:24pt;">
+            <div style="border-top:1px solid ${AZUL_OSC}; margin-bottom:3pt;"></div>
             <div style="font-weight:bold;">${this.esc(ajustes.companyRep || '')}</div>
-            <div style="padding-left:22pt;">${this.esc(ajustes.companyRepTitle || '')}</div>
+            <div style="color:${GRIS_TX};">${this.esc(ajustes.companyRepTitle || '')}</div>
         </td>
-        <td style="font-size:8.5pt; vertical-align:top;">
-            <div style="border-top:1px solid #000; width:200pt;"></div>
-            <div>${this.esc(meta.client)}</div>
-            <div style="padding-left:40pt;">CLIENTE</div>
+        <td style="font-size:8.5pt; text-align:center; padding-left:24pt;">
+            <div style="border-top:1px solid ${AZUL_OSC}; margin-bottom:3pt;"></div>
+            <div style="font-weight:bold;">${this.esc(meta.client)}</div>
+            <div style="color:${GRIS_TX};">CLIENTE / FIRMA DE ACEPTACIÓN</div>
         </td>
     </tr>
 </table>`;
 
-        // El membrete va como imagen fija a hoja completa: en la impresión los
+        // El marco va como imagen fija a hoja completa: al imprimir, los
         // elementos "fixed" se repiten en todas las páginas. Se usa <img> y no
         // un background de CSS porque los fondos solo se imprimen si el usuario
         // activa "Gráficos de fondo", que viene apagado.
@@ -293,7 +356,7 @@ class QuotationDocument {
             ? `<img src="${membreteDataUri}" alt="" style="position:fixed; top:0; left:0; width:210mm; height:297mm; z-index:0;">`
             : '';
 
-        // La tabla exterior reserva el alto del membrete arriba y abajo en CADA
+        // La tabla exterior reserva el alto del marco arriba y abajo en CADA
         // hoja: thead y tfoot se repiten solos al cortar la página.
         return `${fondo}
 <table style="width:100%; border-collapse:collapse; position:relative; z-index:1;">
@@ -304,9 +367,9 @@ class QuotationDocument {
     }
 
     /** Estilos repetidos, para no reescribirlos en cada celda. */
-    get cel() { return 'border:1px solid #000; padding:2.5pt 3pt; font-size:7.5pt; vertical-align:middle;'; }
-    get enc() { return 'border:1px solid #000; padding:3pt; font-size:7.5pt; text-align:center; font-weight:bold; vertical-align:middle;'; }
-    get dato() { return 'padding:1pt 0; font-size:9pt; font-weight:bold; vertical-align:top;'; }
+    get cel()   { return 'border:1px solid #C9D2DE; padding:3.5pt 5pt; font-size:8pt; vertical-align:top;'; }
+    get enc()   { return 'border:1px solid #003E89; padding:4.5pt; font-size:8pt; text-align:center; font-weight:bold;'; }
+    get ficha() { return 'padding:2pt 0; font-size:9pt; vertical-align:top;'; }
 
     /** Envuelve la maqueta en un documento completo. */
     envolver(cuerpo, titulo, paraWord) {
