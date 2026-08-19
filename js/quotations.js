@@ -1881,7 +1881,12 @@ class QuotationManager {
             subtotal += item.total;
             tbody.innerHTML += `
                 <tr>
-                    <td>${item.quantity}</td>
+                    <td>
+                        <input type="number" class="form-control" min="1" step="1" value="${item.quantity}"
+                            style="width:64px; padding:2px 6px;"
+                            onchange="window.quotationManager.updateItemQuantity(${index}, this.value)"
+                            title="Editar cantidad: recalcula el total del ítem">
+                    </td>
                     <td>${window.escapeHtml(item.description)}</td>
                     <td>${window.escapeHtml(item.dimensions)}${this.moduleLeavesLabel(item)}</td>
                     <td>$${item.total.toFixed(2)}</td>
@@ -1905,6 +1910,40 @@ class QuotationManager {
 
     removeItem(index) {
         this.cart.splice(index, 1);
+        this.renderCart();
+    }
+
+    /**
+     * Cambia la cantidad de un ítem ya en el carrito y recalcula su total sin
+     * tener que volver a abrir el formulario. unitPrice es fijo (precio de UNA
+     * unidad, ya con margen); el resto de los importes del ítem (costo crudo,
+     * gastos generales, utilidad) se guardan multiplicados por la cantidad
+     * vieja, así que se re-derivan a partir del importe por unidad.
+     */
+    updateItemQuantity(index, rawValue) {
+        const item = this.cart[index];
+        if (!item) return;
+
+        const q = parseInt(rawValue, 10);
+        if (!Number.isInteger(q) || q < 1) {
+            notify.warning('La cantidad debe ser un número entero mayor o igual a 1.');
+            this.renderCart();   // repinta con el valor anterior, sin dejar el campo inválido
+            return;
+        }
+        if (q === item.quantity) return;
+
+        const oldQty = item.quantity;
+        const rawPerUnit = item.rawTotal / oldQty;
+        const gastosPerUnit = item.gastosValor / oldQty;
+        const utilidadPerUnit = item.utilidadValor / oldQty;
+
+        item.quantity = q;
+        item.total = item.unitPrice * q;
+        item.rawTotal = rawPerUnit * q;
+        item.gastosValor = gastosPerUnit * q;
+        item.utilidadValor = utilidadPerUnit * q;
+        if (item.rawData) item.rawData.qty = q;
+
         this.renderCart();
     }
 
