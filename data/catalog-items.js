@@ -47,10 +47,30 @@
     add(V, 'VENTANA FIJA 1100', 'VENTANA FIJA 1 MODULO');
     add(V, 'VENTANA FIJA 1100', 'VENTANA FIJA 2 MODULOS');
 
+    /**
+     * VENTANA FIJA EN TUBO. Los cuatro ítems SIN medida en el nombre son los de
+     * tubo 4x4: su receta resuelve el rol `ventana-tubo-marco`, que en las tres
+     * marcas apunta al tubo de 4x4 (Cedal CED-TUB4245, Fisa FIS-TUB2333, Femec
+     * FEM-TUB4717). No se les agregó "4X4" al nombre porque el id del ítem sale
+     * del nombre y renombrarlos dejaría huérfanas las recetas ya cargadas:
+     * migrateModuleIds solo reasigna familias renombradas, no ítems.
+     *
+     * Los 5X4 y 7X4 se agregaron el 19/08/2026: en las cotizaciones reales
+     * aparece "VENTANA FIJA EN TUBO 7 X 4" y se estaba cobrando el tubo de 4x4.
+     * En Cedal el 7x4 (CED-TUB7316, $7,55/m) sale 77% más caro que el 4x4
+     * ($4,27/m), así que la diferencia no era menor. Ver la familia hermana
+     * VENTANA EN TUBO, que ya venía separada por medida.
+     */
     add(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 1 MODULO');
     add(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 2 MODULOS');
     add(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 3 MODULOS');
     add(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 4 MODULOS');
+    // El de 1 va aparte: addRange pega siempre el mismo sufijo y saldría
+    // "1 MODULOS".
+    add(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 5X4 1 MODULO');
+    addRange(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 5X4', [2, 3, 4], 'MODULOS');
+    add(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 7X4 1 MODULO');
+    addRange(V, 'VENTANA FIJA EN TUBO', 'VENTANA FIJA 7X4', [2, 3, 4], 'MODULOS');
 
     add(V, 'VENTANA FIJA CON PERFIL PROYECTABLE', 'VENTANA FIJA CON PERFIL PROYECTABLE 1 MODULO');
     add(V, 'VENTANA FIJA CON PERFIL PROYECTABLE', 'VENTANA FIJA CON PERFIL PROYECTABLE 2 MODULOS');
