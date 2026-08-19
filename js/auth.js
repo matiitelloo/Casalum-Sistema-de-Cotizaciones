@@ -140,14 +140,6 @@ class AuthManager {
             });
         }
 
-        const changeProfileBtn = document.getElementById('btn-change-profile');
-        if (changeProfileBtn) {
-            changeProfileBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.logout();
-            });
-        }
-
         const btnProfile = document.getElementById('btn-profile-dropdown');
         if (btnProfile) {
             btnProfile.addEventListener('click', (e) => {
