@@ -2493,15 +2493,11 @@ window.SEED_DATA = {
     // Ventana fija en tubo: 2 anclas por módulo más 2 (VENTANAS FIJAS.xlsx,
     // hoja "V. FIJA TUBO"). Va aparte de "Anclas para tubo 7x4" ($0.25), que
     // es de otra medida.
-    { name: 'Ancla', pricePerUnit: 0.45, unit: 'und' },
-    // "Vidrio besado": paños de vidrio unidos entre sí con silicón estructural,
-    // sin perfil de aluminio divisor (el checkbox "Vidrio besado" del formulario
-    // de cotización agrega la frase al detalle; este accesorio cobra el silicón
-    // extra de esa unión, aparte del "Silicon" normal del perímetro). PRECIO
-    // PROVISIONAL sin verificar contra ningún Excel — no hay una hoja de cálculo
-    // de Casalum para esto todavía. Ajustar en Catálogo → Accesorios apenas se
-    // sepa el costo real del cartucho de silicón estructural usado.
-    { name: 'Silicón Vidrio Besado', pricePerUnit: 3.50, unit: 'ml' }
+    { name: 'Ancla', pricePerUnit: 0.45, unit: 'und' }
+    // "Vidrio besado" (paños de vidrio pegados entre sí, sin perfil divisor) NO
+    // lleva un silicón aparte: se usa el mismo "Silicon" de $2.20 de acá arriba,
+    // cargando más cantidad. Hubo un accesorio "Silicón Vidrio Besado" a $3.50
+    // con precio inventado; se quitó porque ese producto no existe.
   ],
   /**
    * Módulos preestablecidos por ítem del catálogo (ver js/modules.js). itemId -> receta.
