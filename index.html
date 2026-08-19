@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css?v=7">
+    <link rel="stylesheet" href="css/styles.css?v=8">
     <link rel="stylesheet" href="css/print.css">
     <style>
         /* Extra styles for tables and stepper */
@@ -1170,8 +1170,10 @@
                                     </select>
                                 </div>
 
-                                <!-- Base y Altura -->
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <!-- Base y Altura. minmax(0,...) para que las columnas puedan
+                                     achicarse en el celular: un "1fr" pelado no baja del ancho
+                                     de su contenido y se salía de la pantalla. -->
+                                <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem;">
                                     <div class="form-group">
                                         <label><i class="fa-solid fa-arrows-left-right" style="color: var(--primary-light); margin-right: 0.35rem;"></i>Base (metros)</label>
                                         <input type="number" id="gq-base" class="form-control" placeholder="Ej: 1.20" step="0.01" min="0">

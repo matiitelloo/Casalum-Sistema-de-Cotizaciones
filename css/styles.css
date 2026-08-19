@@ -301,16 +301,31 @@ body {
     background: rgba(255, 255, 255, 0.85);
 }
 
+/* El bloque del título tiene que poder achicarse: sin min-width:0 un flex item
+   no baja de su contenido, y en el celular el título largo estiraba el header
+   más allá de la pantalla (el navegador respondía alejando el zoom). */
+.header-title {
+    min-width: 0;
+    flex: 1;
+}
+
 .header-title h1 {
     font-size: 1.2rem;
     font-weight: 700;
     color: var(--primary);
+    /* Una sola línea, con puntos suspensivos: el saludo de Inicio es largo y
+       antes se partía en tres renglones que se salían del alto del header. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
 }
 
 .header-user {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 .user-avatar {
@@ -863,8 +878,32 @@ h4 {
         margin-left: 0;
     }
 
+    /* Una sola columna pase lo que pase: varios formularios traen la cantidad
+       de columnas en un style= inline, que gana por especificidad.
+       Va minmax(0, 1fr) y no 1fr: un "1fr" pelado no baja del ancho de su
+       contenido, y un <select> mide lo que su opción más larga ("VENTANA FIJA
+       CON PERFIL PROYECTABLE"), así que la columna se salía de la pantalla. */
     .grid-form {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+
+    /* Misma razón, para los campos dentro de grids y flex. */
+    .form-control {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* Los hijos con "grid-column: span 2" inline creaban una segunda columna
+       implícita aunque la plantilla tuviera una sola, y esa columna se
+       dimensiona por su contenido: era lo que se salía de la pantalla. */
+    .grid-form > * {
+        grid-column: 1 / -1 !important;
+    }
+
+    /* Grids sueltas del formulario, con las columnas puestas inline. */
+    #accessories-container,
+    #add-p-prices {
+        grid-template-columns: minmax(0, 1fr) !important;
     }
 
     .page-container {
@@ -881,6 +920,63 @@ h4 {
 
     .top-header {
         padding: 0 1rem;
+    }
+
+    /* Solo queda el avatar: el nombre completo empujaba el header fuera de la
+       pantalla. El nombre sigue estando en el menú del perfil. */
+    .user-name {
+        display: none;
+    }
+
+    .header-title {
+        gap: 0.5rem !important;
+    }
+
+    .header-title h1 {
+        font-size: 1rem;
+    }
+
+    /* Las tablas anchas (carrito, historial, catálogo, roles) se desplazan
+       dentro de su propio recuadro. Antes estiraban la página entera y el
+       navegador alejaba el zoom para que entrara, dejando todo diminuto. */
+    .table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    /* Selects con ancho mínimo fijo pensado para escritorio (Preestablecer
+       ítems, Base de Datos): en el celular tienen que poder achicarse. */
+    #module-item-select,
+    #module-group-select,
+    #catalog-brand-select,
+    #catalog-category-select,
+    #module-profile-filter,
+    #roles-filter {
+        min-width: 0 !important;
+        max-width: none !important;
+        width: 100%;
+    }
+
+    /* El paso a paso ocupaba media pantalla de alto en vertical. */
+    .step {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.8rem;
+    }
+
+    /* Que ningún contenido fuerce el ancho de la página. */
+    .page-container,
+    .card,
+    .card-body {
+        max-width: 100%;
+        overflow-wrap: break-word;
     }
 }
 
