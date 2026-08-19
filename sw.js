@@ -18,7 +18,7 @@
  * 3. Al cambiar CACHE_VERSION se borran las cachés viejas en el activate.
  */
 
-const CACHE_VERSION = 'casalum-v1';
+const CACHE_VERSION = 'casalum-v2';
 
 // CDN de estilos: son archivos con versión fija en la URL, no cambian nunca.
 // Se guardan aparte porque a estos sí conviene servirlos de caché primero.
@@ -53,7 +53,11 @@ const ARMAZON = [
     './assets/logo.png',
     './assets/favicon.png',
     './assets/icon-192.png',
-    './assets/icon-512.png'
+    './assets/icon-512.png',
+    // Membrete y firma del documento de cotización: sin estos, una cotización
+    // generada sin señal saldría sin el papel membretado.
+    './assets/membrete.png',
+    './assets/firma.png'
 ];
 
 self.addEventListener('install', event => {

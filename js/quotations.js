@@ -1453,12 +1453,18 @@ class QuotationManager {
         }
 
         const btn = document.getElementById('btn-print');
-        window.setButtonLoading(btn, true, 'Generando...');
-        const aviso = notify.loading(`Generando el documento ${nombre}...`);
+        window.setButtonLoading(btn, true, esWord ? 'Generando...' : 'Preparando...');
+        // El PDF no se descarga solo: se abre la impresión y el usuario elige
+        // "Guardar como PDF" (así el PDF sale igual al Word, del mismo documento).
+        const aviso = notify.loading(esWord
+            ? 'Generando el documento Word...'
+            : 'Preparando el documento para imprimir...');
 
         try {
             await generador.generate(this);
-            aviso.done(`Documento ${nombre} generado`);
+            aviso.done(esWord
+                ? 'Documento Word generado'
+                : 'En el diálogo de impresión, elija "Guardar como PDF" en Destino.');
         } catch (e) {
             console.error(`Error generando ${nombre}`, e);
             aviso.fail(`No se pudo generar el ${nombre}: ${e.message || 'error desconocido'}`);

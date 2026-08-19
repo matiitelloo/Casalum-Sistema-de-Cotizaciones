@@ -1353,9 +1353,10 @@
             else if (e.key === 'ArrowLeft') showPrevImage();
         });
     </script>
-    <!-- PDF-Lib: conserva la plantilla corporativa y escribe datos vectoriales sobre ella -->
-    <script src="assets/pdf-lib.min.js"></script>
-    <script src="assets/plantilla.js?v=1"></script>
+    <!-- pdf-lib y la plantilla escaneada ya no se usan: el PDF sale del mismo
+         documento que el Word (ver js/word.js), imprimiéndolo. Eran 780 KB que
+         se bajaban en cada carga. Los archivos quedan en assets/ por si hay que
+         volver atrás. -->
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
@@ -1368,10 +1369,10 @@
     <script src="js/db.js?v=3"></script>
     <script src="js/calculator.js?v=13"></script>
     <script src="js/ventanaFija1100.js?v=9"></script>
-    <script src="js/quotations.js?v=49"></script>
+    <script src="js/quotations.js?v=50"></script>
     <script src="js/clients.js?v=9"></script>
-    <script src="js/pdf.js?v=3"></script>
-    <script src="js/word.js?v=1"></script>
+    <script src="js/pdf.js?v=4"></script>
+    <script src="js/word.js?v=4"></script>
     <script src="js/catalog.js?v=15"></script>
     <script src="js/modules.js?v=21"></script>
     <script src="js/settings.js?v=3"></script>
