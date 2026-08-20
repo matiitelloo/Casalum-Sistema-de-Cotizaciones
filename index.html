@@ -148,6 +148,38 @@
             z-index: 10000;
         }
         .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+        /* Pasar y retroceder con el dedo o el mouse, para quien no usa las
+           flechas del teclado. Van fijas a los costados: la foto cambia de
+           tamano segun la pantalla, asi que atarlas a ella las movia de lugar
+           en cada imagen. */
+        .lightbox-nav {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.15);
+            color: white;
+            font-size: 1.35rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease;
+            z-index: 10000;
+        }
+        .lightbox-nav:hover { background: rgba(255,255,255,0.3); }
+        .lightbox-nav.prev { left: 1rem; }
+        .lightbox-nav.next { right: 1rem; }
+        /* En el celular la foto ocupa casi todo el ancho: los botones se achican
+           y se pegan al borde para taparla lo menos posible. */
+        @media (max-width: 600px) {
+            .lightbox-nav { width: 38px; height: 38px; font-size: 1.1rem; }
+            .lightbox-nav.prev { left: 0.25rem; }
+            .lightbox-nav.next { right: 0.25rem; }
+        }
         /* Atajo para cotizar la foto que se esta mirando. */
         .lightbox-cotizar {
             border: none;
@@ -1338,6 +1370,12 @@
     <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
         <button type="button" class="lightbox-close" onclick="closeLightbox()" aria-label="Cerrar" title="Cerrar (Esc)">
             <i class="fa-solid fa-xmark"></i>
+        </button>
+        <button type="button" class="lightbox-nav prev" onclick="event.stopPropagation(); showPrevImage();" aria-label="Anterior" title="Anterior (flecha izquierda)">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <button type="button" class="lightbox-nav next" onclick="event.stopPropagation(); showNextImage();" aria-label="Siguiente" title="Siguiente (flecha derecha)">
+            <i class="fa-solid fa-chevron-right"></i>
         </button>
         <div class="lightbox-content" onclick="event.stopPropagation()">
             <div id="lightbox-title" class="lightbox-title"></div>
