@@ -181,6 +181,15 @@
             position: relative;
             display: flex;
             min-height: 0;
+        }
+        /* Mientras la foto se baja no se sabe cuanto va a medir. Sin esto la
+           caja se achica a cero y los dos botones quedan pegados en el medio de
+           la pantalla hasta que termine (con internet lento se ve mal). */
+        .lightbox-foto.cargando {
+            min-width: 60%;
+            min-height: 40vh;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
             /* El maximo deja libre el lugar de los dos botones. El ancho justo
                lo pone ajustarCajaFoto(): cuando la foto queda limitada por el
                alto, esta caja igual se estiraria hasta el maximo y los botones
@@ -1437,8 +1446,9 @@
             const caja = document.querySelector('.lightbox-foto');
             const img = document.getElementById('lightbox-img');
             if (!caja || !img) return;
-            caja.style.width = '';   // suelta el ancho anterior para medir de nuevo
+            // Todavia bajando: se deja como esta (ya tiene el lugar reservado).
             if (!img.complete || !img.naturalWidth) return;
+            caja.classList.remove('cargando');
             // Dos pasadas: al girar el celular cambia a la vez el alto que tiene
             // disponible la foto, y la primera medida puede salir corta.
             for (let i = 0; i < 2; i++) {
@@ -1456,10 +1466,20 @@
         function renderLightbox(index) {
             currentLightboxIndex = index;
             const img = document.getElementById('lightbox-img');
+            const caja = document.querySelector('.lightbox-foto');
             img.src = galleryImages[index];
-            // Una foto que todavia no bajo no se puede medir: se espera a que cargue.
-            if (img.complete) ajustarCajaFoto();
-            else img.addEventListener('load', ajustarCajaFoto, { once: true });
+            // Una foto que todavia no bajo no se puede medir: se le reserva el
+            // lugar y se la mide cuando llegue. El ancho de la foto anterior no
+            // sirve para esta, asi que se suelta.
+            if (img.complete && img.naturalWidth) {
+                ajustarCajaFoto();
+            } else if (caja) {
+                caja.style.width = '';
+                caja.classList.add('cargando');
+                img.addEventListener('load', ajustarCajaFoto, { once: true });
+                // Si la foto no llega (sin senal), al menos no queda el hueco.
+                img.addEventListener('error', () => caja.classList.remove('cargando'), { once: true });
+            }
             document.getElementById('lightbox-title').textContent = galleryTitles[index] || '';
             // Una foto sin familia asignada no se puede cotizar de un clic.
             const btn = document.getElementById('lightbox-cotizar');
