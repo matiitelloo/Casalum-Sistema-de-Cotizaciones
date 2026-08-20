@@ -105,6 +105,7 @@ class QuotationManager {
             mullon: document.getElementById('p-mullon') ? document.getElementById('p-mullon').checked : false,
             vidrioBesado: document.getElementById('p-vidrio-besado') ? document.getElementById('p-vidrio-besado').checked : false,
             glass: val('p-glass'),
+            tubo: val('p-tubo'),
             qty: val('p-qty'),
             labor: {
                 workers: val('p-labor-workers'),
@@ -146,6 +147,7 @@ class QuotationManager {
         if (besadoCb) besadoCb.checked = !!form.vidrioBesado;
 
         setVal('p-glass', form.glass);
+        setVal('p-tubo', form.tubo);
         this.updateGlassPrice();
 
         // El área de vidrio es un campo calculado: se recompone de las medidas.
@@ -881,6 +883,14 @@ class QuotationManager {
             pGlassSelect.addEventListener('change', () => this.updateGlassPrice());
         }
 
+        const pTuboSelect = document.getElementById('p-tubo');
+        if (pTuboSelect) {
+            pTuboSelect.addEventListener('change', () => {
+                this.recalcularFormulasDelModulo();
+                this.queueSaveDraft();
+            });
+        }
+
         const pMbSelect = document.getElementById('p-mb');
         if (pMbSelect) {
             pMbSelect.addEventListener('change', () => this.aplicarSistemaMB(pMbSelect.value));
@@ -1041,6 +1051,37 @@ class QuotationManager {
         }
     }
 
+    // ============================================================
+    // TUBO: LO ELIGE QUIEN COTIZA
+    // ============================================================
+
+    /**
+     * La receta de una ventana en tubo no dice la medida del tubo: la misma
+     * ventana fija se hace en 4x4, 5x4 o 7x4, y entre el 4x4 y el 7x4 hay 77%
+     * de diferencia de precio por metro. Hasta ahora todas resolvían al 4x4 y
+     * las de 7x4 se cotizaban baratas sin que nada lo avisara.
+     *
+     * El desplegable aparece solo si la receta activa tiene una fila de tubo
+     * sin medida propia: las puertas batientes, que ya traen la medida en la
+     * receta (`batiente-tubo-7x4`), no lo necesitan.
+     */
+    recetaUsaTubo(mod) {
+        const calc = window.calculator;
+        if (!mod || !calc || !calc.filaDeTuboSinMedida) return false;
+        return (mod.profiles || []).some(row => calc.filaDeTuboSinMedida(row));
+    }
+
+    actualizarTubo(mod) {
+        const grupo = document.getElementById('p-tubo-group');
+        if (!grupo) return;
+        const usa = this.recetaUsaTubo(mod);
+        grupo.style.display = usa ? '' : 'none';
+        if (!usa) {
+            const sel = document.getElementById('p-tubo');
+            if (sel) sel.value = '';
+        }
+    }
+
     /** Cuántos módulos hace normalmente esta familia, según el catálogo. */
     rangoModulos(family) {
         const rangos = window.CATALOG_MODULE_RANGE || {};
@@ -1147,6 +1188,7 @@ class QuotationManager {
         if (!family) {
             this.activeModule = null;
             this.actualizarSistemaMB(family);
+            this.actualizarTubo(null);
             this.renderModuleInfo();
             this.queueSaveDraft();
             return;
@@ -1162,6 +1204,7 @@ class QuotationManager {
         if (mod && this.activeModule && this.activeModule.itemId === mod.itemId) {
             this.recalcularFormulasDelModulo();
             this.actualizarSistemaMB(family);
+            this.actualizarTubo(mod);
             this.renderModuleInfo();
             return;
         }
@@ -1174,6 +1217,7 @@ class QuotationManager {
         if (mod) this.applyModule(mod);
 
         this.actualizarSistemaMB(family);
+        this.actualizarTubo(mod);
         this.renderModuleInfo();
         this.queueSaveDraft();
     }
@@ -1999,6 +2043,7 @@ class QuotationManager {
         return {
             brand, system, color, width, height, qty, glassType, glassArea,
             modules, leaves, mullon, vidrioBesado,
+            tubo: (document.getElementById('p-tubo') || {}).value || '',
             sashWidth: sashWidthRaw > 0 ? sashWidthRaw : width,
             sashHeight: sashHeightRaw > 0 ? sashHeightRaw : height,
             labor: { workers, hours, transport, viaticos },
@@ -2088,6 +2133,15 @@ class QuotationManager {
             notify.warning('Debe seleccionar el tipo de vidrio antes de agregar el producto.');
             this.switchProductTab('productos');
             document.getElementById('p-glass').focus();
+            return;
+        }
+
+        // Sin medida de tubo la receta resolvia siempre al 4x4, y una ventana de
+        // 7x4 salia hasta 47% barata sin ningun aviso.
+        if (this.recetaUsaTubo(this.activeModule) && !document.getElementById('p-tubo').value) {
+            notify.warning('Elija la medida del tubo antes de agregar el producto.');
+            this.switchProductTab('productos');
+            document.getElementById('p-tubo').focus();
             return;
         }
 

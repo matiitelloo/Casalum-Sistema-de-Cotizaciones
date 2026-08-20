@@ -17,13 +17,34 @@ class Calculator {
      * @param {string} color - The selected color (natural, negro, etc)
      * @param {number} quantity - Quantity of unit
      */
+    /**
+     * Que color de la lista de precios de ESE producto corresponde al color
+     * pedido. Hace falta porque el tubo sale siempre de Fisa (ver
+     * resolveModuleProduct) y las marcas no llaman igual a los colores: lo que
+     * en Cedal es "madera" o "nogal", en Fisa es "maderado".
+     * Devuelve null si ese producto no se hace en ese color.
+     */
+    colorDisponible(item, color) {
+        const clave = String(color || '').toLowerCase();
+        if (!item || !item.prices) return null;
+        if (item.prices[clave] !== null && item.prices[clave] !== undefined) return clave;
+
+        const equivalencias = {
+            madera: 'maderado', nogal: 'maderado', roble: 'maderado',
+            maderado: 'madera', champang: 'champagne', champagne: 'champang'
+        };
+        const alt = equivalencias[clave];
+        if (alt && item.prices[alt] !== null && item.prices[alt] !== undefined) return alt;
+        return null;
+    }
+
     calculateItemCost(item, color, quantity) {
         // Base cost
         let unitPrice = 0;
         
         if (item.prices) { // It's an aluminum profile
-            const colorKey = color.toLowerCase();
-            unitPrice = item.prices[colorKey];
+            const colorKey = this.colorDisponible(item, color);
+            unitPrice = colorKey === null ? undefined : item.prices[colorKey];
             if (unitPrice === null || unitPrice === undefined) {
                 console.warn(`Item ${item.code} has no price for color ${color}`);
                 return 0; // Invalid color for this item
@@ -240,13 +261,61 @@ class Calculator {
     }
 
     /**
+     * El tubo lo compra Casalum siempre a Fisa, sea cual sea el proveedor del
+     * resto del aluminio (lo pidió el usuario el 20/08/2026). Así que una fila
+     * de tubo no se resuelve contra la marca elegida sino siempre contra Fisa.
+     */
+    static get ROLES_TUBO() {
+        // Solo el tubo en si. Ojo: los junquillos de una ventana en tubo se
+        // llaman `ventana-tubo-junquillo-espalda`, o sea que tambien dicen
+        // "tubo" en el rol, y cambiarlos por un tubo seria un desastre.
+        return [/^ventana-tubo-marco$/i, /^batiente-tubo-\d+\s*x\s*\d+$/i];
+    }
+
+    esFilaDeTubo(row) {
+        const rol = (row && row.role) || '';
+        return Calculator.ROLES_TUBO.some(re => re.test(rol));
+    }
+
+    /**
+     * Una fila de tubo que NO dice la medida en el rol (`ventana-tubo-marco`)
+     * la define quien cotiza, con el desplegable "Tubo" del formulario: la
+     * misma ventana fija se hace en 4x4, 5x4 o 7x4 y el precio cambia hasta un
+     * 77%. Las que sí la dicen (`batiente-tubo-7x4`) ya vienen resueltas por la
+     * receta y no se tocan.
+     */
+    filaDeTuboSinMedida(row) {
+        return this.esFilaDeTubo(row) && !/\d\s*x\s*\d/i.test(row.role);
+    }
+
+    rolDeTubo(medida) { return 'batiente-tubo-' + String(medida || '').toLowerCase(); }
+
+    /**
      * Resuelve el producto real de una fila de módulo para la marca elegida al
      * cotizar. Si la fila tiene `role` (rol genérico) se busca por rol en esa
      * marca -> multi-proveedor automático. Si no tiene rol, se usa el
      * código+categoría guardados en la fila (comportamiento de siempre,
      * limitado a la marca con la que se armó la receta).
+     *
+     * `medidaTubo` (opcional) es la medida elegida en el formulario: solo se
+     * usa en las filas de tubo sin medida propia.
      */
-    resolveModuleProduct(row, brandData) {
+    resolveModuleProduct(row, brandData, medidaTubo) {
+        if (this.esFilaDeTubo(row)) {
+            const rol = (medidaTubo && this.filaDeTuboSinMedida(row))
+                ? this.rolDeTubo(medidaTubo)
+                : row.role;
+
+            const enFisa = this.findProductByRole(window.SEED_DATA.brands['fisa'], rol);
+            if (enFisa) return enFisa;
+
+            // Fisa todavia no tiene ese tubo etiquetado con ese rol. Antes de
+            // dejar la ventana sin tubo, se usa el de la marca elegida: sale de
+            // otro proveedor, pero al menos es la medida que pidieron.
+            return this.findProductByRole(brandData, rol)
+                || (row.role ? this.findProductByRole(brandData, row.role) : null);
+        }
+
         if (row.role) {
             const hit = this.findProductByRole(brandData, row.role);
             if (hit) return hit;
@@ -266,7 +335,7 @@ class Calculator {
      * @param {Object} params - width, height, brand, system, color, glassType, glassArea, accessories, labor, moduleProfiles
      */
     calculateWindowCost(params) {
-        const { width, height, brand, system, color, glassType, glassArea, accessories = [], labor = {}, moduleProfiles = null } = params;
+        const { width, height, brand, system, color, glassType, glassArea, accessories = [], labor = {}, moduleProfiles = null, tubo = '' } = params;
 
         // Find brand and system
         const brandData = window.SEED_DATA.brands[brand.toLowerCase()];
@@ -308,7 +377,7 @@ class Calculator {
                 const qty = this.resolveModuleQty(row, ctx);
                 if (qty <= 0) return;
 
-                const prod = this.resolveModuleProduct(row, brandData);
+                const prod = this.resolveModuleProduct(row, brandData, tubo);
                 if (!prod) {
                     // Antes esto solo iba a la consola: el perfil se salteaba en
                     // silencio y la cotización salía sin ese aluminio, más barata,
@@ -319,6 +388,12 @@ class Calculator {
                 }
 
                 const unitPrice = this.calculateItemCost(prod, color, 1);
+                if (unitPrice === 0) {
+                    // Sin precio para ese color: antes sumaba cero y la ventana
+                    // salía más barata sin decir nada.
+                    perfilesFaltantes.push((prod.description || row.role) + ' (sin precio en ' + color + ')');
+                    return;
+                }
                 const cost = unitPrice * qty;
                 if (cost > 0) {
                     totalCost += cost;

@@ -684,6 +684,25 @@
                                             </small>
                                         </div>
 
+                                        <!-- Solo para lo que se fabrica en tubo. La misma ventana fija se hace
+                                             en 4x4, 5x4 o 7x4 y el tubo cambia de precio hasta un 77%: la receta
+                                             no lo define, lo elige quien cotiza. -->
+                                        <div class="form-group" id="p-tubo-group" style="grid-column: span 2; display: none;">
+                                            <div style="border-bottom: 1px solid #ccc; margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
+                                                <h4 style="margin: 0; color: var(--primary);">Tubo</h4>
+                                            </div>
+                                            <label>Seleccione el tubo *</label>
+                                            <select id="p-tubo" class="form-control">
+                                                <option value="">Seleccione el tubo...</option>
+                                                <option value="4x4">4 x 4</option>
+                                                <option value="5x4">5 x 4</option>
+                                                <option value="7x4">7 x 4</option>
+                                            </select>
+                                            <small id="p-tubo-info" style="display:block; margin-top:0.4rem; font-size:0.78rem; color: var(--text-muted);">
+                                                El tubo se compra siempre a Fisa, sea cual sea la marca del resto del aluminio.
+                                            </small>
+                                        </div>
+
                                         <!-- Solo para cabinas: el marco es el sistema M&B, que se compra armado.
                                              Cada cabina lleva UNO solo, asi que se elige de una lista y no se
                                              cargan cantidades a mano en Accesorios. -->
@@ -1561,9 +1580,9 @@
     <script src="data/catalog-items.js?v=9"></script>
     <script src="js/auth.js?v=6"></script>
     <script src="js/db.js?v=3"></script>
-    <script src="js/calculator.js?v=13"></script>
+    <script src="js/calculator.js?v=14"></script>
     <script src="js/ventanaFija1100.js?v=9"></script>
-    <script src="js/quotations.js?v=57"></script>
+    <script src="js/quotations.js?v=58"></script>
     <script src="js/clients.js?v=10"></script>
     <script src="js/pdf.js?v=4"></script>
     <script src="js/word.js?v=9"></script>
