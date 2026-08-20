@@ -169,6 +169,8 @@ class QuotationManager {
         }
 
         if (form.tab) this.switchProductTab(form.tab);
+
+        this.actualizarSistemaMB(form.system);
     }
 
     /** Guarda el borrador tras un ratito de inactividad, para no escribir en cada tecla. */
@@ -878,6 +880,11 @@ class QuotationManager {
         if (pGlassSelect) {
             pGlassSelect.addEventListener('change', () => this.updateGlassPrice());
         }
+
+        const pMbSelect = document.getElementById('p-mb');
+        if (pMbSelect) {
+            pMbSelect.addEventListener('change', () => this.aplicarSistemaMB(pMbSelect.value));
+        }
     }
 
     // ============================================================
@@ -942,6 +949,96 @@ class QuotationManager {
             sel.appendChild(op);
         }
         sel.value = v;
+    }
+
+    // ============================================================
+    // CABINAS: SISTEMA M&B Y MODULOS FIJOS
+    // ============================================================
+
+    /**
+     * Las cabinas de baño no llevan marco de aluminio: el marco ES el sistema
+     * M&B, que se compra armado (MB-004, MB-008, BM-007, MB-009). Cada cabina
+     * lleva uno solo y son excluyentes, por eso se eligen de una lista en vez
+     * de cargarles la cantidad a mano en Accesorios, donde era facil poner dos
+     * o ninguno.
+     */
+    static get RE_SISTEMA_MB() { return /^Sistema\s+(MB|BM)-/i; }
+
+    esFamiliaCabina(family) { return /CABINA/i.test(family || ''); }
+
+    /** Los sistemas M&B que hay cargados hoy en el catálogo de accesorios. */
+    sistemasMB() {
+        return (window.SEED_DATA.accessories || [])
+            .filter(a => QuotationManager.RE_SISTEMA_MB.test(a.name));
+    }
+
+    populateSistemaMB() {
+        const sel = document.getElementById('p-mb');
+        if (!sel) return;
+        const previo = sel.value;
+        sel.innerHTML = '<option value="">Seleccione el sistema MB...</option>';
+        this.sistemasMB().forEach(a => {
+            sel.innerHTML += `<option value="${window.escapeHtml(a.name)}">`
+                + `${window.escapeHtml(a.name)} ($${a.pricePerUnit.toFixed(2)})</option>`;
+        });
+        if (previo) sel.value = previo;
+    }
+
+    /** Muestra la lista de sistemas M&B solo cuando lo que se cotiza es una cabina. */
+    actualizarSistemaMB(family) {
+        const grupo = document.getElementById('p-mb-group');
+        if (!grupo) return;
+        const esCabina = this.esFamiliaCabina(family);
+        grupo.style.display = esCabina ? '' : 'none';
+        if (esCabina) {
+            this.sincronizarSistemaMB();
+        } else {
+            const sel = document.getElementById('p-mb');
+            if (sel) sel.value = '';
+        }
+    }
+
+    /** Deja en 1 el sistema elegido y en 0 los demás. */
+    aplicarSistemaMB(nombre) {
+        this.sistemasMB().forEach(a => {
+            const input = document.querySelector(`.acc-input[data-name="${a.name}"]`);
+            if (input) input.value = a.name === nombre ? '1' : '0';
+        });
+        this.queueSaveDraft();
+    }
+
+    /**
+     * Al revés: mira qué sistema quedó cargado en Accesorios y lo marca en la
+     * lista. Hace falta porque los accesorios también los escriben la receta y
+     * el borrador recuperado, no solo esta lista.
+     */
+    sincronizarSistemaMB() {
+        const sel = document.getElementById('p-mb');
+        if (!sel) return;
+        const puesto = this.sistemasMB().find(a => {
+            const input = document.querySelector(`.acc-input[data-name="${a.name}"]`);
+            return input && parseFloat(input.value) > 0;
+        });
+        sel.value = puesto ? puesto.name : '';
+    }
+
+    /**
+     * Una cabina es siempre de dos módulos, nunca de uno ni de tres. Cuando se
+     * elige una, "Módulos" queda en 2 y no ofrece otra cosa; al pasar a otro
+     * sistema vuelve la lista completa.
+     */
+    ajustarModulosDeCabina(family) {
+        const sel = document.getElementById('p-modules');
+        if (!sel) return;
+
+        if (this.esFamiliaCabina(family)) {
+            sel.innerHTML = '<option value="2">2</option>';
+            sel.value = '2';
+            sel.dataset.fijo = 'cabina';
+        } else if (sel.dataset.fijo === 'cabina') {
+            delete sel.dataset.fijo;
+            this.populateCantidadSelects();   // conserva lo que estuviera elegido
+        }
     }
 
     /** Cuántos módulos hace normalmente esta familia, según el catálogo. */
@@ -1043,8 +1140,13 @@ class QuotationManager {
         const systemSelect = document.getElementById('p-system');
         const family = systemSelect ? systemSelect.value : '';
 
+        // Va antes de buscar la receta: la receta se elige por cantidad de
+        // módulos, y en una cabina esa cantidad siempre es 2.
+        this.ajustarModulosDeCabina(family);
+
         if (!family) {
             this.activeModule = null;
+            this.actualizarSistemaMB(family);
             this.renderModuleInfo();
             this.queueSaveDraft();
             return;
@@ -1059,6 +1161,7 @@ class QuotationManager {
         // mismo número fijo de siempre).
         if (mod && this.activeModule && this.activeModule.itemId === mod.itemId) {
             this.recalcularFormulasDelModulo();
+            this.actualizarSistemaMB(family);
             this.renderModuleInfo();
             return;
         }
@@ -1070,6 +1173,7 @@ class QuotationManager {
         this.activeModule = mod;
         if (mod) this.applyModule(mod);
 
+        this.actualizarSistemaMB(family);
         this.renderModuleInfo();
         this.queueSaveDraft();
     }
@@ -1791,6 +1895,8 @@ class QuotationManager {
             });
         }
 
+        this.populateSistemaMB();
+
         const accContainer = document.getElementById('accessories-container');
         if (accContainer && window.SEED_DATA) {
             accContainer.innerHTML = '';
@@ -1982,6 +2088,15 @@ class QuotationManager {
             notify.warning('Debe seleccionar el tipo de vidrio antes de agregar el producto.');
             this.switchProductTab('productos');
             document.getElementById('p-glass').focus();
+            return;
+        }
+
+        // En una cabina el sistema M&B es el marco: sin él la cabina se cotiza
+        // sin la pieza más cara (entre $90 y $190) y nada lo avisa.
+        if (this.esFamiliaCabina(data.system) && !document.getElementById('p-mb').value) {
+            notify.warning('Elija el sistema MB de la cabina antes de agregar el producto.');
+            this.switchProductTab('productos');
+            document.getElementById('p-mb').focus();
             return;
         }
 

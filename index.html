@@ -683,6 +683,23 @@
                                                 cantidad en "Mano de Obra y Extras" → Accesorios → <strong>Silicon</strong>.
                                             </small>
                                         </div>
+
+                                        <!-- Solo para cabinas: el marco es el sistema M&B, que se compra armado.
+                                             Cada cabina lleva UNO solo, asi que se elige de una lista y no se
+                                             cargan cantidades a mano en Accesorios. -->
+                                        <div class="form-group" id="p-mb-group" style="grid-column: span 2; display: none;">
+                                            <div style="border-bottom: 1px solid #ccc; margin-bottom: 0.5rem; padding-bottom: 0.5rem;">
+                                                <h4 style="margin: 0; color: var(--primary);">Sistema M&amp;B (cabinas)</h4>
+                                            </div>
+                                            <label>Seleccione el sistema MB *</label>
+                                            <select id="p-mb" class="form-control">
+                                                <option value="">Seleccione el sistema MB...</option>
+                                            </select>
+                                            <small style="display:block; margin-top:0.4rem; font-size:0.78rem; color: var(--text-muted);">
+                                                Cada cabina lleva un solo sistema. El que elija se carga con cantidad 1
+                                                en Accesorios y los otros quedan en 0.
+                                            </small>
+                                        </div>
                                     </div>
 
                                     <!-- Tab: Mano de Obra y Extras -->
@@ -1546,7 +1563,7 @@
     <script src="js/db.js?v=3"></script>
     <script src="js/calculator.js?v=13"></script>
     <script src="js/ventanaFija1100.js?v=9"></script>
-    <script src="js/quotations.js?v=56"></script>
+    <script src="js/quotations.js?v=57"></script>
     <script src="js/clients.js?v=10"></script>
     <script src="js/pdf.js?v=4"></script>
     <script src="js/word.js?v=9"></script>
