@@ -1084,7 +1084,8 @@
                     <div id="catalog-tab-profiles" class="catalog-tab-content">
                         <!-- Brand selector -->
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem;">
-                            <img id="catalog-brand-logo" src="" alt="" style="height: 28px; width: 28px; object-fit: contain; border-radius: 4px; display: none;">
+                            <!-- Un logo, o los tres cuando el proveedor es "Todos" (ver renderBrandLogos). -->
+                            <span id="catalog-brand-logos" style="display: inline-flex; gap: 4px; align-items: center;"></span>
                             <select id="catalog-brand-select" class="form-control" style="max-width: 200px;">
                             </select>
                             <select id="catalog-category-select" class="form-control" style="max-width: 280px;">
@@ -1383,7 +1384,7 @@
     <script src="js/clients.js?v=9"></script>
     <script src="js/pdf.js?v=4"></script>
     <script src="js/word.js?v=9"></script>
-    <script src="js/catalog.js?v=18"></script>
+    <script src="js/catalog.js?v=20"></script>
     <script src="js/modules.js?v=21"></script>
     <script src="js/settings.js?v=3"></script>
     <script src="js/app.js?v=23"></script>

@@ -107,12 +107,7 @@ class CatalogManager {
         if (brandSel) {
             brandSel.addEventListener('change', () => {
                 this.currentBrand = brandSel.value;
-                // Con "Todos" no hay un logo único que mostrar al lado del
-                // selector: cada fila lleva el suyo.
-                if (window.updateBrandLogo) {
-                    window.updateBrandLogo('catalog-brand-logo',
-                        this.currentBrand === CatalogManager.TODAS ? '' : this.currentBrand);
-                }
+                this.renderBrandLogos();
                 this.populateCategorySelect();
             });
         }
@@ -190,14 +185,34 @@ class CatalogManager {
         sel.innerHTML = `<option value="${CatalogManager.TODAS}">Todos</option>`
             + brands.map(k => `<option value="${window.escapeHtml(k)}">${window.escapeHtml(window.SEED_DATA.brands[k].name)}</option>`).join('');
 
-        this.currentBrand = brands[0];
+        // Arranca en "Todos": se abre directo el catálogo completo de las tres
+        // marcas, con los tres logos al lado del selector.
+        this.currentBrand = CatalogManager.TODAS;
         sel.value = this.currentBrand;
-        if (window.updateBrandLogo) window.updateBrandLogo('catalog-brand-logo', this.currentBrand);
+        this.renderBrandLogos();
         this.populateCategorySelect();
     }
 
     /** Valor de la opción "Todos", tanto de proveedores como de categorías. */
     static get TODAS() { return '__todas__'; }
+
+    /**
+     * Logos junto al selector de proveedor: el de la marca elegida, o los tres
+     * cuando está en "Todos", para que se vea de entrada que están las tres.
+     */
+    renderBrandLogos() {
+        const cont = document.getElementById('catalog-brand-logos');
+        if (!cont) return;
+        const logos = window.BRAND_LOGOS || {};
+        cont.innerHTML = this.marcasVisibles().map(m => {
+            const b = window.SEED_DATA.brands[m];
+            if (!b || !logos[m]) return '';
+            // Si el archivo del logo no está, se oculta ese solo.
+            return `<img src="${logos[m]}" alt="${window.escapeHtml(b.name)}" title="${window.escapeHtml(b.name)}"
+                        onerror="this.style.display='none'"
+                        style="height:28px; width:28px; object-fit:contain; border-radius:4px;">`;
+        }).join('');
+    }
 
     /** Marcas a mostrar: la elegida, o todas. */
     marcasVisibles() {
