@@ -562,6 +562,16 @@ class QuotationManager {
         // en curso. Quien navega es app.navigate('new-quotation').
         if (!this.isQuickQuote) return;
 
+        this.limpiarCotizacion();
+        this.goToStep(1);
+    }
+
+    /**
+     * Deja Nueva Cotización como recién abierta: sin cliente, sin productos,
+     * sin notas ni descuento, y sin la cotización que se estuviera editando.
+     * No toca la pantalla ni el formulario del ítem (ver resetItemForm).
+     */
+    limpiarCotizacion() {
         this.isQuickQuote = false;
         this.cart = [];
         this.editingId = null;
@@ -584,7 +594,14 @@ class QuotationManager {
         if (btnSaveAs) btnSaveAs.style.display = 'none';
 
         this.renderCart();
-        this.goToStep(1);
+    }
+
+    /** ¿Hay una cotización empezada que se perdería si se arranca otra? */
+    hayCotizacionEnCurso() {
+        if (this.cart.length > 0) return true;
+        if (this.editingId) return true;
+        const val = id => ((document.getElementById(id) || {}).value || '').trim();
+        return !!(val('client-id') || val('client-name') || val('q-notes'));
     }
 
     /**
@@ -594,8 +611,22 @@ class QuotationManager {
      *
      * Empieza en el Paso 1 (Cliente), que es por donde va toda cotización, pero
      * el sistema queda puesto desde ya para cuando llegue al Paso 3.
+     *
+     * Arranca de cero: si habia una cotización empezada, avisa antes, porque
+     * de ahí no se vuelve.
      */
-    cotizarFamilia(familia) {
+    async cotizarFamilia(familia) {
+        if (this.hayCotizacionEnCurso()) {
+            const seguir = await notify.confirm(
+                'Tiene una cotización en curso.\n\nSi continúa se borra todo lo que lleva cargado: el cliente, los productos y las notas.',
+                { titulo: 'Cotización en curso', danger: true, confirmText: 'Borrar y cotizar', cancelText: 'Cancelar' });
+            if (!seguir) return;
+        }
+
+        this.limpiarCotizacion();
+        this.resetItemForm();
+        this.clearDraft();
+
         window.app.navigate('new-quotation');
 
         const sel = document.getElementById('p-system');
