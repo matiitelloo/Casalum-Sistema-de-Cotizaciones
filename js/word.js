@@ -58,7 +58,11 @@ class QuotationDocument {
             name: client.name, id: client.id,
             address: client.address, phone: client.phone
         };
-        const etiquetaRevision = manager && manager.revisionLabel;
+        const version = {
+            etiqueta: manager && manager.revisionLabel,
+            tipo: (manager && manager.versionType) || 'A',
+            numero: (manager && manager.versionNumber) || 1
+        };
 
         const quote = await this.resolveQuoteNumber(manager);
 
@@ -70,7 +74,7 @@ class QuotationDocument {
         const ajustes = Object.assign({}, porDefecto, guardados);
 
         return {
-            meta: this.metadata(datosCliente, cart, quote, manager && manager.editingDate, etiquetaRevision),
+            meta: this.metadata(datosCliente, cart, quote, manager && manager.editingDate, version),
             cart,
             totals: (manager && manager.totals) || {},
             ajustes
@@ -84,17 +88,28 @@ class QuotationDocument {
         return { number: 1, year: new Date().getFullYear() };
     }
 
-    metadata(client, cart, quote, savedDate, etiquetaRevision) {
+    metadata(client, cart, quote, savedDate, version) {
         const marcas = [...new Set(cart.map(x => this.nombreMarca(x.brand)).filter(Boolean))].join(' / ');
         const colores = [...new Set(cart.map(x => x.color).filter(Boolean))].join(' / ') || 'POR DEFINIR';
         const vidrios = [...new Set(cart.map(x => x.glassType).filter(Boolean))].join(' / ') || 'SIN VIDRIO';
         const fecha = new Date(savedDate || Date.now())
             .toLocaleDateString('es-EC', { day: '2-digit', month: 'long', year: 'numeric' })
             .toUpperCase();
-        // "167-26 A.1", igual que las cotizaciones en papel. Si todavía no hay
-        // etiqueta de revisión (cotización nueva sin guardar) se arma con el
-        // número reservado y los dos últimos dígitos del año.
-        const codigo = etiquetaRevision || `${quote.number}-${String(quote.year).slice(2)}`;
+        // Código tal como va en el papel: "001-26 A.1" — consecutivo de tres
+        // dígitos, los dos últimos del año, y la versión.
+        //
+        // SIN la inicial del usuario. La app numera por usuario y arma el código
+        // como "A001-26" (ver buildBaseCode en quotations.js): esa letra sirve
+        // para el historial, para saber quién la hizo, pero al cliente no le
+        // dice nada y las cotizaciones en papel nunca la llevaron.
+        //
+        // Si todavía no se guardó no hay etiqueta de revisión, así que se arma
+        // igual con el número ya reservado y la versión en curso: el código que
+        // se ve en el PDF antes de guardar es el mismo que queda después.
+        const codigo = version && version.etiqueta
+            ? this.sinInicial(version.etiqueta)
+            : `${String(quote.number).padStart(3, '0')}-${String(quote.year).slice(2)}`
+              + ` ${(version && version.tipo) || 'A'}.${(version && version.numero) || 1}`;
         return {
             codigo,
             date: fecha,
@@ -105,6 +120,11 @@ class QuotationDocument {
             aluminum: `${colores.toUpperCase()}${marcas ? ` (${marcas.toUpperCase()})` : ''}`,
             glass: vidrios.toUpperCase()
         };
+    }
+
+    /** "A001-26 A.1" -> "001-26 A.1". Solo quita la letra inicial del código. */
+    sinInicial(etiqueta) {
+        return String(etiqueta || '').replace(/^[A-Za-z](?=\d)/, '');
     }
 
     nombreMarca(clave) {
