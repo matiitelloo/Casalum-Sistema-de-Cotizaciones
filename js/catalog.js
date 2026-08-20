@@ -107,7 +107,12 @@ class CatalogManager {
         if (brandSel) {
             brandSel.addEventListener('change', () => {
                 this.currentBrand = brandSel.value;
-                if (window.updateBrandLogo) window.updateBrandLogo('catalog-brand-logo', this.currentBrand);
+                // Con "Todos" no hay un logo único que mostrar al lado del
+                // selector: cada fila lleva el suyo.
+                if (window.updateBrandLogo) {
+                    window.updateBrandLogo('catalog-brand-logo',
+                        this.currentBrand === CatalogManager.TODAS ? '' : this.currentBrand);
+                }
                 this.populateCategorySelect();
             });
         }
@@ -179,29 +184,39 @@ class CatalogManager {
     populateBrandSelect() {
         const sel = document.getElementById('catalog-brand-select');
         if (!sel || !window.SEED_DATA) return;
-        sel.innerHTML = '';
         const brands = Object.keys(window.SEED_DATA.brands);
-        brands.forEach((key, i) => {
-            sel.innerHTML += `<option value="${window.escapeHtml(key)}">${window.escapeHtml(window.SEED_DATA.brands[key].name)}</option>`;
-        });
-        if (brands.length > 0) {
-            this.currentBrand = brands[0];
-            sel.value = brands[0];
-            if (window.updateBrandLogo) window.updateBrandLogo('catalog-brand-logo', this.currentBrand);
-            this.populateCategorySelect();
-        }
+        if (!brands.length) { sel.innerHTML = ''; return; }
+
+        sel.innerHTML = `<option value="${CatalogManager.TODAS}">Todos</option>`
+            + brands.map(k => `<option value="${window.escapeHtml(k)}">${window.escapeHtml(window.SEED_DATA.brands[k].name)}</option>`).join('');
+
+        this.currentBrand = brands[0];
+        sel.value = this.currentBrand;
+        if (window.updateBrandLogo) window.updateBrandLogo('catalog-brand-logo', this.currentBrand);
+        this.populateCategorySelect();
     }
 
-    /** Valor de la opción "TODOS" del desplegable de categorías. */
+    /** Valor de la opción "Todos", tanto de proveedores como de categorías. */
     static get TODAS() { return '__todas__'; }
+
+    /** Marcas a mostrar: la elegida, o todas. */
+    marcasVisibles() {
+        return this.currentBrand === CatalogManager.TODAS
+            ? Object.keys(window.SEED_DATA.brands)
+            : [this.currentBrand];
+    }
 
     populateCategorySelect() {
         const sel = document.getElementById('catalog-category-select');
         if (!sel) return;
-        const brand = window.SEED_DATA.brands[this.currentBrand];
-        if (!brand) { sel.innerHTML = ''; return; }
-
-        const cats = Object.keys(brand.categories);
+        // Con "Todos" los proveedores, las categorías son la unión de las tres:
+        // no todas las marcas tienen las mismas.
+        const cats = [];
+        this.marcasVisibles().forEach(m => {
+            const b = window.SEED_DATA.brands[m];
+            if (b) Object.keys(b.categories).forEach(c => { if (!cats.includes(c)) cats.push(c); });
+        });
+        if (!cats.length) { sel.innerHTML = ''; return; }
         // "Todos" primero y por defecto: sirve para ver el catálogo completo
         // del proveedor y para buscar un perfil sin saber en qué categoría está.
         sel.innerHTML = `<option value="${CatalogManager.TODAS}">Todos</option>`
@@ -230,31 +245,39 @@ class CatalogManager {
         const container = document.getElementById('catalog-profiles-table');
         if (!container) return;
         const contador = document.getElementById('catalog-profiles-count');
-        const brand = window.SEED_DATA.brands[this.currentBrand];
-        if (!brand) { container.innerHTML = '<p>Marca no encontrada.</p>'; return; }
+        const marcas = this.marcasVisibles().filter(m => window.SEED_DATA.brands[m]);
+        if (!marcas.length) { container.innerHTML = '<p>Marca no encontrada.</p>'; return; }
 
-        const todas = this.currentCategory === CatalogManager.TODAS;
-        if (!todas && !brand.categories[this.currentCategory]) {
-            container.innerHTML = '<p>Seleccione una categoría.</p>';
-            return;
-        }
+        const todasCat = this.currentCategory === CatalogManager.TODAS;
 
-        // Cada fila se queda con SU categoría: con "TODOS" la tabla mezcla
-        // varias, y el índice por sí solo no alcanza para saber a qué producto
-        // corresponde al editarlo o borrarlo.
-        const cats = todas ? Object.keys(brand.categories) : [this.currentCategory];
+        // Cada fila se queda con SU marca y SU categoría: con "Todos" la tabla
+        // mezcla varias y el índice por sí solo no alcanza para saber a qué
+        // producto corresponde al editarlo o borrarlo.
         let filas = [];
-        cats.forEach(cat => {
-            (brand.categories[cat].products || []).forEach((prod, idx) => {
-                filas.push({ cat, idx, prod });
+        marcas.forEach(marca => {
+            const b = window.SEED_DATA.brands[marca];
+            const cats = todasCat ? Object.keys(b.categories) : [this.currentCategory];
+            cats.forEach(cat => {
+                // Una marca puede no tener la categoría elegida.
+                if (!b.categories[cat]) return;
+                (b.categories[cat].products || []).forEach((prod, idx) => {
+                    filas.push({ marca, cat, idx, prod });
+                });
             });
         });
         const total = filas.length;
 
+        if (!total && !todasCat) {
+            container.innerHTML = '<p class="text-muted" style="padding:1rem;">Ningún proveedor tiene esa categoría.</p>';
+            if (contador) contador.textContent = '';
+            return;
+        }
+
         const q = this.profileSearch;
         if (q) {
+            const nombre = m => (window.SEED_DATA.brands[m] || {}).name || m;
             filas = filas.filter(f =>
-                `${f.prod.code} ${f.prod.description} ${f.cat}`.toLowerCase().indexOf(q) !== -1);
+                `${f.prod.code} ${f.prod.description} ${f.cat} ${nombre(f.marca)}`.toLowerCase().indexOf(q) !== -1);
         }
 
         if (contador) {
@@ -269,30 +292,53 @@ class CatalogManager {
             return;
         }
 
-        const colors = brand.colors;
+        // Las marcas no tienen los mismos colores (Femec suma "grises"), así
+        // que con varias a la vista las columnas son la unión de todas y cada
+        // producto llena solo las que su marca maneja.
+        const colors = [];
+        marcas.forEach(m => (window.SEED_DATA.brands[m].colors || []).forEach(c => {
+            if (!colors.some(x => x.toLowerCase() === c.toLowerCase())) colors.push(c);
+        }));
         const editable = this.isAdmin;
+        const logos = window.BRAND_LOGOS || {};
 
         let html = `<table class="table" style="font-size: 0.82rem; min-width: 700px;">
             <thead><tr style="background: var(--primary); color: white;">
                 <th style="padding:8px;">Código</th>
                 <th style="padding:8px;">Descripción</th>`;
-        if (todas) html += `<th style="padding:8px;">Categoría</th>`;
+        if (todasCat) html += `<th style="padding:8px;">Categoría</th>`;
         colors.forEach(c => {
             html += `<th style="padding:8px; text-align:center;">${c}</th>`;
         });
         if (editable) html += `<th style="padding:8px; text-align:center;"><i class="fa-solid fa-cog"></i></th>`;
         html += `</tr></thead><tbody>`;
 
-        filas.forEach(({ cat, idx, prod }) => {
-            const ref = `data-idx="${idx}" data-cat="${window.escapeHtml(cat)}"`;
+        filas.forEach(({ marca, cat, idx, prod }) => {
+            const b = window.SEED_DATA.brands[marca];
+            const ref = `data-idx="${idx}" data-cat="${window.escapeHtml(cat)}" data-brand="${window.escapeHtml(marca)}"`;
+            const logo = logos[marca]
+                ? `<img src="${logos[marca]}" alt="${window.escapeHtml(b.name)}" title="${window.escapeHtml(b.name)}"
+                       onerror="this.style.display='none'"
+                       style="height:18px; width:18px; object-fit:contain; border-radius:3px; flex-shrink:0;">`
+                : '';
             html += `<tr>
-                <td style="padding:6px 8px; font-weight:600; color: var(--primary);">${editable ? `<input type="text" value="${window.escapeHtml(prod.code)}" data-field="code" ${ref} class="catalog-edit-input" style="width:75px;">` : window.escapeHtml(prod.code)}</td>
+                <td style="padding:6px 8px; font-weight:600; color: var(--primary);">
+                    <span style="display:inline-flex; align-items:center; gap:6px;">
+                        ${logo}${editable ? `<input type="text" value="${window.escapeHtml(prod.code)}" data-field="code" ${ref} class="catalog-edit-input" style="width:75px;">` : window.escapeHtml(prod.code)}
+                    </span>
+                </td>
                 <td style="padding:6px 8px;">${editable ? `<input type="text" value="${window.escapeHtml(prod.description)}" data-field="desc" ${ref} class="catalog-edit-input" style="width:200px;">` : window.escapeHtml(prod.description)}</td>`;
 
-            if (todas) html += `<td style="padding:6px 8px; color: var(--text-muted); font-size:0.76rem;">${window.escapeHtml(cat)}</td>`;
+            if (todasCat) html += `<td style="padding:6px 8px; color: var(--text-muted); font-size:0.76rem;">${window.escapeHtml(cat)}</td>`;
 
             colors.forEach(c => {
                 const colorKey = c.toLowerCase();
+                // Esta marca puede no tener este color: la celda queda vacía.
+                const aplica = (b.colors || []).some(x => x.toLowerCase() === colorKey);
+                if (!aplica) {
+                    html += `<td style="padding:6px 8px; text-align:center; background:#fafafa;"></td>`;
+                    return;
+                }
                 const price = prod.prices[colorKey];
                 const val = price !== null && price !== undefined ? price.toFixed(2) : '-';
                 if (editable) {
@@ -306,8 +352,9 @@ class CatalogManager {
                 }
             });
             if (editable) {
+                const esc = s => window.escapeHtml(s).replace(/'/g, "\\'");
                 html += `<td style="padding:6px 8px; text-align:center;">
-                    <button class="btn btn-sm btn-danger" onclick="window.catalogManager.deleteProduct(${idx}, '${window.escapeHtml(cat).replace(/'/g, "\\'")}')" title="Eliminar">
+                    <button class="btn btn-sm btn-danger" onclick="window.catalogManager.deleteProduct(${idx}, '${esc(cat)}', '${esc(marca)}')" title="Eliminar">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </td>`;
@@ -330,10 +377,14 @@ class CatalogManager {
         const input = e.target;
         const idx = parseInt(input.getAttribute('data-idx'));
         const field = input.getAttribute('data-field');
-        // La categoría viene en la fila: con "TODOS" la tabla mezcla varias y
-        // this.currentCategory no sirve para ubicar el producto.
+        // La marca y la categoría vienen en la fila: con "Todos" la tabla
+        // mezcla varias y this.currentBrand/currentCategory no sirven para
+        // ubicar el producto.
         const cat = input.getAttribute('data-cat') || this.currentCategory;
-        const prod = window.SEED_DATA.brands[this.currentBrand].categories[cat].products[idx];
+        const marca = input.getAttribute('data-brand') || this.currentBrand;
+        const contenedor = window.SEED_DATA.brands[marca];
+        if (!contenedor || !contenedor.categories[cat]) return;
+        const prod = contenedor.categories[cat].products[idx];
 
         if (field === 'price') {
             const colorKey = input.getAttribute('data-color');
@@ -341,7 +392,7 @@ class CatalogManager {
             prod.prices[colorKey] = val === '' ? null : parseFloat(val);
         } else if (field === 'code') {
             // Se re-aplica el prefijo del proveedor por si lo borraron al editar.
-            prod.code = window.prefixCode(input.value.trim().toUpperCase(), this.currentBrand);
+            prod.code = window.prefixCode(input.value.trim().toUpperCase(), marca);
             input.value = prod.code;
         } else {
             prod[field] = input.value.trim().toUpperCase();
@@ -350,10 +401,11 @@ class CatalogManager {
         this.markChanged();
     }
 
-    async deleteProduct(idx, categoria) {
+    async deleteProduct(idx, categoria, marca) {
         if (!(await notify.confirm('¿Eliminar este producto del catálogo?', { danger: true, confirmText: 'Eliminar' }))) return;
-        const brand = window.SEED_DATA.brands[this.currentBrand];
-        // Con "TODOS" la fila trae su propia categoría (ver renderProfilesTable).
+        // Con "Todos" la fila trae su propia marca y categoría (ver renderProfilesTable).
+        const brand = window.SEED_DATA.brands[marca || this.currentBrand];
+        if (!brand) return;
         const cat = brand.categories[categoria || this.currentCategory];
         if (!cat) return;
         cat.products.splice(idx, 1);
