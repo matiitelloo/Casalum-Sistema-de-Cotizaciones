@@ -202,17 +202,16 @@ class CatalogManager {
         if (!brand) { sel.innerHTML = ''; return; }
 
         const cats = Object.keys(brand.categories);
-        const total = cats.reduce((n, c) => n + (brand.categories[c].products || []).length, 0);
-        // "TODOS" primero: sirve para ver el catálogo completo del proveedor y
-        // para buscar un perfil sin saber en qué categoría está.
-        sel.innerHTML = `<option value="${CatalogManager.TODAS}">TODOS (${total} perfiles)</option>`
+        // "Todos" primero y por defecto: sirve para ver el catálogo completo
+        // del proveedor y para buscar un perfil sin saber en qué categoría está.
+        sel.innerHTML = `<option value="${CatalogManager.TODAS}">Todos</option>`
             + cats.map(c => `<option value="${window.escapeHtml(c)}">${window.escapeHtml(c)}</option>`).join('');
 
         // Se conserva la categoría elegida al cambiar de marca, si esa marca
-        // también la tiene; si no, se arranca en la primera.
+        // también la tiene; si no (y al entrar por primera vez), queda en Todos.
         const previa = this.currentCategory;
         const sigue = previa === CatalogManager.TODAS || cats.includes(previa);
-        this.currentCategory = sigue ? previa : (cats[0] || CatalogManager.TODAS);
+        this.currentCategory = sigue ? previa : CatalogManager.TODAS;
         sel.value = this.currentCategory;
         this.renderProfilesTable();
     }
