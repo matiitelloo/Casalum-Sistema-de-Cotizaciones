@@ -58,6 +58,13 @@ class App {
 
         navButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
+                // Los ítems del menú son enlaces de verdad (<a href="#...">)
+                // para que el clic derecho ofrezca "Abrir en una pestaña nueva".
+                // Con Ctrl/Cmd/Shift o el botón del medio se deja pasar la
+                // navegación del navegador, que es lo que abre la otra pestaña.
+                if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+
                 // Update active button
                 navButtons.forEach(b => b.classList.remove('active'));
                 const clickedBtn = e.currentTarget;
@@ -86,24 +93,9 @@ class App {
             });
         }
 
-        // Acceso directo a "Base de Datos" desde el submenú Cotización: navega a
-        // Catálogo y abre esa pestaña de una vez (en vez de la de Módulos, que es
-        // la que abre por defecto). La edición sigue restringida a admins: reutiliza
-        // la misma vista de Catálogo, que ya solo habilita los campos para ellos.
-        const navCatalogDb = document.getElementById('nav-catalog-db');
-        if (navCatalogDb) {
-            navCatalogDb.addEventListener('click', () => {
-                this.navigate('catalog');
-                if (window.moduleManager) window.moduleManager.showView('db');
-            });
-        }
-        const navCatalogModules = document.getElementById('nav-catalog-modules');
-        if (navCatalogModules) {
-            navCatalogModules.addEventListener('click', () => {
-                this.navigate('catalog');
-                if (window.moduleManager) window.moduleManager.showView('modules');
-            });
-        }
+        // Los dos botones del submenú Catálogo ya no necesitan manejador propio:
+        // cada uno lleva su data-page ("catalog" y "catalog-db"), y navigate()
+        // abre la vista que corresponde según la sección.
 
         const bindGroupToggle = (toggleId, submenuId, arrowId) => {
             const toggle = document.getElementById(toggleId);
@@ -211,7 +203,9 @@ class App {
 
         const pageId = deLaUrl || saved.page;
         if (!pageId || pageId === 'dashboard') return;                  // ya es la pantalla inicial
-        if (!document.getElementById(`page-${pageId}`)) return;         // sección que ya no existe
+        // Se busca la PANTALLA, no la sección: "catalog-db" no tiene un
+        // page-catalog-db propio, comparte page-catalog con "catalog".
+        if (!document.getElementById(`page-${this.pantallaDe(pageId)}`)) return;
         if (pageId === 'settings' && user.role !== 'admin') return;     // no la puede ver
 
         // replace: la restauración es la primera pantalla de la sesión, no un
@@ -319,11 +313,29 @@ class App {
             'history': 'historial',
             'new-quotation': 'nueva-cotizacion',
             'clients': 'clientes',
-            'catalog': 'catalogo',
+            // Catálogo tiene dos vistas dentro de la misma pantalla. Cada una
+            // lleva su propia dirección para que recargar con F5 vuelva a la
+            // que se estaba viendo, y para poder compartir el enlace.
+            'catalog': 'preestablecer',
+            'catalog-db': 'base_de_datos',
             'glass-quote': 'cotizar-vidrio',
             'settings': 'ajustes',
             'profile': 'perfil'
         };
+    }
+
+    /**
+     * Secciones que en realidad son la misma pantalla (`page-catalog`) con una
+     * vista distinta adentro. La clave es la sección de la URL; el valor, la
+     * vista que hay que abrir (ver ModuleManager.showView).
+     */
+    static get SUBVISTA_CATALOGO() {
+        return { 'catalog': 'modules', 'catalog-db': 'db' };
+    }
+
+    /** Id del <div class="page"> que le corresponde a una sección. */
+    pantallaDe(pageId) {
+        return App.SUBVISTA_CATALOGO[pageId] ? 'catalog' : pageId;
     }
 
     /** Sección interna -> texto de la URL. */
@@ -338,6 +350,9 @@ class App {
      */
     seccionDe(ruta) {
         if (!ruta) return '';
+        // Enlaces viejos: el Catálogo era una sola dirección "#catalogo" y hoy
+        // son dos. Se abre en Preestablecer Ítems, que era lo que mostraba.
+        if (ruta === 'catalogo') return 'catalog';
         const enEspanol = Object.keys(App.RUTAS).find(k => App.RUTAS[k] === ruta);
         if (enEspanol) return enEspanol;
         return App.RUTAS[ruta] ? ruta : ruta;   // ya venía en inglés (enlace viejo)
@@ -371,7 +386,8 @@ class App {
                 || this.seccionDe(location.hash ? location.hash.slice(1) : '')
                 || 'dashboard';
 
-            if (!document.getElementById(`page-${pageId}`)) return;
+            // La pantalla, no la sección: "catalog-db" comparte page-catalog.
+            if (!document.getElementById(`page-${this.pantallaDe(pageId)}`)) return;
 
             // Sección de admin: si el usuario no puede verla, no se abre.
             const user = window.authManager && window.authManager.currentUser;
@@ -418,7 +434,10 @@ class App {
      *   apilar una nueva (para la restauración inicial de sesión).
      */
     navigate(pageId, opts) {
-        const targetPage = document.getElementById(`page-${pageId}`);
+        // "catalog-db" no tiene pantalla propia: es page-catalog con la otra
+        // vista abierta (ver SUBVISTA_CATALOGO).
+        const pantalla = this.pantallaDe(pageId);
+        const targetPage = document.getElementById(`page-${pantalla}`);
         if (!targetPage) {
             console.warn(`navigate(): página desconocida "${pageId}", se ignora.`);
             return;
@@ -444,6 +463,7 @@ class App {
             'clients': 'Directorio de Clientes',
             'history': 'Historial de Cotizaciones',
             'catalog': 'Catálogo de Productos',
+            'catalog-db': 'Catálogo de Productos',
             'glass-quote': 'Cotizar Vidrio',
             'settings': 'Ajustes de la Empresa'
         };
@@ -468,7 +488,9 @@ class App {
             if (window.clientManager) {
                 window.clientManager.loadClientsList();
             }
-        } else if (pageId === 'catalog') {
+        } else if (pantalla === 'catalog') {
+            // Cuál de las dos vistas abrir sale de la sección, o sea de la URL.
+            if (window.moduleManager) window.moduleManager.showView(App.SUBVISTA_CATALOGO[pageId] || 'modules');
             this.loadCatalogPreview();
         } else if (pageId === 'history') {
             this.loadRecentQuotations();

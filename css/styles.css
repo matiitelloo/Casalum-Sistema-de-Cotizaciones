@@ -214,6 +214,8 @@ body {
 .nav-item {
     background: transparent;
     border: none;
+    /* Los que navegan son <a> de verdad, para poder abrirlos en otra pestaña. */
+    text-decoration: none;
     color: rgba(255, 255, 255, 0.65);
     padding: 0.8rem 1rem;
     text-align: left;

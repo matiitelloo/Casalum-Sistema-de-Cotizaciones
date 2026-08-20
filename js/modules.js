@@ -51,6 +51,11 @@ class ModuleManager {
     // ============================================================
     // NAVEGACIÓN DE VISTAS (Módulos <-> Base de datos)
     // ============================================================
+    /**
+     * Abre una de las dos vistas del Catálogo. Quién la llama es navigate() en
+     * app.js según la sección de la URL ("preestablecer" o "base_de_datos"), así
+     * que no hace falta recordar nada acá: la dirección ya dice cuál va.
+     */
     showView(view) {
         const modulesView = document.getElementById('catalog-modules-view');
         const dbView = document.getElementById('catalog-db-view');
@@ -73,10 +78,8 @@ class ModuleManager {
     }
 
     bindEvents() {
-        const navModules = document.getElementById('nav-catalog-modules');
-        const navDb = document.getElementById('nav-catalog-db');
-        if (navModules) navModules.addEventListener('click', () => this.showView('modules'));
-        if (navDb) navDb.addEventListener('click', () => this.showView('db'));
+        // Los botones del submenú no se manejan acá: cada uno lleva su
+        // data-page y de la navegación se encarga app.js (ver SUBVISTA_CATALOGO).
 
         const groupSel = document.getElementById('module-group-select');
         if (groupSel) groupSel.addEventListener('change', () => {

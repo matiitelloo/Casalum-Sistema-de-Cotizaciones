@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css?v=8">
+    <link rel="stylesheet" href="css/styles.css?v=9">
     <link rel="stylesheet" href="css/print.css">
     <style>
         /* Extra styles for tables and stepper */
@@ -36,7 +36,11 @@
         .btn-danger { background-color: var(--danger); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
         .totals-box { background: #f9fafb; padding: 1.5rem; border-radius: var(--radius); margin-top: 2rem; border: 1px solid var(--border); }
-        .totals-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 1rem; }
+        /* gap: con "SUBTOTAL SIN DESCUENTO", que es la etiqueta más larga, el
+           space-between solo no dejaba aire y el rótulo quedaba pegado al importe. */
+        .totals-row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; font-size: 1rem; }
+        .totals-row > :first-child { min-width: 0; }
+        .totals-row > :last-child { flex-shrink: 0; white-space: nowrap; }
         .totals-row.grand-total { font-size: 1.25rem; font-weight: 700; color: var(--primary); border-top: 2px solid var(--border); padding-top: 0.5rem; margin-top: 0.5rem; }
 
         /* Catalog edit inputs */
@@ -198,31 +202,31 @@
                 <img src="assets/logo.png" alt="CASALUM" style="width: 140px; background: white; border-radius: 8px; padding: 6px;">
             </div>
             <nav class="sidebar-nav">
-                <button class="nav-item active" data-page="dashboard"><i class="fa-solid fa-home"></i> Inicio</button>
+                <a class="nav-item active" href="#inicio" data-page="dashboard"><i class="fa-solid fa-home"></i> Inicio</a>
 
                 <button class="nav-item" type="button" id="nav-group-cotizacion" aria-expanded="false">
                     <i class="fa-solid fa-file-invoice"></i> Cotización
                     <i class="fa-solid fa-chevron-down" id="nav-group-cotizacion-arrow" style="margin-left: auto; font-size: 0.7rem; transition: transform var(--duration) var(--ease-smooth);"></i>
                 </button>
                 <div id="nav-submenu-cotizacion" style="display: none; flex-direction: column; gap: 0.25rem; padding-left: 1.25rem;">
-                    <button class="nav-item" data-page="new-quotation" id="nav-new-quotation"><i class="fa-solid fa-plus-circle"></i> Nueva Cotización</button>
-                    <button class="nav-item" data-page="new-quotation" id="nav-quick-quote"><i class="fa-solid fa-bolt"></i> Cotización Rápida</button>
-                    <button class="nav-item" data-page="glass-quote"><i class="fa-solid fa-glass-water"></i> Cotizar Vidrio</button>
-                    <button class="nav-item" data-page="history"><i class="fa-solid fa-magnifying-glass"></i> Buscar Cotización</button>
+                    <a class="nav-item" href="#nueva-cotizacion" data-page="new-quotation" id="nav-new-quotation"><i class="fa-solid fa-plus-circle"></i> Nueva Cotización</a>
+                    <a class="nav-item" href="#nueva-cotizacion" data-page="new-quotation" id="nav-quick-quote"><i class="fa-solid fa-bolt"></i> Cotización Rápida</a>
+                    <a class="nav-item" href="#cotizar-vidrio" data-page="glass-quote"><i class="fa-solid fa-glass-water"></i> Cotizar Vidrio</a>
+                    <a class="nav-item" href="#historial" data-page="history"><i class="fa-solid fa-magnifying-glass"></i> Buscar Cotización</a>
                 </div>
 
-                <button class="nav-item" data-page="clients"><i class="fa-solid fa-address-book"></i> Clientes</button>
+                <a class="nav-item" href="#clientes" data-page="clients"><i class="fa-solid fa-address-book"></i> Clientes</a>
 
                 <button class="nav-item" type="button" id="nav-group-catalogo" aria-expanded="false">
                     <i class="fa-solid fa-book-open"></i> Catálogo
                     <i class="fa-solid fa-chevron-down" id="nav-group-catalogo-arrow" style="margin-left: auto; font-size: 0.7rem; transition: transform var(--duration) var(--ease-smooth);"></i>
                 </button>
                 <div id="nav-submenu-catalogo" style="display: none; flex-direction: column; gap: 0.25rem; padding-left: 1.25rem;">
-                    <button class="nav-item" data-page="catalog" id="nav-catalog-modules"><i class="fa-solid fa-cubes"></i> Preestablecer ítems</button>
-                    <button class="nav-item" data-page="catalog" id="nav-catalog-db"><i class="fa-solid fa-database"></i> Base de Datos</button>
+                    <a class="nav-item" href="#preestablecer" data-page="catalog" id="nav-catalog-modules"><i class="fa-solid fa-cubes"></i> Preestablecer ítems</a>
+                    <a class="nav-item" href="#base_de_datos" data-page="catalog-db" id="nav-catalog-db"><i class="fa-solid fa-database"></i> Base de Datos</a>
                 </div>
 
-                <button class="nav-item" data-page="settings" id="nav-settings" style="display: none;"><i class="fa-solid fa-gear"></i> Ajustes de la Empresa</button>
+                <a class="nav-item" href="#ajustes" data-page="settings" id="nav-settings" style="display: none;"><i class="fa-solid fa-gear"></i> Ajustes de la Empresa</a>
             </nav>
         </aside>
 
@@ -1385,9 +1389,9 @@
     <script src="js/pdf.js?v=4"></script>
     <script src="js/word.js?v=9"></script>
     <script src="js/catalog.js?v=20"></script>
-    <script src="js/modules.js?v=21"></script>
+    <script src="js/modules.js?v=23"></script>
     <script src="js/settings.js?v=3"></script>
-    <script src="js/app.js?v=23"></script>
+    <script src="js/app.js?v=26"></script>
 
     <!-- Registro del service worker: es lo que hace que Android ofrezca
          instalarla y que abra sin señal. Va al final y sin bloquear nada: si
