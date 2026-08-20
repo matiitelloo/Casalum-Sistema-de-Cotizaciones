@@ -28,6 +28,7 @@ class CatalogManager {
         this.hasChanges = false;
         this.currentBrand = '';
         this.currentCategory = '';
+        this.profileSearch = '';
         this.currentTab = 'profiles';
         this.rolesFilter = '';
         this.rolesOnlyIncomplete = false;
@@ -119,6 +120,14 @@ class CatalogManager {
             });
         }
 
+        const buscador = document.getElementById('catalog-profile-search');
+        if (buscador) {
+            buscador.addEventListener('input', () => {
+                this.profileSearch = buscador.value.trim().toLowerCase();
+                this.renderProfilesTable();
+            });
+        }
+
         // Filtros del tab de roles genéricos
         const rolesFilter = document.getElementById('roles-filter');
         if (rolesFilter) {
@@ -183,22 +192,29 @@ class CatalogManager {
         }
     }
 
+    /** Valor de la opción "TODOS" del desplegable de categorías. */
+    static get TODAS() { return '__todas__'; }
+
     populateCategorySelect() {
         const sel = document.getElementById('catalog-category-select');
         if (!sel) return;
-        sel.innerHTML = '';
         const brand = window.SEED_DATA.brands[this.currentBrand];
-        if (!brand) return;
+        if (!brand) { sel.innerHTML = ''; return; }
 
         const cats = Object.keys(brand.categories);
-        cats.forEach((cat, i) => {
-            sel.innerHTML += `<option value="${window.escapeHtml(cat)}">${window.escapeHtml(cat)}</option>`;
-        });
-        if (cats.length > 0) {
-            this.currentCategory = cats[0];
-            sel.value = cats[0];
-            this.renderProfilesTable();
-        }
+        const total = cats.reduce((n, c) => n + (brand.categories[c].products || []).length, 0);
+        // "TODOS" primero: sirve para ver el catálogo completo del proveedor y
+        // para buscar un perfil sin saber en qué categoría está.
+        sel.innerHTML = `<option value="${CatalogManager.TODAS}">TODOS (${total} perfiles)</option>`
+            + cats.map(c => `<option value="${window.escapeHtml(c)}">${window.escapeHtml(c)}</option>`).join('');
+
+        // Se conserva la categoría elegida al cambiar de marca, si esa marca
+        // también la tiene; si no, se arranca en la primera.
+        const previa = this.currentCategory;
+        const sigue = previa === CatalogManager.TODAS || cats.includes(previa);
+        this.currentCategory = sigue ? previa : (cats[0] || CatalogManager.TODAS);
+        sel.value = this.currentCategory;
+        this.renderProfilesTable();
     }
 
     renderCurrentTab() {
@@ -214,10 +230,45 @@ class CatalogManager {
     renderProfilesTable() {
         const container = document.getElementById('catalog-profiles-table');
         if (!container) return;
+        const contador = document.getElementById('catalog-profiles-count');
         const brand = window.SEED_DATA.brands[this.currentBrand];
         if (!brand) { container.innerHTML = '<p>Marca no encontrada.</p>'; return; }
-        const cat = brand.categories[this.currentCategory];
-        if (!cat) { container.innerHTML = '<p>Seleccione una categoría.</p>'; return; }
+
+        const todas = this.currentCategory === CatalogManager.TODAS;
+        if (!todas && !brand.categories[this.currentCategory]) {
+            container.innerHTML = '<p>Seleccione una categoría.</p>';
+            return;
+        }
+
+        // Cada fila se queda con SU categoría: con "TODOS" la tabla mezcla
+        // varias, y el índice por sí solo no alcanza para saber a qué producto
+        // corresponde al editarlo o borrarlo.
+        const cats = todas ? Object.keys(brand.categories) : [this.currentCategory];
+        let filas = [];
+        cats.forEach(cat => {
+            (brand.categories[cat].products || []).forEach((prod, idx) => {
+                filas.push({ cat, idx, prod });
+            });
+        });
+        const total = filas.length;
+
+        const q = this.profileSearch;
+        if (q) {
+            filas = filas.filter(f =>
+                `${f.prod.code} ${f.prod.description} ${f.cat}`.toLowerCase().indexOf(q) !== -1);
+        }
+
+        if (contador) {
+            contador.textContent = q
+                ? `${filas.length} de ${total} perfiles`
+                : `${total} perfil${total === 1 ? '' : 'es'}`;
+        }
+
+        if (!filas.length) {
+            container.innerHTML = `<p class="text-muted" style="padding:1rem;">${
+                q ? 'Ningún perfil coincide con la búsqueda.' : 'Esta categoría no tiene perfiles.'}</p>`;
+            return;
+        }
 
         const colors = brand.colors;
         const editable = this.isAdmin;
@@ -226,20 +277,20 @@ class CatalogManager {
             <thead><tr style="background: var(--primary); color: white;">
                 <th style="padding:8px;">Código</th>
                 <th style="padding:8px;">Descripción</th>`;
+        if (todas) html += `<th style="padding:8px;">Categoría</th>`;
         colors.forEach(c => {
             html += `<th style="padding:8px; text-align:center;">${c}</th>`;
         });
         if (editable) html += `<th style="padding:8px; text-align:center;"><i class="fa-solid fa-cog"></i></th>`;
         html += `</tr></thead><tbody>`;
 
-        cat.products.forEach((prod, idx) => {
+        filas.forEach(({ cat, idx, prod }) => {
+            const ref = `data-idx="${idx}" data-cat="${window.escapeHtml(cat)}"`;
             html += `<tr>
-                <td style="padding:6px 8px; font-weight:600; color: var(--primary);">${editable ? `<input type="text" value="${window.escapeHtml(prod.code)}" data-field="code" data-idx="${idx}" class="catalog-edit-input" style="width:75px;">` : window.escapeHtml(prod.code)}</td>
-                <td style="padding:6px 8px;">${editable ? `<input type="text" value="${window.escapeHtml(prod.description)}" data-field="desc" data-idx="${idx}" class="catalog-edit-input" style="width:200px;">` : window.escapeHtml(prod.description)}</td>`;
-                
-            if (editable) {
-                // Fijo/Fórmula fue transferido a Módulos
-            }
+                <td style="padding:6px 8px; font-weight:600; color: var(--primary);">${editable ? `<input type="text" value="${window.escapeHtml(prod.code)}" data-field="code" ${ref} class="catalog-edit-input" style="width:75px;">` : window.escapeHtml(prod.code)}</td>
+                <td style="padding:6px 8px;">${editable ? `<input type="text" value="${window.escapeHtml(prod.description)}" data-field="desc" ${ref} class="catalog-edit-input" style="width:200px;">` : window.escapeHtml(prod.description)}</td>`;
+
+            if (todas) html += `<td style="padding:6px 8px; color: var(--text-muted); font-size:0.76rem;">${window.escapeHtml(cat)}</td>`;
 
             colors.forEach(c => {
                 const colorKey = c.toLowerCase();
@@ -247,8 +298,8 @@ class CatalogManager {
                 const val = price !== null && price !== undefined ? price.toFixed(2) : '-';
                 if (editable) {
                     html += `<td style="padding:6px 4px; text-align:center;">
-                        <input type="number" step="0.01" value="${price !== null && price !== undefined ? price : ''}" 
-                            data-field="price" data-color="${colorKey}" data-idx="${idx}" 
+                        <input type="number" step="0.01" value="${price !== null && price !== undefined ? price : ''}"
+                            data-field="price" data-color="${colorKey}" ${ref}
                             class="catalog-edit-input" style="width:65px; text-align:center;">
                     </td>`;
                 } else {
@@ -257,7 +308,7 @@ class CatalogManager {
             });
             if (editable) {
                 html += `<td style="padding:6px 8px; text-align:center;">
-                    <button class="btn btn-sm btn-danger" onclick="window.catalogManager.deleteProduct(${idx})" title="Eliminar">
+                    <button class="btn btn-sm btn-danger" onclick="window.catalogManager.deleteProduct(${idx}, '${window.escapeHtml(cat).replace(/'/g, "\\'")}')" title="Eliminar">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </td>`;
@@ -280,7 +331,10 @@ class CatalogManager {
         const input = e.target;
         const idx = parseInt(input.getAttribute('data-idx'));
         const field = input.getAttribute('data-field');
-        const prod = window.SEED_DATA.brands[this.currentBrand].categories[this.currentCategory].products[idx];
+        // La categoría viene en la fila: con "TODOS" la tabla mezcla varias y
+        // this.currentCategory no sirve para ubicar el producto.
+        const cat = input.getAttribute('data-cat') || this.currentCategory;
+        const prod = window.SEED_DATA.brands[this.currentBrand].categories[cat].products[idx];
 
         if (field === 'price') {
             const colorKey = input.getAttribute('data-color');
@@ -297,10 +351,12 @@ class CatalogManager {
         this.markChanged();
     }
 
-    async deleteProduct(idx) {
+    async deleteProduct(idx, categoria) {
         if (!(await notify.confirm('¿Eliminar este producto del catálogo?', { danger: true, confirmText: 'Eliminar' }))) return;
         const brand = window.SEED_DATA.brands[this.currentBrand];
-        const cat = brand.categories[this.currentCategory];
+        // Con "TODOS" la fila trae su propia categoría (ver renderProfilesTable).
+        const cat = brand.categories[categoria || this.currentCategory];
+        if (!cat) return;
         cat.products.splice(idx, 1);
         this.markChanged();
         this.renderProfilesTable();
