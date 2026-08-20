@@ -345,13 +345,16 @@ ${formaPago.length ? `<div style="margin-top:10pt; page-break-inside:avoid;">
 <!-- Firmas -->
 <table style="width:100%; border-collapse:collapse; margin-top:16pt; page-break-inside:avoid;">
     <tr>
-        <td style="width:50%; font-size:8.5pt; font-style:italic; color:${GRIS_TX}; padding-left:26pt;">Atentamente,</td>
-        <td style="font-size:8.5pt; font-style:italic; color:${GRIS_TX}; padding-left:26pt;">Aceptado conforme,</td>
+        <!-- Los rótulos van en el mismo recuadro que la firma y el nombre. -->
+        <td style="width:50%; font-size:8.5pt; font-style:italic; color:${GRIS_TX}; text-align:center; padding:0 24pt 0 0;">Atentamente,</td>
+        <td style="font-size:8.5pt; font-style:italic; color:${GRIS_TX}; text-align:center; padding:0 0 0 24pt;">Aceptado conforme,</td>
     </tr>
     <tr>
         <!-- La firma se apoya sobre la línea; el alto fijo reserva su lugar
-             aunque la imagen no llegue a cargar. -->
-        <td style="height:46pt; vertical-align:bottom; padding:0 0 0 14pt;">
+             aunque la imagen no llegue a cargar. Lleva el MISMO recuadro que la
+             celda del nombre de abajo (centrado y padding-right 24pt) para que
+             quede centrada sobre la línea y no corrida a un costado. -->
+        <td style="height:46pt; vertical-align:bottom; text-align:center; padding:0 24pt 0 0;">
             ${firmaDataUri ? `<img src="${firmaDataUri}" alt="" style="height:44pt; margin-bottom:-8pt;">` : '&nbsp;'}
         </td>
         <td style="padding:0;">&nbsp;</td>
