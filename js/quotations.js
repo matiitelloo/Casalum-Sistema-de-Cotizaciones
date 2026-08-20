@@ -587,6 +587,34 @@ class QuotationManager {
         this.goToStep(1);
     }
 
+    /**
+     * Entra a Nueva Cotización con un sistema ya elegido. Lo usa el catálogo
+     * visual de Inicio: el usuario ve la foto de lo que quiere y de ahí pasa a
+     * cotizarlo, sin tener que buscar el nombre en la lista.
+     *
+     * Empieza en el Paso 1 (Cliente), que es por donde va toda cotización, pero
+     * el sistema queda puesto desde ya para cuando llegue al Paso 3.
+     */
+    cotizarFamilia(familia) {
+        window.app.navigate('new-quotation');
+
+        const sel = document.getElementById('p-system');
+        if (sel) {
+            sel.value = familia;
+            if (sel.value !== familia) {
+                // La foto apunta a una familia que ya no está en el catálogo.
+                console.warn(`cotizarFamilia(): "${familia}" no existe en Sistema / Categoría.`);
+            } else {
+                // Elegir la opción a mano no dispara el evento "change": hay que
+                // pedir a mano que se aplique la receta que le toca.
+                this.syncModuleFromSystem();
+                this.marcarCantidadesFueraDeRango();
+            }
+        }
+
+        this.goToStep(1);
+    }
+
     async loadQuotationForEdit(q) {
         this.editingId = q.id;
         this.editingDate = q.date; // Keep original date as user requested

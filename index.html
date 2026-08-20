@@ -114,6 +114,14 @@
             gap: 0.75rem;
             cursor: default;
             max-width: 90%;
+            /* La columna no puede pasarse de alto: si se pasa, el titulo se sale
+               por arriba y el boton de cotizar queda cortado por abajo (pasa en
+               el celular acostado y en ventanas bajas). Lo que cede es la foto,
+               que se achica sola (ver el min-height de la imagen). */
+            max-height: 100vh;
+            max-height: 100dvh;
+            padding: 1rem 0;
+            box-sizing: border-box;
         }
         .lightbox-title {
             color: white;
@@ -140,9 +148,30 @@
             z-index: 10000;
         }
         .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+        /* Atajo para cotizar la foto que se esta mirando. */
+        .lightbox-cotizar {
+            border: none;
+            border-radius: 999px;
+            padding: 0.7rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+            transition: transform 0.15s ease, filter 0.15s ease;
+        }
+        .lightbox-cotizar:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .lightbox-overlay img {
             max-width: 85%;
+            /* min-height:0 es lo que le permite achicarse dentro de la columna:
+               sin eso una imagen alta empuja al resto fuera de la pantalla. */
             max-height: 85vh;
+            min-height: 0;
             object-fit: contain;
             border-radius: 10px;
             box-shadow: 0 12px 40px rgba(0,0,0,0.4);
@@ -290,63 +319,63 @@
                             <h3 style="color: var(--primary); margin: 0;">Sistemas y Modelos <span style="font-size: 0.9rem; font-weight: normal; color: var(--text-secondary); margin-left: 10px;">Catálogo Visual</span></h3>
                         </div>
                         <div class="product-gallery">
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="VENTANA FIJA 1100" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785514348622.jpg" alt="Ventana Fija" loading="lazy" decoding="async">
                                 <div class="card-title">1. Ventana Fija</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="VENTANA CORREDIZA 1300" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785514348519.jpg" alt="Ventana Corrediza" loading="lazy" decoding="async">
                                 <div class="card-title">2. Ventana Corrediza</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="VENTANA PROYECTABLE" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513139059.jpg" alt="Ventana Proyectable" loading="lazy" decoding="async">
                                 <div class="card-title">3. Ventana Proyectable</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="VENTANA EN TUBO" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513965545.jpg" alt="Ventana en Tubo 5x4" loading="lazy" decoding="async">
                                 <div class="card-title">4. Ventana en Tubo (5x4)</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="VENTANA EN TUBO" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785514348538.jpg" alt="Ventana en Tubo 4x4" loading="lazy" decoding="async">
                                 <div class="card-title">4. Ventana en Tubo (4x4)</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="VENTANA EN TUBO" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785514348548.jpg" alt="Ventana en Tubo 7x4" loading="lazy" decoding="async">
                                 <div class="card-title">4. Ventana en Tubo (7x4)</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="PUERTAS BATIENTE" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513485072.jpg" alt="Puerta Batiente 7x4" loading="lazy" decoding="async">
                                 <div class="card-title">5. Puertas Batientes (7x4)</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="PUERTAS BATIENTE" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513485346.jpg" alt="Puerta Batiente 5x4" loading="lazy" decoding="async">
                                 <div class="card-title">5. Puertas Batientes (5x4)</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="PUERTA CORREDIZA 2000" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513485162.jpg" alt="Puerta Corrediza 2000" loading="lazy" decoding="async">
                                 <div class="card-title">6. Puerta Corrediza 2000</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="PUERTA CORREDIZA EUROPEA APILABLE" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513485220.jpg" alt="Puerta Corrediza Europea Apilable" loading="lazy" decoding="async">
                                 <div class="card-title">7. Puerta Corrediza Europea</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="PUERTA T45" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513485076.jpg" alt="Puerta T45" loading="lazy" decoding="async">
                                 <div class="card-title">8. Puerta T45</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="MAMPARAS FIJAS" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513139065.jpg" alt="Mampara Aluminio" loading="lazy" decoding="async">
                                 <div class="card-title">9. Mampara (Aluminio)</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="MAMPARAS FIJAS" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513139116.jpg" alt="Mampara" loading="lazy" decoding="async">
                                 <div class="card-title">9.1. Mamparas</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="CABINAS ACERO Y VIDRIO" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513139023.jpg" alt="Cabina Corrediza" loading="lazy" decoding="async">
                                 <div class="card-title">10. Cabina Corrediza</div>
                             </div>
-                            <div class="gallery-card" onclick="openLightbox(this)">
+                            <div class="gallery-card" data-familia="CABINAS ACERO Y VIDRIO" onclick="openLightbox(this)">
                                 <img src="img/products/media__1785513139184.jpg" alt="Cabina Batiente" loading="lazy" decoding="async">
                                 <div class="card-title">10.1. Cabina Batiente</div>
                             </div>
@@ -1313,6 +1342,9 @@
         <div class="lightbox-content" onclick="event.stopPropagation()">
             <div id="lightbox-title" class="lightbox-title"></div>
             <img id="lightbox-img" src="" alt="">
+            <button type="button" id="lightbox-cotizar" class="lightbox-cotizar" onclick="cotizarImagenActual()">
+                <i class="fa-solid fa-file-invoice-dollar"></i> ¿Deseas cotizarla? Click aquí
+            </button>
         </div>
     </div>
 
@@ -1321,6 +1353,9 @@
         let currentLightboxIndex = -1;
         const galleryImages = [];
         const galleryTitles = [];
+        // Familia del catalogo que le corresponde a cada foto (data-familia en la
+        // tarjeta). Es lo que se deja elegido en "Sistema / Categoria" al cotizar.
+        const galleryFamilies = [];
 
         function collectGalleryData() {
             if (galleryImages.length > 0) return;
@@ -1329,6 +1364,7 @@
                 const title = card.querySelector('.card-title');
                 galleryImages.push(img.src);
                 galleryTitles.push(title ? title.textContent.trim() : '');
+                galleryFamilies.push(card.getAttribute('data-familia') || '');
             });
         }
 
@@ -1338,6 +1374,17 @@
             currentLightboxIndex = index;
             document.getElementById('lightbox-img').src = galleryImages[index];
             document.getElementById('lightbox-title').textContent = galleryTitles[index] || '';
+            // Una foto sin familia asignada no se puede cotizar de un clic.
+            const btn = document.getElementById('lightbox-cotizar');
+            if (btn) btn.style.display = galleryFamilies[index] ? 'inline-flex' : 'none';
+        }
+
+        /** Lleva la foto que se esta mirando al formulario de Nueva Cotizacion. */
+        function cotizarImagenActual() {
+            const familia = galleryFamilies[currentLightboxIndex];
+            if (!familia || !window.quotationManager) return;
+            closeLightbox();
+            window.quotationManager.cotizarFamilia(familia);
         }
 
         function openLightbox(card) {
@@ -1384,7 +1431,7 @@
     <script src="js/db.js?v=3"></script>
     <script src="js/calculator.js?v=13"></script>
     <script src="js/ventanaFija1100.js?v=9"></script>
-    <script src="js/quotations.js?v=54"></script>
+    <script src="js/quotations.js?v=55"></script>
     <script src="js/clients.js?v=10"></script>
     <script src="js/pdf.js?v=4"></script>
     <script src="js/word.js?v=9"></script>
