@@ -648,6 +648,11 @@ class QuotationManager {
             btnAddDirect.addEventListener('click', () => this.addItemToCart());
         }
 
+        const btnManual = document.getElementById('btn-add-manual');
+        if (btnManual) {
+            btnManual.addEventListener('click', () => this.abrirProductoManual());
+        }
+
         // Sub-tabs del Paso 3: Productos / Mano de Obra y Extras (solo cambia qué se
         // ve; el cálculo y el guardado usan los mismos campos sin importar la pestaña activa)
         document.querySelectorAll('.product-form-tab').forEach(tab => {
@@ -1404,6 +1409,129 @@ class QuotationManager {
     }
 
     /**
+     * Producto escrito a mano, para cotizar algo que no está en el catálogo ni
+     * en la base de datos (un trabajo especial, un material comprado hecho).
+     *
+     * No pasa por las recetas ni por el margen: el precio que se escribe acá es
+     * el que va a la cotización tal cual. Por eso el ítem guarda gastos y
+     * utilidad en 0 y su costo crudo igual al total — si se le aplicara el
+     * margen encima, el usuario vería un número distinto del que escribió.
+     *
+     * @param {Object} [previo] - ítem que se está editando, para precargarlo.
+     * @param {number} [indice] - posición en el carrito cuando se está editando.
+     */
+    abrirProductoManual(previo, indice) {
+        const editando = previo !== undefined && indice !== undefined;
+        const v = previo || {};
+
+        const overlay = document.createElement('div');
+        overlay.className = 'notify-confirm-overlay';
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:2000; display:flex; justify-content:center; align-items:center; backdrop-filter:blur(4px);';
+        overlay.innerHTML = `
+            <div role="dialog" aria-modal="true" aria-label="Producto manual"
+                style="background:#fff; border-radius:var(--radius-lg); padding:1.5rem; max-width:520px; width:92%; box-shadow:var(--shadow-lg); max-height:90vh; overflow:auto;">
+                <h3 style="margin:0 0 0.25rem; color:var(--primary);">
+                    <i class="fa-solid fa-pen-to-square"></i> ${editando ? 'Editar producto manual' : 'Agregar producto manualmente'}
+                </h3>
+                <p style="margin:0 0 1.1rem; color:var(--text-muted); font-size:0.85rem;">
+                    Para algo que no está en el catálogo. El precio que escriba es el que va a la
+                    cotización: no se le suman gastos generales ni utilidad.
+                </p>
+                <div class="grid-form" style="grid-template-columns: 1fr 1fr; gap:0.9rem;">
+                    <div class="form-group" style="margin:0;">
+                        <label>Cantidad *</label>
+                        <input type="number" id="man-cant" class="form-control" min="1" step="1" value="${v.quantity || 1}">
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label>Medidas</label>
+                        <input type="text" id="man-med" class="form-control" placeholder="Ej: 1.20 x 0.80 m" value="${window.escapeHtml(v.dimensions || '')}">
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1; margin:0;">
+                        <label>Descripción *</label>
+                        <textarea id="man-desc" class="form-control" rows="3"
+                            placeholder="Ej: PASAMANOS DE ACERO INOXIDABLE CON VIDRIO TEMPLADO 10MM">${window.escapeHtml(v.description || '')}</textarea>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1; margin:0;">
+                        <label>Total ($) *</label>
+                        <input type="number" id="man-total" class="form-control" min="0" step="0.01"
+                            placeholder="Precio final de este ítem" value="${v.total !== undefined ? v.total : ''}">
+                        <small id="man-ayuda" style="color:var(--text-muted); font-size:0.78rem; margin-top:0.3rem;"></small>
+                    </div>
+                </div>
+                <div id="man-error" style="display:none; color:var(--danger); font-size:0.85rem; margin-top:0.8rem;"></div>
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.3rem;">
+                    <button type="button" class="btn btn-outline" id="man-cancelar">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="man-ok">
+                        <i class="fa-solid fa-plus"></i> ${editando ? 'Guardar cambios' : 'Agregar a la cotización'}
+                    </button>
+                </div>
+            </div>`;
+        document.body.appendChild(overlay);
+
+        const $ = id => document.getElementById(id);
+        const cerrar = () => { overlay.remove(); document.removeEventListener('keydown', onKey); };
+        const onKey = e => { if (e.key === 'Escape') cerrar(); };
+        document.addEventListener('keydown', onKey);
+        overlay.addEventListener('click', e => { if (e.target === overlay) cerrar(); });
+        $('man-cancelar').addEventListener('click', cerrar);
+
+        // Deja ver cuánto da por unidad, que es lo que se suele querer controlar.
+        const ayuda = () => {
+            const c = parseInt($('man-cant').value, 10) || 0;
+            const t = parseFloat($('man-total').value);
+            $('man-ayuda').textContent = (c > 1 && t > 0)
+                ? `Son $${(t / c).toFixed(2)} por unidad (${c} unidades).`
+                : '';
+        };
+        $('man-cant').addEventListener('input', ayuda);
+        $('man-total').addEventListener('input', ayuda);
+        ayuda();
+
+        $('man-ok').addEventListener('click', () => {
+            const cant = parseInt($('man-cant').value, 10);
+            const desc = ($('man-desc').value || '').trim();
+            const med = ($('man-med').value || '').trim();
+            const total = parseFloat($('man-total').value);
+            const err = $('man-error');
+            const fallar = msg => { err.textContent = msg; err.style.display = 'block'; };
+
+            if (!Number.isInteger(cant) || cant < 1) return fallar('La cantidad debe ser un número entero mayor o igual a 1.');
+            if (!desc) return fallar('Escriba una descripción del producto.');
+            if (Number.isNaN(total) || total < 0) return fallar('Escriba el total en dólares (puede ser 0).');
+
+            const item = {
+                id: (previo && previo.id) || Date.now().toString(),
+                manual: true,
+                quantity: cant,
+                description: desc,
+                dimensions: med,
+                unitPrice: total / cant,
+                total: total,
+                // Sin margen: lo que se escribió ES el precio final (ver el
+                // comentario de arriba). El costo crudo se iguala al total para
+                // que los subtotales de la cotización cierren.
+                rawTotal: total,
+                gastosValor: 0,
+                utilidadValor: 0,
+                details: [],
+                modules: null,
+                leaves: null,
+                moduleId: null,
+                moduleName: null
+            };
+
+            if (editando) this.cart[indice] = item;
+            else this.cart.push(item);
+
+            cerrar();
+            this.renderCart();
+            notify.success(editando ? 'Producto manual actualizado.' : 'Producto manual agregado a la cotización.');
+        });
+
+        $('man-desc').focus();
+    }
+
+    /**
      * Frena el ítem si su familia no tiene receta preestablecida y pide
      * confirmación expresa. Devuelve true si se puede seguir.
      *
@@ -1936,6 +2064,10 @@ class QuotationManager {
                         <br><span style="font-size:0.75rem; color: var(--danger); font-weight:600;"
                             title="Esta familia no tiene receta cargada: el precio se calculó con los perfiles requeridos del proveedor y puede estar muy por debajo del real.">
                             <i class="fa-solid fa-triangle-exclamation"></i> Sin receta &mdash; revise el precio
+                        </span>` : ''}${item.manual ? `
+                        <br><span style="font-size:0.75rem; color: var(--text-muted); font-weight:600;"
+                            title="Producto escrito a mano: el precio lo puso usted, no sale de una receta y no lleva gastos generales ni utilidad.">
+                            <i class="fa-solid fa-pen-to-square"></i> Manual &mdash; precio puesto a mano
                         </span>` : ''}</td>
                     <td>${window.escapeHtml(item.dimensions)}${this.moduleLeavesLabel(item)}</td>
                     <td>$${item.total.toFixed(2)}</td>
@@ -1998,6 +2130,16 @@ class QuotationManager {
 
     editItem(index) {
         const item = this.cart[index];
+
+        // Un producto manual no tiene receta que reponer en el formulario: se
+        // vuelve a abrir su propia ventana con los datos cargados. Sin esto
+        // caería en el camino de abajo, que saca el ítem del carrito para
+        // reeditarlo y lo dejaría perdido.
+        if (item.manual) {
+            this.abrirProductoManual(item, index);
+            return;
+        }
+
         const data = item.rawData;
 
         if (data) {

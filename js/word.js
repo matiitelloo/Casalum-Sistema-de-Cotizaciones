@@ -192,7 +192,9 @@ class QuotationDocument {
 
         const filas = cart.map((item, i) => {
             const md = this.medidas(item);
-            const medida = (md.base && md.alto) ? `${md.base} x ${md.alto}` : '';
+            // Si no son medidas numéricas (típico de un producto manual: "a
+            // convenir", "según plano"), se muestra el texto tal cual se cargó.
+            const medida = (md.base && md.alto) ? `${md.base} x ${md.alto}` : this.clean(item.dimensions);
             const fondo = i % 2 ? ' background:#F7F9FC;' : '';
             return `<tr style="${fondo}">
                 <td style="${this.cel} text-align:center; color:${GRIS_TX};">${i + 1}</td>
