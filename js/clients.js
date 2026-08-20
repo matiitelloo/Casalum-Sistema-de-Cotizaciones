@@ -43,15 +43,25 @@ class ClientManager {
         }
     }
 
-    /** Cliente genérico reutilizable para atención rápida en el local, sin pedir datos. */
-    async useGenericClient() {
+    /**
+     * Devuelve el cliente genérico (lo crea si no existe) SIN tocar el
+     * formulario. Va aparte de useGenericClient porque consultar la nube tarda:
+     * quien lo pide necesita poder decidir, cuando llega la respuesta, si
+     * todavía corresponde escribirlo en pantalla (ver startQuickQuote).
+     */
+    async getGenericClient() {
         const genericId = '9999999999';
         let client = await this.getClientById(genericId);
         if (!client) {
             client = { id: genericId, name: 'Consumidor Final', phone: '000000', address: '000000' };
             await window.dbManager.save('clients', client, 'id');
         }
-        this.fillClientForm(client);
+        return client;
+    }
+
+    /** Cliente genérico reutilizable para atención rápida en el local, sin pedir datos. */
+    async useGenericClient() {
+        this.fillClientForm(await this.getGenericClient());
     }
 
     async searchClient(query) {

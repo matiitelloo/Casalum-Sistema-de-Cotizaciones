@@ -76,26 +76,12 @@ class App {
             });
         });
 
-        const navQuickQuote = document.getElementById('nav-quick-quote');
-        if (navQuickQuote) {
-            navQuickQuote.addEventListener('click', () => {
-                if (window.quotationManager) window.quotationManager.startQuickQuote();
-            });
-        }
-
-        // "Nueva Cotización" y "Cotización Rápida" comparten página pero deben ser
-        // modos independientes: este handler evita que la rápida deje residuos
-        // (carrito, cliente, stepper de 2 pasos) al entrar a la normal.
-        const navNewQuotation = document.getElementById('nav-new-quotation');
-        if (navNewQuotation) {
-            navNewQuotation.addEventListener('click', () => {
-                if (window.quotationManager) window.quotationManager.goToNewQuotation();
-            });
-        }
-
-        // Los dos botones del submenú Catálogo ya no necesitan manejador propio:
-        // cada uno lleva su data-page ("catalog" y "catalog-db"), y navigate()
-        // abre la vista que corresponde según la sección.
+        // Ni los dos botones del submenú Catálogo ni los de Cotización necesitan
+        // manejador propio: cada uno lleva su data-page ("catalog"/"catalog-db",
+        // "new-quotation"/"quick-quote") y navigate() abre la vista o el modo
+        // que corresponde según la sección. "Nueva Cotización" y "Cotización
+        // Rápida" comparten pantalla pero son modos independientes: entrar a
+        // una limpia lo que dejó la otra.
 
         const bindGroupToggle = (toggleId, submenuId, arrowId) => {
             const toggle = document.getElementById(toggleId);
@@ -215,9 +201,11 @@ class App {
 
         // Si se recuperó una cotización en curso se vuelve al paso donde la dejó;
         // si no hay nada que recuperar, el asistente abre limpio en el Paso 1.
-        if (pageId === 'new-quotation' && window.quotationManager) {
-            const step = draftRestored ? (window.quotationManager.currentStep || 1) : 1;
-            window.quotationManager.goToStep(step);
+        // Vale para los dos modos: "quick-quote" es la misma pantalla.
+        if (this.pantallaDe(pageId) === 'new-quotation' && window.quotationManager) {
+            const qm = window.quotationManager;
+            const step = draftRestored ? (qm.currentStep || 1) : (qm.isQuickQuote ? 3 : 1);
+            qm.goToStep(step);
         }
     }
 
@@ -312,6 +300,9 @@ class App {
             'dashboard': 'inicio',
             'history': 'historial',
             'new-quotation': 'nueva-cotizacion',
+            // Cotización Rápida es la misma pantalla en otro modo, pero con su
+            // propia dirección: así se puede recargar o compartir el enlace.
+            'quick-quote': 'cotizacion-rapida',
             'clients': 'clientes',
             // Catálogo tiene dos vistas dentro de la misma pantalla. Cada una
             // lleva su propia dirección para que recargar con F5 vuelva a la
@@ -325,17 +316,25 @@ class App {
     }
 
     /**
-     * Secciones que en realidad son la misma pantalla (`page-catalog`) con una
-     * vista distinta adentro. La clave es la sección de la URL; el valor, la
-     * vista que hay que abrir (ver ModuleManager.showView).
+     * Secciones que comparten pantalla con otra: cada una tiene su dirección
+     * pero abre el mismo <div class="page">, en un modo o vista distinta.
+     * Clave: sección de la URL. Valor: id de la pantalla.
      */
+    static get PANTALLAS() {
+        return {
+            'catalog-db': 'catalog',        // Base de Datos vive en page-catalog
+            'quick-quote': 'new-quotation'  // Cotización Rápida, en page-new-quotation
+        };
+    }
+
+    /** Cuál de las dos vistas del Catálogo abre cada sección. */
     static get SUBVISTA_CATALOGO() {
         return { 'catalog': 'modules', 'catalog-db': 'db' };
     }
 
     /** Id del <div class="page"> que le corresponde a una sección. */
     pantallaDe(pageId) {
-        return App.SUBVISTA_CATALOGO[pageId] ? 'catalog' : pageId;
+        return App.PANTALLAS[pageId] || pageId;
     }
 
     /** Sección interna -> texto de la URL. */
@@ -492,6 +491,20 @@ class App {
             // Cuál de las dos vistas abrir sale de la sección, o sea de la URL.
             if (window.moduleManager) window.moduleManager.showView(App.SUBVISTA_CATALOGO[pageId] || 'modules');
             this.loadCatalogPreview();
+        } else if (pantalla === 'new-quotation') {
+            // El modo sale de la sección, o sea de la URL.
+            const qm = window.quotationManager;
+            if (qm) {
+                if (pageId === 'quick-quote') {
+                    // Solo si no estaba ya en ese modo: startQuickQuote() vacía
+                    // el carrito, y al recargar en "#cotizacion-rapida" se
+                    // llevaría puesto el borrador que se acaba de recuperar.
+                    if (!qm.isQuickQuote) qm.startQuickQuote();
+                } else {
+                    // No hace nada si ya venía en modo normal (no pierde lo cargado).
+                    qm.goToNewQuotation();
+                }
+            }
         } else if (pageId === 'history') {
             this.loadRecentQuotations();
         } else if (pageId === 'glass-quote') {

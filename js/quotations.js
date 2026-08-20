@@ -18,6 +18,9 @@ class QuotationManager {
         this.parentId = null;
         this.leavesManuallyEdited = false;
         this.isQuickQuote = false;
+        // Cuenta cada entrada a Cotización Rápida, para descartar la respuesta
+        // tardía de una entrada anterior (ver startQuickQuote).
+        this.quickQuoteToken = 0;
         this.activeModule = null;   // módulo preestablecido aplicado al ítem en edición
         this.applyingModule = false;
         this.init();
@@ -181,6 +184,15 @@ class QuotationManager {
     saveDraft() {
         if (this.restoringDraft) return; // no re-guardar mientras se está restaurando
 
+        // Una Cotización Rápida no se guarda como borrador: es atención de
+        // mostrador, se hace y se cierra. Además, al recuperarla aparecía el
+        // aviso de "cotización en curso" y el modo volvía al normal, sacando al
+        // usuario de la pantalla en la que estaba.
+        if (this.isQuickQuote) {
+            this.clearDraft();
+            return;
+        }
+
         const user = window.authManager && window.authManager.currentUser;
         if (!user) return;
 
@@ -259,6 +271,9 @@ class QuotationManager {
         }
         // Un borrador de otro usuario del mismo equipo no se toca.
         if (!draft || draft.uid !== user.uid || !Array.isArray(draft.cart)) return false;
+        // Los de Cotización Rápida ya no se guardan (ver saveDraft), pero puede
+        // quedar alguno viejo: se descarta en vez de recuperarlo.
+        if (draft.isQuickQuote) { this.clearDraft(); return false; }
 
         this.restoringDraft = true;
         try {
@@ -492,6 +507,10 @@ class QuotationManager {
      */
     startQuickQuote() {
         this.isQuickQuote = true;
+        // El aviso de "cotización recuperada" es del modo normal: si quedó en
+        // pantalla al entrar acá, no viene a cuento.
+        const banner = document.getElementById('draft-restored-banner');
+        if (banner) banner.style.display = 'none';
         this.cart = [];
         this.editingId = null;
         this.editingDate = null;
@@ -503,16 +522,30 @@ class QuotationManager {
         document.getElementById('client-form').reset();
         window.clientManager.currentClient = null;
         this.renderCart();
-        window.app.navigate('new-quotation');
+        // La navegación la hace app.navigate('quick-quote'): esta función solo
+        // deja el modo listo. Si navegara acá, cambiaría la dirección a
+        // "#nueva-cotizacion" y se perdería "#cotizacion-rapida".
         this.goToStep(3);
         // Sin pedir cédula ni nombre: se guarda como "Consumidor Final" de una vez.
-        // Si falla la nube (sin señal en el local, etc.) se usa uno local para no
-        // dejar la venta rápida sin cliente asignado.
+        //
+        // Buscarlo en la nube tarda, y si mientras tanto el usuario se pasa a
+        // Nueva Cotización, la respuesta llegaba igual y le dejaba "Consumidor
+        // Final" puesto en el modo normal. Por eso se pide el cliente sin que
+        // toque el formulario y recién se escribe si esta misma entrada al modo
+        // rápido sigue vigente. El contador distingue además dos entradas
+        // seguidas: solo la última manda.
         if (window.clientManager) {
-            window.clientManager.useGenericClient().catch(err => {
-                console.warn('No se pudo obtener/guardar "Consumidor Final" en la nube; se usa uno local:', err);
-                window.clientManager.fillClientForm({ id: '9999999999', name: 'Consumidor Final', phone: '000000', address: '000000' });
-            });
+            const token = ++this.quickQuoteToken;
+            const vigente = () => this.isQuickQuote && this.quickQuoteToken === token;
+            const local = { id: '9999999999', name: 'Consumidor Final', phone: '000000', address: '000000' };
+            window.clientManager.getGenericClient()
+                .then(cliente => { if (vigente()) window.clientManager.fillClientForm(cliente); })
+                .catch(err => {
+                    // Sin señal en el local: se usa uno local para no dejar la
+                    // venta rápida sin cliente asignado.
+                    console.warn('No se pudo obtener/guardar "Consumidor Final" en la nube; se usa uno local:', err);
+                    if (vigente()) window.clientManager.fillClientForm(local);
+                });
         }
     }
 
@@ -525,10 +558,9 @@ class QuotationManager {
      * donde se había quedado (no pierde el trabajo en curso).
      */
     goToNewQuotation() {
-        if (!this.isQuickQuote) {
-            window.app.navigate('new-quotation');
-            return;
-        }
+        // Ya estaba en modo normal: no se toca nada para no perder el trabajo
+        // en curso. Quien navega es app.navigate('new-quotation').
+        if (!this.isQuickQuote) return;
 
         this.isQuickQuote = false;
         this.cart = [];
@@ -552,7 +584,6 @@ class QuotationManager {
         if (btnSaveAs) btnSaveAs.style.display = 'none';
 
         this.renderCart();
-        window.app.navigate('new-quotation');
         this.goToStep(1);
     }
 
@@ -603,7 +634,9 @@ class QuotationManager {
 
         // Navigate to cart step
         this.renderCart();
-        window.app.navigate('new-quotation');
+        // La navegación la hace app.navigate('quick-quote'): esta función solo
+        // deja el modo listo. Si navegara acá, cambiaría la dirección a
+        // "#nueva-cotizacion" y se perdería "#cotizacion-rapida".
         this.goToStep(3);
     }
 
