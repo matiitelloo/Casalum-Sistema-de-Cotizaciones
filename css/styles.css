@@ -423,6 +423,16 @@ body {
     transition: all var(--duration) var(--ease-smooth);
     position: relative;
     overflow: hidden;
+    /* Las tarjetas son enlaces (llevan al historial y a los clientes), pero
+       tienen que seguir viendose como tarjetas: sin subrayado ni color de link. */
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow);
+    transform: translateY(-2px);
 }
 
 .stat-card::before {

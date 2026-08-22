@@ -25,7 +25,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/styles.css?v=9">
+    <link rel="stylesheet" href="css/styles.css?v=10">
     <link rel="stylesheet" href="css/print.css">
     <style>
         /* Extra styles for tables and stepper */
@@ -355,21 +355,24 @@
             <div class="page-container">
                 <!-- Page: Dashboard -->
                 <div id="page-dashboard" class="page active">
+                    <!-- Las dos tarjetas llevan al listado que resumen. Son enlaces de
+                         verdad (no un onclick) para que el clic derecho ofrezca abrir en
+                         otra pestana, igual que los botones del menu. -->
                     <div class="dashboard-cards">
-                        <div class="card stat-card">
+                        <a href="#historial" class="card stat-card" data-page="history">
                             <div class="stat-icon"><i class="fa-solid fa-file-invoice"></i></div>
                             <div class="stat-info">
                                 <h3>Cotizaciones</h3>
-                                <p class="stat-value" id="stat-quotations-count">0</p>
+                                <p class="stat-value" id="stat-quotations-count">Cargando...</p>
                             </div>
-                        </div>
-                        <div class="card stat-card">
+                        </a>
+                        <a href="#clientes" class="card stat-card" data-page="clients">
                             <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
                             <div class="stat-info">
                                 <h3>Clientes Registrados</h3>
-                                <p class="stat-value" id="stat-clients-count">0</p>
+                                <p class="stat-value" id="stat-clients-count">Cargando...</p>
                             </div>
-                        </div>
+                        </a>
                     </div>
 
                     <div class="mt-4">
@@ -1582,7 +1585,7 @@
     <script src="js/catalog.js?v=20"></script>
     <script src="js/modules.js?v=23"></script>
     <script src="js/settings.js?v=3"></script>
-    <script src="js/app.js?v=27"></script>
+    <script src="js/app.js?v=28"></script>
 
     <!-- Registro del service worker: es lo que hace que Android ofrezca
          instalarla y que abra sin señal. Va al final y sin bloquear nada: si

@@ -76,6 +76,17 @@ class App {
             });
         });
 
+        // Las dos tarjetas de Inicio llevan al listado que resumen. Mismo trato que
+        // el menú: son enlaces, así que con Ctrl o el botón del medio se deja pasar
+        // la navegación del navegador para abrir en otra pestaña.
+        document.querySelectorAll('.stat-card[data-page]').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
+                e.preventDefault();
+                this.navigate(card.getAttribute('data-page'));
+            });
+        });
+
         // Ni los dos botones del submenú Catálogo ni los de Cotización necesitan
         // manejador propio: cada uno lleva su data-page ("catalog"/"catalog-db",
         // "new-quotation"/"quick-quote") y navigate() abre la vista o el modo
@@ -621,12 +632,29 @@ class App {
         }
     }
 
+    /**
+     * Los dos números de Inicio. Se piden a la nube, así que tardan: hasta que
+     * llegan se muestra "Cargando...". Antes arrancaban en 0, y al recargar la
+     * página parecía por un momento que no había ninguna cotización ni ningún
+     * cliente.
+     */
     async updateDashboardStats() {
-        const count = await window.dbManager.count('clients');
-        document.getElementById('stat-clients-count').textContent = count;
-        
-        const quotCount = await window.dbManager.count('quotations');
-        document.getElementById('stat-quotations-count').textContent = quotCount;
+        const poner = (id, valor) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = valor;
+        };
+        poner('stat-clients-count', 'Cargando...');
+        poner('stat-quotations-count', 'Cargando...');
+
+        // Los dos a la vez: uno no tiene por qué esperar al otro.
+        const [clientes, cotizaciones] = await Promise.all([
+            window.dbManager.count('clients').catch(() => null),
+            window.dbManager.count('quotations').catch(() => null)
+        ]);
+
+        // Sin señal se dice, no se inventa un cero.
+        poner('stat-clients-count', clientes === null ? '—' : clientes);
+        poner('stat-quotations-count', cotizaciones === null ? '—' : cotizaciones);
     }
 
     async loadRecentQuotations(resetPage = true) {
