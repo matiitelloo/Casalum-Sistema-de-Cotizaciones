@@ -1,5 +1,16 @@
 const AUTH_EMAIL_DOMAIN = 'casalum.local';
-const usernameToEmail = (username) => `${username.trim().toLowerCase()}@${AUTH_EMAIL_DOMAIN}`;
+/**
+ * Firebase identifica a la gente por correo, pero acá se entra con un usuario
+ * corto ("mtello"), asi que se le pega un dominio inventado.
+ *
+ * Si escriben un correo de verdad, se usa tal cual: las cuentas nuevas pueden
+ * tener el correo real de la persona, y esas SI pueden recuperar la contrasena
+ * solas por mail. Las viejas siguen entrando con su usuario de siempre.
+ */
+const usernameToEmail = (username) => {
+    const v = String(username || '').trim().toLowerCase();
+    return v.includes('@') ? v : `${v}@${AUTH_EMAIL_DOMAIN}`;
+};
 
 /** Máximo que esperamos a Firebase antes de asumir que no hay sesión y mostrar el login. */
 const AUTH_BOOT_TIMEOUT_MS = 8000;
