@@ -9,6 +9,8 @@ class App {
         this.currentPage = 'dashboard';
         this.historyPageSize = 15;
         this.historyVisibleCount = 15;
+        // Vidrios sueltos que va llevando el cliente en Cotizar Vidrio.
+        this.glassCart = [];
         this.init();
     }
 
@@ -545,89 +547,173 @@ class App {
             const resultArea = document.getElementById('gq-result-area');
             const resultPrice = document.getElementById('gq-result-price');
 
-            const calculate = () => {
+            /**
+             * Lee el formulario y calcula el precio de ese vidrio. Devuelve null
+             * (y avisa) si falta algo. El vidrio se corta 5 cm mas grande de la
+             * medida pedida, y sobre esa medida se cobra.
+             */
+            const leerVidrio = () => {
                 const type = sel.value;
                 const base = parseFloat(baseInput.value);
                 const height = parseFloat(heightInput.value);
+                const qty = parseInt(document.getElementById('gq-qty').value, 10) || 1;
 
-                if (!type) { notify.warning('Seleccione un tipo de vidrio.'); return; }
-                if (!base || base <= 0) { notify.warning('Ingrese la base en metros.'); return; }
-                if (!height || height <= 0) { notify.warning('Ingrese la altura en metros.'); return; }
+                if (!type) { notify.warning('Seleccione un tipo de vidrio.'); return null; }
+                if (!base || base <= 0) { notify.warning('Ingrese la base en metros.'); return null; }
+                if (!height || height <= 0) { notify.warning('Ingrese la altura en metros.'); return null; }
+                if (qty < 1) { notify.warning('La cantidad tiene que ser 1 o más.'); return null; }
 
                 const glassData = window.SEED_DATA.glassSale || window.SEED_DATA.glass;
                 const glass = glassData.find(g => g.type === type);
-                if (!glass) return;
+                if (!glass) return null;
 
-                const adjustedBase = base + 0.05;   // +5 cm
-                const adjustedHeight = height + 0.05; // +5 cm
-                const area = adjustedBase * adjustedHeight;
-                const price = glass.pricePerM2 * area;
+                const area = (base + 0.05) * (height + 0.05);   // +5 cm por lado
+                const unitario = glass.pricePerM2 * area;
+                return { type, base, height, qty, area, unitario, total: unitario * qty };
+            };
 
-                resultLabel.textContent = `${type}`;
+            const calculate = () => {
+                const v = leerVidrio();
+                if (!v) return;
+                const { type, base, height, qty } = v;
+                const price = v.total;
+
+                resultLabel.textContent = qty > 1 ? `${type} (x${qty})` : `${type}`;
                 resultArea.textContent = `${base.toFixed(2)} × ${height.toFixed(2)} m`;
                 resultPrice.textContent = `$${price.toFixed(2)}`;
                 resultDiv.style.display = 'block';
 
-                const saveBtn = document.getElementById('gq-save');
-                if (saveBtn) {
-                    saveBtn.style.display = 'inline-block';
-                    saveBtn.onclick = async () => {
-                        try {
-                            const quotation = {
-                                clientId: 'MOSTRADOR',
-                                clientName: 'Venta de Vidrio Mostrador',
-                                date: new Date().toISOString(),
-                                cart: [{
-                                    quantity: 1,
-                                    description: `Vidrio suelto: ${type}`,
-                                    dimensions: `${base.toFixed(2)} × ${height.toFixed(2)}m`,
-                                    rawTotal: price,
-                                    total: price,
-                                    type: 'glass-sale'
-                                }],
-                                totals: { total: price },
-                                settings: window.calculator?.settings || {},
-                                author: window.authManager.currentUser.username,
-                                authorName: window.authManager.currentUser.name,
-                                revisionLabel: 'Venta de Vidrio', // Se muestra en lugar de COT-XXX
-                                parentId: null,
-                                status: 'active',
-                                quickQuote: true,
-                                isGlassQuote: true // Flag to identify it in history
-                            };
-
-                            await window.dbManager.save('quotations', quotation);
-                            notify.success('Cotización de vidrio guardada en el historial.');
-
-                            // Reset
-                            baseInput.value = '';
-                            heightInput.value = '';
-                            sel.value = '';
-                            resultDiv.style.display = 'none';
-                            saveBtn.style.display = 'none';
-                        } catch (e) {
-                            console.error('Error saving glass quote', e);
-                            notify.error('Hubo un error al guardar la cotización.');
-                        }
-                    };
-                }
             };
 
             document.getElementById('gq-calculate').addEventListener('click', calculate);
+
+            // Agregar a la lista: un cliente puede llevar varios vidrios de
+            // distinto tipo y medida en la misma compra.
+            document.getElementById('gq-add').addEventListener('click', () => {
+                const v = leerVidrio();
+                if (!v) return;
+                this.glassCart.push(v);
+                this.renderGlassCart();
+                // El formulario queda listo para el siguiente, conservando el tipo
+                // de vidrio: lo mas comun es pedir varias piezas del mismo.
+                baseInput.value = '';
+                heightInput.value = '';
+                document.getElementById('gq-qty').value = '1';
+                resultDiv.style.display = 'none';
+                baseInput.focus();
+            });
 
             document.getElementById('gq-clear').addEventListener('click', () => {
                 sel.value = '';
                 baseInput.value = '';
                 heightInput.value = '';
+                document.getElementById('gq-qty').value = '1';
                 resultDiv.style.display = 'none';
-                const saveBtn = document.getElementById('gq-save');
-                if (saveBtn) saveBtn.style.display = 'none';
+                this.glassCart = [];
+                this.renderGlassCart();
             });
+
+            document.getElementById('gq-save').addEventListener('click', () => this.guardarVentaDeVidrio());
 
             // Allow Enter key to calculate
             [baseInput, heightInput].forEach(inp => {
                 inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); calculate(); } });
             });
+        }
+    }
+
+    /** Dibuja la lista de vidrios de la venta y su total. */
+    renderGlassCart() {
+        const caja = document.getElementById('gq-lista-caja');
+        const cuerpo = document.getElementById('gq-lista-cuerpo');
+        const guardar = document.getElementById('gq-save');
+        if (!caja || !cuerpo) return;
+
+        const lista = this.glassCart || [];
+        caja.style.display = lista.length ? 'block' : 'none';
+        if (guardar) guardar.style.display = lista.length ? 'inline-block' : 'none';
+
+        // Se arma con DOM y textContent: el tipo de vidrio sale del catálogo y
+        // podría traer comillas o HTML.
+        cuerpo.innerHTML = '';
+        lista.forEach((v, i) => {
+            const tr = document.createElement('tr');
+            const celda = (texto) => {
+                const td = document.createElement('td');
+                td.textContent = texto;
+                return td;
+            };
+            const quitar = document.createElement('button');
+            quitar.className = 'btn btn-sm btn-danger';
+            quitar.innerHTML = '<i class="fa-solid fa-trash"></i>';
+            quitar.title = 'Quitar de la lista';
+            quitar.addEventListener('click', () => {
+                this.glassCart.splice(i, 1);
+                this.renderGlassCart();
+            });
+            const tdQuitar = document.createElement('td');
+            tdQuitar.appendChild(quitar);
+
+            tr.append(
+                celda(i + 1),
+                celda(v.type),
+                celda(`${v.base.toFixed(2)} × ${v.height.toFixed(2)} m`),
+                celda(v.qty),
+                celda(`$${v.total.toFixed(2)}`),
+                tdQuitar
+            );
+            cuerpo.appendChild(tr);
+        });
+
+        const total = lista.reduce((s, v) => s + v.total, 0);
+        const elTotal = document.getElementById('gq-lista-total');
+        if (elTotal) elTotal.textContent = `$${total.toFixed(2)}`;
+    }
+
+    /** Guarda toda la lista como una sola venta en el historial. */
+    async guardarVentaDeVidrio() {
+        const lista = this.glassCart || [];
+        if (!lista.length) { notify.warning('Agregue al menos un vidrio a la lista.'); return; }
+
+        const total = lista.reduce((s, v) => s + v.total, 0);
+        try {
+            await window.dbManager.save('quotations', {
+                clientId: 'MOSTRADOR',
+                clientName: 'Venta de Vidrio Mostrador',
+                date: new Date().toISOString(),
+                cart: lista.map(v => ({
+                    quantity: v.qty,
+                    description: `Vidrio suelto: ${v.type}`,
+                    dimensions: `${v.base.toFixed(2)} × ${v.height.toFixed(2)}m`,
+                    unitPrice: v.unitario,
+                    rawTotal: v.total,
+                    total: v.total,
+                    type: 'glass-sale'
+                })),
+                totals: { total: total },
+                settings: (window.calculator && window.calculator.settings) || {},
+                author: window.authManager.currentUser.username,
+                authorName: window.authManager.currentUser.name,
+                revisionLabel: 'Venta de Vidrio',   // se muestra en lugar del código
+                parentId: null,
+                status: 'active',
+                quickQuote: true,
+                isGlassQuote: true
+            });
+            notify.success(lista.length === 1
+                ? 'Venta de vidrio guardada en el historial.'
+                : `Venta de ${lista.length} vidrios guardada en el historial.`);
+
+            this.glassCart = [];
+            this.renderGlassCart();
+            document.getElementById('gq-base').value = '';
+            document.getElementById('gq-height').value = '';
+            document.getElementById('gq-qty').value = '1';
+            document.getElementById('gq-glass-type').value = '';
+            document.getElementById('gq-result').style.display = 'none';
+        } catch (e) {
+            console.error('Error guardando la venta de vidrio:', e);
+            notify.error('Hubo un error al guardar la venta.');
         }
     }
 
