@@ -368,8 +368,8 @@ ${formaPago.length ? `<div style="margin-top:10pt; page-break-inside:avoid;">
              aunque la imagen no llegue a cargar. Lleva el MISMO recuadro que la
              celda del nombre de abajo (centrado y padding-right 24pt) para que
              quede centrada sobre la línea y no corrida a un costado. -->
-        <td style="height:46pt; vertical-align:bottom; text-align:center; padding:0 24pt 0 0;">
-            ${firmaDataUri ? `<img src="${firmaDataUri}" alt="" style="height:44pt; margin-bottom:-8pt;">` : '&nbsp;'}
+        <td style="height:70pt; vertical-align:bottom; text-align:center; padding:0 24pt 0 0;">
+            ${firmaDataUri ? `<img src="${firmaDataUri}" alt="" style="height:66pt; margin-bottom:-10pt;">` : '&nbsp;'}
         </td>
         <td style="padding:0;">&nbsp;</td>
     </tr>
