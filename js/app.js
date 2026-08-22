@@ -857,11 +857,10 @@ class App {
                 <td style="padding: 10px;"><span style="color: ${statusColor}; font-weight: 600; font-size: 0.8rem;">${statusLabel}</span></td>
                 <td style="padding: 10px; font-weight:600; color:var(--primary);">$${(q.totals?.total ?? 0).toFixed(2)}</td>
                 <td style="padding: 10px; white-space: nowrap;">
-                    ${q.isGlassQuote ? '' : `<button class="btn btn-sm btn-outline" onclick="window.app.printQuotation('${q.id}')" title="Imprimir cotización" style="border-color: var(--primary); color: var(--primary);">
+                    ${q.isGlassQuote ? `<button class="btn btn-sm btn-outline" onclick="window.app.imprimirOrdenDeTrabajo('${q.id}')" title="Orden de corte para el taller" style="border-color: #b45309; color: #b45309;">
+                        <i class="fa-solid fa-scissors"></i>
+                    </button>` : `<button class="btn btn-sm btn-outline" onclick="window.app.printQuotation('${q.id}')" title="Imprimir cotización" style="border-color: var(--primary); color: var(--primary);">
                         <i class="fa-solid fa-print"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline" onclick="window.app.imprimirOrdenDeTrabajo('${q.id}')" title="Orden de trabajo para el taller" style="margin-left: 5px; border-color: var(--warning, #b45309); color: var(--warning, #b45309);">
-                        <i class="fa-solid fa-screwdriver-wrench"></i>
                     </button>
                     <button class="btn btn-sm btn-outline" onclick="window.app.editQuotation('${q.id}')" title="Editar / Versionar" style="margin-left: 5px;">
                         <i class="fa-solid fa-pen"></i>
@@ -902,14 +901,13 @@ class App {
     }
 
     /**
-     * La hoja que baja al taller: qué fabricar y con qué, sin precios.
-     * La arma js/orden.js a partir del desglose que quedó guardado.
+     * La hoja que va al que corta el vidrio: qué piezas, de qué tipo y de qué
+     * medida, sin precios. La arma js/orden.js.
      */
     async imprimirOrdenDeTrabajo(id) {
         const q = await window.dbManager.getById('quotations', id);
-        if (!q) { notify.error('No se encontró esa cotización.'); return; }
-        const cliente = await window.dbManager.getById('clients', q.clientId);
-        await window.ordenDeTrabajo.imprimir(q, cliente);
+        if (!q) { notify.error('No se encontró esa venta.'); return; }
+        await window.ordenDeTrabajo.imprimir(q);
     }
 
     async printQuotation(id) {
