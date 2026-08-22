@@ -48,6 +48,7 @@ const ARMAZON = [
     './js/ventanaFija1100.js',
     './js/pdf.js',
     './js/word.js',
+    './js/orden.js',
     './data/seed.js',
     './data/catalog-items.js',
     './assets/logo.png',

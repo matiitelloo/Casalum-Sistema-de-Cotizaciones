@@ -860,6 +860,9 @@ class App {
                     ${q.isGlassQuote ? '' : `<button class="btn btn-sm btn-outline" onclick="window.app.printQuotation('${q.id}')" title="Imprimir cotización" style="border-color: var(--primary); color: var(--primary);">
                         <i class="fa-solid fa-print"></i>
                     </button>
+                    <button class="btn btn-sm btn-outline" onclick="window.app.imprimirOrdenDeTrabajo('${q.id}')" title="Orden de trabajo para el taller" style="margin-left: 5px; border-color: var(--warning, #b45309); color: var(--warning, #b45309);">
+                        <i class="fa-solid fa-screwdriver-wrench"></i>
+                    </button>
                     <button class="btn btn-sm btn-outline" onclick="window.app.editQuotation('${q.id}')" title="Editar / Versionar" style="margin-left: 5px;">
                         <i class="fa-solid fa-pen"></i>
                     </button>`}
@@ -896,6 +899,17 @@ class App {
         if (q && window.quotationManager) {
             window.quotationManager.loadQuotationForEdit(q);
         }
+    }
+
+    /**
+     * La hoja que baja al taller: qué fabricar y con qué, sin precios.
+     * La arma js/orden.js a partir del desglose que quedó guardado.
+     */
+    async imprimirOrdenDeTrabajo(id) {
+        const q = await window.dbManager.getById('quotations', id);
+        if (!q) { notify.error('No se encontró esa cotización.'); return; }
+        const cliente = await window.dbManager.getById('clients', q.clientId);
+        await window.ordenDeTrabajo.imprimir(q, cliente);
     }
 
     async printQuotation(id) {

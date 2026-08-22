@@ -458,6 +458,15 @@ ${marcasOffice}
         const [membrete, firma] = await Promise.all([this.membrete(), this.firma()]);
         const html = this.envolver(this.buildHTML(data, membrete, firma), `COTIZACION ${data.meta.codigo}`, false);
 
+        await this.imprimirHTML(html);
+    }
+
+    /**
+     * Manda a imprimir un documento HTML completo. Va en un iframe aparte para
+     * que la impresion no arrastre los estilos ni el contenido de la aplicacion.
+     * Lo usan la cotizacion (arriba) y la orden de trabajo (js/orden.js).
+     */
+    async imprimirHTML(html) {
         const previo = document.getElementById('marco-impresion');
         if (previo) previo.remove();
 
