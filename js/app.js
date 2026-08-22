@@ -893,11 +893,20 @@ class App {
         }
     }
 
+    /**
+     * Abre una cotización guardada para editarla o versionarla.
+     *
+     * Primero se abre la pantalla y despues se carga, nunca al revés:
+     * navigate() limpia el formulario al entrar o salir de Cotización Rápida,
+     * y haciéndolo después se llevaría puesto lo recién cargado.
+     */
     async editQuotation(id) {
         const q = await window.dbManager.getById('quotations', id);
-        if (q && window.quotationManager) {
-            window.quotationManager.loadQuotationForEdit(q);
-        }
+        if (!q) { notify.error('No se encontró esa cotización.'); return; }
+        if (!window.quotationManager) return;
+
+        this.navigate(q.quickQuote ? 'quick-quote' : 'new-quotation');
+        await window.quotationManager.loadQuotationForEdit(q);
     }
 
     /**

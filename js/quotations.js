@@ -695,11 +695,11 @@ class QuotationManager {
             btnSave.innerHTML = '<i class="fa-solid fa-save"></i> Actualizar Cotización';
         }
 
-        // Navigate to cart step
+        // Quien abre la pantalla es app.editQuotation, ANTES de llamar acá: elige
+        // "#nueva-cotizacion" o "#cotizacion-rapida" segun como se guardó, y si
+        // navegara desde acá una cotización rápida terminaría en la dirección
+        // equivocada. Acá solo se deja el carrito y el paso listos.
         this.renderCart();
-        // La navegación la hace app.navigate('quick-quote'): esta función solo
-        // deja el modo listo. Si navegara acá, cambiaría la dirección a
-        // "#nueva-cotizacion" y se perdería "#cotizacion-rapida".
         this.goToStep(3);
     }
 
