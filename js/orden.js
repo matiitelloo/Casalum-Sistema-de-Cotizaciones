@@ -27,8 +27,12 @@ class OrdenDeTrabajo {
         return String(descripcion || '').replace(/^vidrio suelto:\s*/i, '').trim() || 'Vidrio';
     }
 
-    construirHTML(datos) {
+    construirHTML(datos, membreteDataUri) {
         const { cart } = datos;
+        // Los mismos margenes que la cotizacion: son los que deja libres el
+        // membrete (medidos sobre la imagen), para no escribir encima.
+        const M = (window.wordGenerator && window.wordGenerator.constructor.MARGENES)
+            || { arriba: 39, abajo: 23, izquierda: 19, derecha: 10 };
 
         // Una sola tabla: tipo, medida y cantidad. Nada mas.
         const filas = (cart || []).map((it, i) => `
@@ -42,11 +46,21 @@ class OrdenDeTrabajo {
         return `<!doctype html>
 <html lang="es"><head><meta charset="utf-8"><title>ORDEN DE CORTE</title>
 <style>
-    @page { size: A4; margin: 18mm 14mm; }
+    /* Sin margenes de pagina: el lugar libre lo reserva la tabla de afuera, asi
+       se repite en todas las hojas y no solo en la primera. */
+    @page { size: A4 portrait; margin: 0; }
+    html, body { margin: 0; padding: 0; }
     * { box-sizing: border-box; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+    tr { page-break-inside: avoid; }
+    table.marco { width: 100%; border-collapse: collapse; position: relative; z-index: 1; }
+    table.marco > thead > tr > td, table.marco > tfoot > tr > td, table.marco > tbody > tr > td { border: 0; padding: 0; }
     body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; margin: 0; }
-    h1 { margin: 0 0 12pt; font-size: 18pt; color: #0b4a8f; letter-spacing: 0.5pt; }
-    table { width: 100%; border-collapse: collapse; font-size: 11.5pt; }
+    /* El aire de arriba lo pide el membrete: sin el, el titulo queda pegado a la
+       linea del sitio web y parece parte del logo. */
+    h1 { margin: 7mm 0 12pt; font-size: 18pt; color: #0b4a8f; letter-spacing: 0.5pt; }
+    table.piezas { width: 100%; border-collapse: collapse; font-size: 11.5pt; }
     th { background: #f2e9e4; border: 1px solid #666; padding: 5pt; font-size: 10pt; text-transform: uppercase; }
     td { border: 1px solid #666; padding: 7pt 6pt; }
     .n { width: 8%; text-align: center; font-weight: bold; }
@@ -56,8 +70,14 @@ class OrdenDeTrabajo {
     .firma { margin-top: 40pt; width: 60%; border-top: 1px solid #333; padding-top: 4pt; font-size: 10pt; text-align: center; }
 </style></head>
 <body>
+    ${membreteDataUri ? `<img src="${membreteDataUri}" alt="" style="position:fixed; top:0; left:0; width:210mm; height:297mm; z-index:0;">` : ''}
+    <table class="marco">
+        <thead><tr><td style="height:${M.arriba}mm;">&nbsp;</td></tr></thead>
+        <tfoot><tr><td style="height:${M.abajo}mm;">&nbsp;</td></tr></tfoot>
+        <tbody><tr><td style="padding:0 ${M.derecha}mm 0 ${M.izquierda}mm; vertical-align:top;">
+
     <h1>ORDEN DE CORTE</h1>
-    <table>
+    <table class="piezas">
         <thead>
             <tr>
                 <th class="n">N&deg;</th>
@@ -70,6 +90,9 @@ class OrdenDeTrabajo {
     </table>
 
     <div class="firma">Entregado al cliente</div>
+
+        </td></tr></tbody>
+    </table>
 </body></html>`;
     }
 
@@ -79,18 +102,18 @@ class OrdenDeTrabajo {
             notify.warning('Esa venta no tiene vidrios cargados.');
             return;
         }
-        const html = this.construirHTML({
-            codigo: q.revisionLabel || 'Venta de Vidrio',
-            cliente: q.clientName || 'Mostrador',
-            fecha: this.fecha(q.date),
-            autor: q.authorName || q.author || '',
-            cart: q.cart
-        });
-
         if (!window.wordGenerator || !window.wordGenerator.imprimirHTML) {
             notify.error('No se pudo abrir la impresión.');
             return;
         }
+
+        // El membrete lo carga el mismo que arma la cotizacion, que ya lo tiene
+        // guardado. Si no se pudiera leer, la hoja sale igual pero en blanco.
+        let membrete = '';
+        try { membrete = await window.wordGenerator.membrete(); }
+        catch (e) { console.warn('No se pudo cargar el membrete:', e); }
+
+        const html = this.construirHTML({ cart: q.cart }, membrete);
         await window.wordGenerator.imprimirHTML(html);
     }
 }
