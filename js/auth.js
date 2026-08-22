@@ -12,6 +12,31 @@ const usernameToEmail = (username) => {
     return v.includes('@') ? v : `${v}@${AUTH_EMAIL_DOMAIN}`;
 };
 
+/**
+ * Con que correo entrar, a partir de lo que escribieron.
+ *
+ * Se sigue entrando con el usuario de siempre ("MTELLO"), pero el correo de la
+ * cuenta ya no se puede adivinar: varias son correos reales de la persona, para
+ * que puedan recuperar la contrasena solas. Asi que hay una libretita en la base
+ * (coleccion `login`) que traduce usuario -> correo.
+ *
+ * Se lee ANTES de entrar, o sea sin sesion, y por eso la libretita solo permite
+ * pedir una ficha sabiendo el usuario exacto: no se puede listar. Si no esta o
+ * no se puede leer, se cae al dominio de siempre, que es como funcionaba antes.
+ */
+async function correoParaEntrar(escrito) {
+    const v = String(escrito || '').trim().toLowerCase();
+    if (v.includes('@')) return v;   // escribieron el correo directamente
+
+    try {
+        const doc = await firebase.firestore().collection('login').doc(v).get();
+        if (doc.exists && doc.data().email) return String(doc.data().email).toLowerCase();
+    } catch (e) {
+        console.warn('No se pudo consultar la libretita de usuarios:', e.message);
+    }
+    return usernameToEmail(v);
+}
+
 /** Máximo que esperamos a Firebase antes de asumir que no hay sesión y mostrar el login. */
 const AUTH_BOOT_TIMEOUT_MS = 8000;
 
@@ -205,7 +230,7 @@ class AuthManager {
         );
 
         try {
-            await firebase.auth().signInWithEmailAndPassword(usernameToEmail(userInp), passInp);
+            await firebase.auth().signInWithEmailAndPassword(await correoParaEntrar(userInp), passInp);
         } catch (error) {
             errorMsg.textContent = 'Usuario o contraseña incorrectos.';
             errorMsg.style.display = 'block';
