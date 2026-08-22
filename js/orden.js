@@ -1,9 +1,9 @@
 /**
  * ORDEN DE TRABAJO DE VENTA DE VIDRIO
  *
- * La hoja que va al que corta el vidrio: qué piezas hay que cortar, de qué tipo
- * y de qué medida. No lleva precios: al taller no le sirven y no tienen por qué
- * circular por ahí.
+ * La hoja que va al que corta el vidrio: una tabla con el tipo, la medida y la
+ * cantidad de cada pieza, y nada mas. Sin precios: al taller no le sirven y no
+ * tienen por que circular por ahi.
  *
  * Sale de una venta de vidrio ya guardada (las que en el historial aparecen como
  * "Venta de Vidrio"). Cada renglón del carrito es un tipo y una medida, con su
@@ -27,121 +27,49 @@ class OrdenDeTrabajo {
         return String(descripcion || '').replace(/^vidrio suelto:\s*/i, '').trim() || 'Vidrio';
     }
 
-    /**
-     * Junta las piezas por tipo de vidrio, que es como se pide y como se corta:
-     * el que corta trabaja una plancha a la vez.
-     */
-    porTipo(cart) {
-        const grupos = new Map();
-        (cart || []).forEach(it => {
-            const tipo = this.tipoDeVidrio(it.description);
-            if (!grupos.has(tipo)) grupos.set(tipo, []);
-            grupos.get(tipo).push({
-                medidas: it.dimensions || '',
-                cantidad: parseInt(it.quantity, 10) || 1
-            });
-        });
-        return [...grupos.entries()].map(([tipo, piezas]) => ({ tipo, piezas }));
-    }
-
     construirHTML(datos) {
-        const { codigo, cliente, fecha, autor, cart } = datos;
-        const grupos = this.porTipo(cart);
-        const totalPiezas = (cart || []).reduce((s, it) => s + (parseInt(it.quantity, 10) || 1), 0);
+        const { cart } = datos;
 
-        let n = 0;
-        const bloques = grupos.map(g => {
-            const filas = g.piezas.map(p => {
-                n++;
-                return `
-                <tr>
-                    <td class="n">${n}</td>
-                    <td class="med">${this.esc(p.medidas)}</td>
-                    <td class="cant">${p.cantidad}</td>
-                    <td class="ok"></td>
-                </tr>`;
-            }).join('');
-            const piezasDelTipo = g.piezas.reduce((s, p) => s + p.cantidad, 0);
-            return `
-            <section class="grupo">
-                <div class="grupo-cab">
-                    <span class="tipo">${this.esc(g.tipo)}</span>
-                    <span class="cuenta">${piezasDelTipo} pieza${piezasDelTipo === 1 ? '' : 's'}</span>
-                </div>
-                <table class="piezas">
-                    <thead>
-                        <tr><th class="n">N&deg;</th><th class="med">Medida (base &times; altura)</th><th class="cant">Cant.</th><th class="ok">Cortado</th></tr>
-                    </thead>
-                    <tbody>${filas}</tbody>
-                </table>
-            </section>`;
-        }).join('');
+        // Una sola tabla: tipo, medida y cantidad. Nada mas.
+        const filas = (cart || []).map((it, i) => `
+            <tr>
+                <td class="n">${i + 1}</td>
+                <td class="tipo">${this.esc(this.tipoDeVidrio(it.description))}</td>
+                <td class="med">${this.esc(it.dimensions || '')}</td>
+                <td class="cant">${parseInt(it.quantity, 10) || 1}</td>
+            </tr>`).join('');
 
         return `<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><title>ORDEN DE CORTE ${this.esc(codigo)}</title>
+<html lang="es"><head><meta charset="utf-8"><title>ORDEN DE CORTE</title>
 <style>
-    @page { size: A4; margin: 14mm 12mm; }
+    @page { size: A4; margin: 18mm 14mm; }
     * { box-sizing: border-box; }
     body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #000; margin: 0; }
-    .cab { border-bottom: 3px solid #0b4a8f; padding-bottom: 6pt; margin-bottom: 10pt; }
-    .cab h1 { margin: 0; font-size: 18pt; color: #0b4a8f; letter-spacing: 0.5pt; }
-    .cab .sub { font-size: 9pt; color: #444; margin-top: 2pt; }
-    .datos { width: 100%; border-collapse: collapse; margin-bottom: 14pt; font-size: 10pt; }
-    .datos td { padding: 4pt 7pt; border: 1px solid #bbb; }
-    .datos .et { background: #eef3f9; font-weight: bold; width: 20%; }
-    .grupo { margin-bottom: 14pt; page-break-inside: avoid; }
-    .grupo-cab { display: flex; justify-content: space-between; align-items: baseline;
-                 background: #0b4a8f; color: #fff; padding: 4pt 8pt; border-radius: 3pt 3pt 0 0; }
-    .grupo-cab .tipo { font-size: 12pt; font-weight: bold; }
-    .grupo-cab .cuenta { font-size: 9.5pt; }
-    table.piezas { width: 100%; border-collapse: collapse; font-size: 11pt; }
-    table.piezas th { background: #f2e9e4; border: 1px solid #999; padding: 4pt; font-size: 9.5pt; text-transform: uppercase; }
-    table.piezas td { border: 1px solid #999; padding: 6pt 5pt; }
-    table.piezas .n { width: 8%; text-align: center; font-weight: bold; }
-    table.piezas .med { font-size: 12pt; font-weight: bold; letter-spacing: 0.5pt; }
-    table.piezas .cant { width: 12%; text-align: center; font-size: 12pt; font-weight: bold; }
-    table.piezas .ok { width: 16%; }
-    .pie { margin-top: 16pt; font-size: 10pt; }
-    .pie .total { font-weight: bold; }
-    .notas { margin-top: 10pt; border: 1px dashed #999; border-radius: 3pt; padding: 6pt 8pt; font-size: 9.5pt; color: #555; }
-    .notas div { margin-bottom: 16pt; }
-    .firmas { margin-top: 26pt; display: flex; gap: 30pt; }
-    .firma { flex: 1; border-top: 1px solid #333; padding-top: 3pt; font-size: 9pt; text-align: center; }
+    h1 { margin: 0 0 12pt; font-size: 18pt; color: #0b4a8f; letter-spacing: 0.5pt; }
+    table { width: 100%; border-collapse: collapse; font-size: 11.5pt; }
+    th { background: #f2e9e4; border: 1px solid #666; padding: 5pt; font-size: 10pt; text-transform: uppercase; }
+    td { border: 1px solid #666; padding: 7pt 6pt; }
+    .n { width: 8%; text-align: center; font-weight: bold; }
+    .tipo { width: 42%; }
+    .med { width: 32%; font-weight: bold; letter-spacing: 0.5pt; }
+    .cant { width: 18%; text-align: center; font-weight: bold; font-size: 13pt; }
+    .firma { margin-top: 40pt; width: 60%; border-top: 1px solid #333; padding-top: 4pt; font-size: 10pt; text-align: center; }
 </style></head>
 <body>
-    <div class="cab">
-        <h1>ORDEN DE CORTE &mdash; VIDRIO</h1>
-        <div class="sub">CASALUM &nbsp;·&nbsp; Aluminio y Vidrio &nbsp;·&nbsp; Cuenca</div>
-    </div>
-
-    <table class="datos">
-        <tr>
-            <td class="et">Venta</td><td>${this.esc(codigo)}</td>
-            <td class="et">Fecha</td><td>${this.esc(fecha)}</td>
-        </tr>
-        <tr>
-            <td class="et">Cliente</td><td>${this.esc(cliente)}</td>
-            <td class="et">Atendió</td><td>${this.esc(autor || '-')}</td>
-        </tr>
+    <h1>ORDEN DE CORTE</h1>
+    <table>
+        <thead>
+            <tr>
+                <th class="n">N&deg;</th>
+                <th class="tipo">Tipo de vidrio</th>
+                <th class="med">Medida</th>
+                <th class="cant">Cant.</th>
+            </tr>
+        </thead>
+        <tbody>${filas}</tbody>
     </table>
 
-    ${bloques}
-
-    <div class="pie">
-        <span class="total">Total: ${totalPiezas} pieza${totalPiezas === 1 ? '' : 's'}</span>
-        en ${grupos.length} tipo${grupos.length === 1 ? '' : 's'} de vidrio.
-    </div>
-
-    <div class="notas">
-        <strong>Observaciones:</strong>
-        <div></div>
-    </div>
-
-    <div class="firmas">
-        <div class="firma">Cortado por</div>
-        <div class="firma">Revisado por</div>
-        <div class="firma">Entregado al cliente</div>
-    </div>
+    <div class="firma">Entregado al cliente</div>
 </body></html>`;
     }
 
