@@ -31,8 +31,12 @@ class OrdenDeTrabajo {
         const { cart } = datos;
         // Los mismos margenes que la cotizacion: son los que deja libres el
         // membrete (medidos sobre la imagen), para no escribir encima.
-        const M = (window.wordGenerator && window.wordGenerator.constructor.MARGENES)
-            || { arriba: 39, abajo: 23, izquierda: 19, derecha: 10 };
+        const doc = window.wordGenerator && window.wordGenerator.constructor;
+        const M = (doc && doc.MARGENES) || { arriba: 39, abajo: 23, izquierda: 19, derecha: 10 };
+        // El fondo se coloca igual que en la cotizacion (ver QuotationDocument.FONDO).
+        const estiloFondo = (doc && doc.estiloFondo)
+            ? doc.estiloFondo()
+            : 'position:fixed; top:0; left:-4.9mm; width:214.9mm; height:297mm; z-index:0;';
 
         // Una sola tabla: tipo, medida y cantidad. Nada mas.
         const filas = (cart || []).map((it, i) => `
@@ -70,7 +74,7 @@ class OrdenDeTrabajo {
     .firma { margin-top: 40pt; width: 60%; border-top: 1px solid #333; padding-top: 4pt; font-size: 10pt; text-align: center; }
 </style></head>
 <body>
-    ${membreteDataUri ? `<img src="${membreteDataUri}" alt="" style="position:fixed; top:0; left:0; width:210mm; height:297mm; z-index:0;">` : ''}
+    ${membreteDataUri ? `<img src="${membreteDataUri}" alt="" style="${estiloFondo}">` : ''}
     <table class="marco">
         <thead><tr><td style="height:${M.arriba}mm;">&nbsp;</td></tr></thead>
         <tfoot><tr><td style="height:${M.abajo}mm;">&nbsp;</td></tr></tfoot>

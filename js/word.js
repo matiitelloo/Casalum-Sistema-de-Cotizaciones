@@ -39,6 +39,20 @@ class QuotationDocument {
         return { arriba: 39, abajo: 23, izquierda: 19, derecha: 10 };
     }
 
+    /**
+     * La imagen del membrete trae 4,9 mm de blanco a la izquierda: la barra azul
+     * no llega al borde del papel. Se la corre esa medida hacia la izquierda y se
+     * la ensancha lo mismo, para que la barra sangre y el lado derecho siga
+     * llegando al borde. Estira la imagen un 2%, que no se nota.
+     */
+    static get FONDO() { return { correr: 4.9, ancho: 210 + 4.9 }; }
+
+    /** El estilo del membrete de fondo, igual para la cotizacion y la orden de corte. */
+    static estiloFondo() {
+        const F = QuotationDocument.FONDO;
+        return `position:fixed; top:0; left:-${F.correr}mm; width:${F.ancho}mm; height:297mm; z-index:0;`;
+    }
+
     // ── Datos ────────────────────────────────────────────────────
 
     /**
@@ -378,7 +392,7 @@ ${formaPago.length ? `<div style="margin-top:10pt; page-break-inside:avoid;">
         // un background de CSS porque los fondos solo se imprimen si el usuario
         // activa "Gráficos de fondo", que viene apagado.
         const fondo = membreteDataUri
-            ? `<img src="${membreteDataUri}" alt="" style="position:fixed; top:0; left:0; width:210mm; height:297mm; z-index:0;">`
+            ? `<img src="${membreteDataUri}" alt="" style="${QuotationDocument.estiloFondo()}">`
             : '';
 
         // La tabla exterior reserva el alto del marco arriba y abajo en CADA
