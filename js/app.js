@@ -65,14 +65,8 @@ class App {
                 if (e.ctrlKey || e.metaKey || e.shiftKey || e.button === 1) return;
                 e.preventDefault();
 
-                // Update active button
-                navButtons.forEach(b => b.classList.remove('active'));
-                const clickedBtn = e.currentTarget;
-                clickedBtn.classList.add('active');
-
-                // Navigate
-                const targetPage = clickedBtn.getAttribute('data-page');
-                this.navigate(targetPage);
+                // De marcar el boton se encarga navigate().
+                this.navigate(e.currentTarget.getAttribute('data-page'));
             });
         });
 
@@ -465,6 +459,11 @@ class App {
 
         // Show target page
         targetPage.classList.add('active');
+
+        // El menu se marca aca y no en cada boton: a la pantalla se llega
+        // tambien desde las tarjetas de Inicio, desde el historial del
+        // navegador y al recargar, y antes cada camino tenia que acordarse.
+        this.syncNavActive(pageId);
 
         // Update title
         const titles = {
